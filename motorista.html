@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Motorista - GoTáxi</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="logo">
+            <h1>GoTáxi</h1>
+            <p>Área do Motorista</p>
+        </div>
+        <div class="header-buttons">
+            <button id="back-btn" onclick="window.location.href='index.html'">Voltar</button>
+            <button id="logout-btn" style="display:none;">Sair</button>
+        </div>
+    </header>
+
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <!-- Painel do motorista -->
+    <div class="driver-panel" id="driver-panel" style="display:none;">
+        <h3>Painel do Motorista</h3>
+        <div class="driver-info">
+            <p id="driver-name">Bem-vindo, </p>
+            <p id="driver-status" class="status-offline">Status: Offline</p>
+        </div>
+        <div class="driver-controls">
+            <button class="driver-btn online-btn" id="online-btn">Ficar Online</button>
+            <button class="driver-btn tracking-btn" id="tracking-btn">Iniciar Rastreamento</button>
+            <button class="driver-btn offline-btn" id="offline-btn" style="display:none;">Ficar Offline</button>
+        </div>
+    </div>
+
+    <!-- Notificação de solicitação -->
+    <div class="request-notification" id="request-notification" style="display:none;">
+        <h3>Solicitação de Táxi</h3>
+        <div class="request-info" id="request-info">
+            <!-- Informações da solicitação serão preenchidas aqui -->
+        </div>
+        <div class="request-actions">
+            <button class="accept-btn" id="accept-btn">Aceitar</button>
+            <button class="reject-btn" id="reject-btn">Rejeitar</button>
+        </div>
+        <div class="countdown" id="countdown">60s</div>
+    </div>
+
+    <!-- Modal de login -->
+    <div class="login-modal" id="login-modal">
+        <div class="login-content">
+            <div class="login-header">
+                <h2>Área do Motorista</h2>
+                <p>Entre na sua conta</p>
+            </div>
+            <div class="warning-message" id="auth-warning" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Sistema de autenticação temporariamente indisponível. Use as credenciais de demonstração.
+            </div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="submit-btn">Entrar</button>
+            </form>
+
+            <div class="demo-credentials">
+                <h4>Credenciais de Demonstração:</h4>
+                <ul>
+                    <li><strong>Mega</strong> | Senha: 12345</li>
+                    <li><strong>Heitor</strong> | Senha: 12345</li>
+                    <li><strong>Marcelo</strong> | Senha: 12345</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="motorista.js"></script>
+</body>
+</html>
