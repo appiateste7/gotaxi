@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoTáxi - Seu Táxi em Lisboa</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <!-- Stripe.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places"></script>
     <script src="https://js.stripe.com/v3/"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,83 +18,97 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
             overflow: hidden;
         }
-        
+
         /* Header */
         header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 70px;
             background-color: #000;
             color: white;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-        
+
         .logo {
             display: flex;
             flex-direction: column;
         }
-        
+
         .logo h1 {
             font-size: 24px;
             font-weight: bold;
             color: #fff;
         }
-        
+
         .logo p {
-            font-size: 12px;
+            font-size: 14px;
             color: #ccc;
         }
-        
+
         .header-buttons {
             display: flex;
             gap: 15px;
         }
-        
-        .btn {
-            padding: 8px 16px;
+
+        .header-buttons button {
+            background-color: #333;
+            color: white;
             border: none;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s;
+            transition: background-color 0.3s;
         }
-        
-        .btn-driver {
-            background-color: #ffc107;
-            color: #000;
+
+        .header-buttons button:hover {
+            background-color: #555;
         }
-        
-        .btn-client {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
-        
+
         /* Mapa */
         #map {
             position: absolute;
-            top: 70px;
+            top: 0;
             left: 0;
             width: 100%;
-            height: calc(100vh - 70px);
+            height: 100vh;
         }
-        
-        /* Modal de Login */
+
+        /* Botão de chamar táxi */
+        .call-taxi-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffcc00;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            transition: all 0.3s;
+        }
+
+        .call-taxi-btn:hover {
+            background-color: #ffd633;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Modal de formulário */
         .modal {
             display: none;
             position: fixed;
@@ -102,164 +116,430 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 2000;
             justify-content: center;
             align-items: center;
         }
-        
+
         .modal-content {
             background-color: white;
             padding: 30px;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 90%;
-            max-width: 400px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
         }
-        
-        .modal h2 {
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
-            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h2 {
             color: #333;
         }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #555;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        .btn-close {
+
+        .close-btn {
             background: none;
             border: none;
-            font-size: 20px;
-            position: absolute;
-            top: 10px;
-            right: 15px;
+            font-size: 24px;
             cursor: pointer;
             color: #777;
         }
-        
-        /* Botão chamar táxi */
-        .call-taxi-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            background-color: #28a745;
-            color: white;
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .radio-group input {
+            width: auto;
+            margin-right: 5px;
+        }
+
+        .submit-btn {
+            background-color: #ffcc00;
+            color: #000;
             border: none;
-            border-radius: 30px;
+            padding: 15px;
+            width: 100%;
+            border-radius: 5px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1000;
-            transition: all 0.3s;
+            margin-top: 10px;
+            transition: background-color 0.3s;
         }
-        
-        .call-taxi-btn:hover {
-            background-color: #218838;
-            transform: translateX(-50%) translateY(-2px);
+
+        .submit-btn:hover {
+            background-color: #ffd633;
         }
-        
-        .call-taxi-btn:disabled {
-            background-color: #6c757d;
+
+        .submit-btn:disabled {
+            background-color: #ccc;
             cursor: not-allowed;
         }
-        
-        /* Formulário de chamada */
-        .form-container {
-            display: none;
-            position: fixed;
-            top: 70px;
-            left: 0;
-            width: 100%;
-            height: calc(100vh - 70px);
-            background-color: white;
-            z-index: 1500;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .form-container h2 {
-            margin-bottom: 20px;
-            text-align: center;
-            color: #333;
-        }
-        
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            margin: 0 -10px;
-        }
-        
-        .form-col {
-            flex: 1;
-            min-width: 300px;
-            padding: 0 10px;
-            margin-bottom: 15px;
-        }
-        
-        .payment-section {
-            border-top: 1px solid #ddd;
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-        
+
         .whatsapp-btn {
-            width: 100%;
-            padding: 12px;
             background-color: #25D366;
             color: white;
             border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 15px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
+            transition: background-color 0.3s;
         }
-        
+
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+        }
+
         .whatsapp-btn:disabled {
-            background-color: #6c757d;
+            background-color: #ccc;
             cursor: not-allowed;
         }
-        
-        /* Estilo para ícones de carro no mapa */
-        .car-marker {
+
+        /* Modal de login */
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-content {
             background-color: white;
-            border: 3px solid #000;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .login-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #777;
+        }
+
+        .login-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .login-option {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-option.active {
+            background-color: #ffcc00;
+            font-weight: bold;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .auth-tab.active {
+            border-bottom: 3px solid #ffcc00;
+            font-weight: bold;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .demo-credentials {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .demo-credentials h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .demo-credentials ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .demo-credentials li {
+            margin-bottom: 5px;
+            padding: 5px;
+            background-color: white;
+            border-radius: 3px;
+        }
+
+        .warning-message {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .driver-panel {
+            display: none;
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            width: 300px;
+        }
+
+        .driver-panel h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .driver-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .driver-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .online-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .online-btn:hover {
+            background-color: #45a049;
+        }
+
+        .offline-btn {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .offline-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        .tracking-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .tracking-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        .request-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            width: 300px;
+            display: none;
+        }
+
+        .request-notification h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .request-info {
+            margin-bottom: 15px;
+        }
+
+        .request-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .accept-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .reject-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .countdown {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #f44336;
+        }
+
+        .confirmation-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            text-align: center;
+            display: none;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .confirmation-message h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .confirmation-message p {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .payment-form {
+            display: none;
+        }
+
+        .payment-form h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .stripe-element {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .payment-btn {
+            background-color: #5469d4;
+            color: white;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .payment-btn:hover {
+            background-color: #4252a8;
+        }
+
+        /* Estilo para o marcador do motorista */
+        .driver-marker {
+            background-color: white;
+            border: 3px solid black;
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -267,106 +547,40 @@
             justify-content: center;
             align-items: center;
         }
-        
-        .car-marker::before {
-            content: "🚗";
-            font-size: 12px;
+
+        .driver-marker::after {
+            content: "";
+            width: 10px;
+            height: 10px;
+            background-color: black;
+            border-radius: 50%;
         }
-        
-        /* Painel do motorista */
-        .driver-panel {
-            display: none;
+
+        .user-info {
             position: fixed;
             top: 70px;
-            right: 0;
-            width: 300px;
-            height: calc(100vh - 70px);
+            left: 20px;
             background-color: white;
-            z-index: 1000;
-            padding: 20px;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-        
-        .driver-panel h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .driver-btn {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 4px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .btn-online {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-offline {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .btn-tracking {
-            background-color: #007bff;
-            color: white;
-        }
-        
-        /* Notificações */
-        .notification {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 15px 20px;
-            background-color: white;
-            border-left: 4px solid #007bff;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 2000;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            z-index: 999;
             display: none;
-            max-width: 350px;
         }
-        
-        .notification h4 {
-            margin-bottom: 5px;
+
+        .user-info p {
+            margin-bottom: 10px;
             color: #333;
         }
-        
-        .notification-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .notification-btn {
-            padding: 8px 15px;
+
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
             border: none;
-            border-radius: 4px;
+            padding: 8px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .btn-accept {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .btn-reject {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        /* Contador */
-        .timer {
-            font-weight: bold;
-            color: #dc3545;
-            margin-top: 10px;
+            width: 100%;
         }
     </style>
 </head>
@@ -378,177 +592,193 @@
             <p>Seu Táxi Em Lisboa, Quando Precisar</p>
         </div>
         <div class="header-buttons">
-            <button class="btn btn-driver" id="driverBtn">Área do Motorista</button>
-            <button class="btn btn-client" id="clientBtn">Cliente</button>
+            <button id="driver-btn">Área do Motorista</button>
+            <button id="client-btn">Cliente</button>
         </div>
     </header>
-    
+
     <!-- Mapa -->
     <div id="map"></div>
-    
-    <!-- Botão chamar táxi -->
-    <button class="call-taxi-btn" id="callTaxiBtn">Chame GoTáxi - €0,50</button>
-    
-    <!-- Modal de Login -->
-    <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <button class="btn-close" id="closeLoginModal">&times;</button>
-            <h2 id="modalTitle">Login</h2>
-            <div class="form-group">
-                <label for="username">Usuário</label>
-                <input type="text" id="username" placeholder="Digite seu usuário">
-            </div>
-            <div class="form-group">
-                <label for="password">Senha</label>
-                <input type="password" id="password" placeholder="Digite sua senha">
-            </div>
-            <button class="btn-login" id="loginBtn">Entrar</button>
-        </div>
-    </div>
-    
-    <!-- Formulário de Chamada -->
-    <div class="form-container" id="formContainer">
-        <h2>Solicitar Táxi</h2>
-        <form id="taxiForm">
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="name">Nome</label>
-                        <input type="text" id="name" required>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="contact">Contato</label>
-                        <input type="tel" id="contact" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="pickup">Onde você está?</label>
-                        <input type="text" id="pickup" required>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="destination">Pra onde vai?</label>
-                        <input type="text" id="destination" required>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="passengers">Passageiros</label>
-                        <select id="passengers" required>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="arrivalTime">Tempo de chegada</label>
-                        <select id="arrivalTime" required>
-                            <option value="5">5 min</option>
-                            <option value="10">10 min</option>
-                            <option value="15">15 min</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="payment">Forma de pagamento</label>
-                        <select id="payment" required>
-                            <option value="cash">Dinheiro</option>
-                            <option value="card">Cartão</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-col">
-                    <div class="form-group">
-                        <label for="notes">Observação</label>
-                        <input type="text" id="notes">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="payment-section">
-                <h3>Pagamento da Chamada - €0,50</h3>
-                <div id="card-element">
-                    <!-- Elemento do Stripe será inserido aqui -->
-                </div>
-                <button type="button" class="btn-login" id="confirmPaymentBtn">Confirmar Chamada</button>
-            </div>
-            
-            <button type="button" class="whatsapp-btn" id="sendWhatsappBtn" disabled>
-                <i>📱</i> Enviar Via WhatsApp
-            </button>
-        </form>
-    </div>
-    
-    <!-- Painel do Motorista -->
-    <div class="driver-panel" id="driverPanel">
-        <h3>Painel do Motorista</h3>
-        <button class="driver-btn btn-online" id="goOnlineBtn">Ficar Online</button>
-        <button class="driver-btn btn-offline" id="goOfflineBtn" style="display:none;">Ficar Offline</button>
-        <button class="driver-btn btn-tracking" id="startTrackingBtn">Iniciar Rastreamento</button>
-        
-        <div id="driverInfo">
-            <p><strong>Nome:</strong> <span id="driverName">-</span></p>
-            <p><strong>Status:</strong> <span id="driverStatus">Offline</span></p>
-            <p><strong>Placa:</strong> <span id="driverPlate">-</span></p>
-            <p><strong>Carro:</strong> <span id="driverCar">-</span></p>
-        </div>
-        
-        <div id="currentRide" style="display:none; margin-top:20px;">
-            <h4>Corrida Atual</h4>
-            <p><strong>Cliente:</strong> <span id="rideClient">-</span></p>
-            <p><strong>Origem:</strong> <span id="rideOrigin">-</span></p>
-            <p><strong>Destino:</strong> <span id="rideDestination">-</span></p>
-            <p><strong>Contato:</strong> <span id="rideContact">-</span></p>
-        </div>
-    </div>
-    
-    <!-- Notificação para Motorista -->
-    <div class="notification" id="driverNotification">
-        <h4>Nova Solicitação de Táxi</h4>
-        <p><strong>Cliente:</strong> <span id="notifClient">-</span></p>
-        <p><strong>Origem:</strong> <span id="notifOrigin">-</span></p>
-        <p><strong>Destino:</strong> <span id="notifDestination">-</span></p>
-        <p><strong>Contato:</strong> <span id="notifContact">-</span></p>
-        <div class="notification-buttons">
-            <button class="notification-btn btn-accept" id="acceptRideBtn">Aceitar</button>
-            <button class="notification-btn btn-reject" id="rejectRideBtn">Rejeitar</button>
-        </div>
-        <div class="timer" id="notificationTimer">60s</div>
-    </div>
-    
-    <!-- Notificação para Cliente -->
-    <div class="notification" id="clientNotification">
-        <h4 id="clientNotifTitle">Status da Corrida</h4>
-        <p id="clientNotifMessage">-</p>
+
+    <!-- Botão de chamar táxi -->
+    <button class="call-taxi-btn" id="call-taxi-btn">Chame GoTáxi - €0,50</button>
+
+    <!-- Informações do usuário -->
+    <div class="user-info" id="user-info">
+        <p id="user-welcome">Bem-vindo, </p>
+        <button class="logout-btn" id="logout-btn">Sair</button>
     </div>
 
-    <!-- Scripts -->
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
+    <!-- Modal de formulário -->
+    <div class="modal" id="form-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Solicitar Táxi</h2>
+                <button class="close-btn" id="close-form-btn">&times;</button>
+            </div>
+            <form id="taxi-form">
+                <div class="form-group">
+                    <label for="name">Nome</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="pickup">Onde você está?</label>
+                    <input type="text" id="pickup" required>
+                </div>
+                <div class="form-group">
+                    <label for="destination">Pra onde vai?</label>
+                    <input type="text" id="destination" required>
+                </div>
+                <div class="form-group">
+                    <label for="passengers">Passageiros</label>
+                    <select id="passengers" required>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Contato</label>
+                    <input type="tel" id="contact" required>
+                </div>
+                <div class="form-group">
+                    <label>Tempo de chegada</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="time" value="5min" required> 5min</label>
+                        <label><input type="radio" name="time" value="10min"> 10min</label>
+                        <label><input type="radio" name="time" value="15min"> 15min</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="payment">Forma de pagamento</label>
+                    <select id="payment" required>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="cartao">Cartão</option>
+                        <option value="mbway">MBWay</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Observação</label>
+                    <textarea id="notes" rows="3"></textarea>
+                </div>
+                
+                <div class="payment-form" id="payment-form">
+                    <h3>Pagamento - €0,50</h3>
+                    <div id="card-element" class="stripe-element"></div>
+                    <button type="button" class="payment-btn" id="confirm-payment-btn">Confirmar Pagamento</button>
+                </div>
+                
+                <button type="button" class="submit-btn" id="submit-form-btn">Finalizar Chamada</button>
+                <button type="button" class="whatsapp-btn" id="whatsapp-btn" disabled>
+                    <i class="fab fa-whatsapp"></i> Enviar Via WhatsApp
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de login -->
+    <div class="login-modal" id="login-modal">
+        <div class="login-content">
+            <div class="login-header">
+                <h2 id="login-title">Login</h2>
+                <p id="login-subtitle">Entre na sua conta</p>
+            </div>
+            <div class="warning-message" id="auth-warning" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Sistema de autenticação temporariamente indisponível. Use as credenciais de demonstração.
+            </div>
+            <div class="login-options">
+                <div class="login-option active" id="client-option">Cliente</div>
+                <div class="login-option" id="driver-option">Motorista</div>
+            </div>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="login-tab">Entrar</div>
+                <div class="auth-tab" id="register-tab">Registrar</div>
+            </div>
+            
+            <form id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="submit-btn">Entrar</button>
+            </form>
+            
+            <form id="register-form" class="auth-form">
+                <div class="form-group">
+                    <label for="reg-name">Nome Completo</label>
+                    <input type="text" id="reg-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-username">Usuário</label>
+                    <input type="text" id="reg-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-phone">Telefone</label>
+                    <input type="tel" id="reg-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Senha</label>
+                    <input type="password" id="reg-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-confirm-password">Confirmar Senha</label>
+                    <input type="password" id="reg-confirm-password" required>
+                </div>
+                <button type="submit" class="submit-btn">Registrar</button>
+            </form>
+
+            <div class="demo-credentials">
+                <h4>Credenciais de Demonstração:</h4>
+                <ul>
+                    <li><strong>Motoristas:</strong> Mega / Heitor / Marcelo | Senha: 12345</li>
+                    <li><strong>Cliente:</strong> cliente | Senha: 12345</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel do motorista -->
+    <div class="driver-panel" id="driver-panel">
+        <h3>Painel do Motorista</h3>
+        <div class="driver-controls">
+            <button class="driver-btn online-btn" id="online-btn">Ficar Online</button>
+            <button class="driver-btn tracking-btn" id="tracking-btn">Iniciar Rastreamento</button>
+            <button class="driver-btn offline-btn" id="offline-btn">Ficar Offline</button>
+        </div>
+    </div>
+
+    <!-- Notificação de solicitação -->
+    <div class="request-notification" id="request-notification">
+        <h3>Solicitação de Táxi</h3>
+        <div class="request-info" id="request-info">
+            <!-- Informações da solicitação serão preenchidas aqui -->
+        </div>
+        <div class="request-actions">
+            <button class="accept-btn" id="accept-btn">Aceitar</button>
+            <button class="reject-btn" id="reject-btn">Rejeitar</button>
+        </div>
+        <div class="countdown" id="countdown">60s</div>
+    </div>
+
+    <!-- Mensagem de confirmação -->
+    <div class="confirmation-message" id="confirmation-message">
+        <h3>Chamada Confirmada!</h3>
+        <p id="driver-info">Seu motorista está a caminho.</p>
+        <p>Aguarde a chegada do táxi.</p>
+        <button class="submit-btn" id="close-confirmation-btn">OK</button>
+    </div>
+
     <script>
         // Configuração do Firebase
         const firebaseConfig = {
@@ -559,380 +789,380 @@
             messagingSenderId: "467502556237",
             appId: "1:467502556237:web:ff0074a42a664f7efba804"
         };
-        
+
         // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        
+        let firebaseApp;
+        let auth;
+        let db;
+        let rtdb;
+        let firebaseInitialized = false;
+
+        try {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            rtdb = firebase.database();
+            firebaseInitialized = true;
+            console.log('Firebase inicializado com sucesso');
+        } catch (error) {
+            console.warn('Erro ao inicializar Firebase, usando modo de demonstração:', error);
+            firebaseInitialized = false;
+            document.getElementById('auth-warning').style.display = 'block';
+        }
+
         // Configuração do Stripe
         const stripe = Stripe('pk_live_51SGN5U2HvDIJYgktaJbjaVG6KwJY1vavWq1OW4XOj5mMGsTrIZ1yqRX4mhOV76G9XVYn4CTWl6kUYcM1OzFa1r2P00QncLSuPE');
         const elements = stripe.elements();
         const cardElement = elements.create('card');
-        
-        // Inicializar mapa
-        let map = L.map('map').setView([38.7223, -9.1393], 13); // Coordenadas de Lisboa
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-        
+        cardElement.mount('#card-element');
+
         // Variáveis globais
+        let map;
         let userLocation = null;
         let userMarker = null;
         let drivers = {};
         let currentUser = null;
         let userType = null;
+        let isTracking = false;
+        let isOnline = false;
+        let currentRequest = null;
+        let countdownInterval = null;
         let selectedDriver = null;
-        let rideRequest = null;
-        let paymentConfirmed = false;
-        let driverWatchId = null;
-        let notificationTimer = null;
-        let timeLeft = 60;
-        
-        // Elementos DOM
-        const driverBtn = document.getElementById('driverBtn');
-        const clientBtn = document.getElementById('clientBtn');
-        const callTaxiBtn = document.getElementById('callTaxiBtn');
-        const loginModal = document.getElementById('loginModal');
-        const closeLoginModal = document.getElementById('closeLoginModal');
-        const loginBtn = document.getElementById('loginBtn');
-        const modalTitle = document.getElementById('modalTitle');
-        const formContainer = document.getElementById('formContainer');
-        const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
-        const sendWhatsappBtn = document.getElementById('sendWhatsappBtn');
-        const driverPanel = document.getElementById('driverPanel');
-        const goOnlineBtn = document.getElementById('goOnlineBtn');
-        const goOfflineBtn = document.getElementById('goOfflineBtn');
-        const startTrackingBtn = document.getElementById('startTrackingBtn');
-        const driverNotification = document.getElementById('driverNotification');
-        const acceptRideBtn = document.getElementById('acceptRideBtn');
-        const rejectRideBtn = document.getElementById('rejectRideBtn');
-        const clientNotification = document.getElementById('clientNotification');
-        const notificationTimerEl = document.getElementById('notificationTimer');
-        
-        // Inicializar elementos do Stripe
-        cardElement.mount('#card-element');
-        
-        // Event Listeners
-        driverBtn.addEventListener('click', () => {
-            userType = 'driver';
-            modalTitle.textContent = 'Login do Motorista';
-            loginModal.style.display = 'flex';
-        });
-        
-        clientBtn.addEventListener('click', () => {
-            userType = 'client';
-            modalTitle.textContent = 'Login do Cliente';
-            loginModal.style.display = 'flex';
-        });
-        
-        closeLoginModal.addEventListener('click', () => {
-            loginModal.style.display = 'none';
-        });
-        
-        loginBtn.addEventListener('click', handleLogin);
-        
-        callTaxiBtn.addEventListener('click', () => {
-            if (currentUser && userType === 'client') {
-                formContainer.style.display = 'block';
-            } else {
-                alert('Por favor, faça login como cliente primeiro.');
+
+        // Sistema de usuários local (fallback)
+        const localUsers = {
+            // Motoristas pré-definidos
+            'Mega': { 
+                password: '12345', 
+                type: 'driver', 
+                phone: '939354112',
+                name: 'Mega'
+            },
+            'Heitor': { 
+                password: '12345', 
+                type: 'driver', 
+                phone: '351910603136',
+                name: 'Heitor'
+            },
+            'Marcelo': { 
+                password: '12345', 
+                type: 'driver', 
+                phone: '351939057350',
+                name: 'Marcelo'
+            },
+            // Cliente de demonstração
+            'cliente': { 
+                password: '12345', 
+                type: 'client',
+                name: 'Cliente Demo'
             }
-        });
-        
-        confirmPaymentBtn.addEventListener('click', handlePayment);
-        
-        sendWhatsappBtn.addEventListener('click', sendWhatsapp);
-        
-        goOnlineBtn.addEventListener('click', goOnline);
-        
-        goOfflineBtn.addEventListener('click', goOffline);
-        
-        startTrackingBtn.addEventListener('click', startTracking);
-        
-        acceptRideBtn.addEventListener('click', acceptRide);
-        
-        rejectRideBtn.addEventListener('click', rejectRide);
-        
-        // Obter localização do usuário
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
-                    };
-                    
-                    // Centralizar mapa na localização do usuário
-                    map.setView([userLocation.lat, userLocation.lng], 15);
-                    
-                    // Adicionar marcador do usuário
-                    userMarker = L.marker([userLocation.lat, userLocation.lng])
-                        .addTo(map)
-                        .bindPopup('Sua localização')
-                        .openPopup();
-                },
-                (error) => {
-                    console.error('Erro ao obter localização:', error);
-                    alert('Não foi possível obter sua localização. O mapa será centralizado em Lisboa.');
-                }
-            );
-        }
-        
-        // Função de login
-        function handleLogin() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+        };
+
+        // Usuários registrados localmente
+        const registeredUsers = JSON.parse(localStorage.getItem('gotaxi_users') || '{}');
+
+        // Inicializar mapa
+        function initMap() {
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
             
-            // Credenciais dos motoristas
-            const drivers = {
-                'Mega': { password: '12345', phone: '939354112', plate: 'AB-12-CD', car: 'Toyota Prius' },
-                'Heitor': { password: '12345', phone: '351910603136', plate: 'EF-34-GH', car: 'Mercedes-Benz' },
-                'Marcelo': { password: '12345', phone: '351939057350', plate: 'IJ-56-KL', car: 'BMW Série 3' }
-            };
-            
-            if (userType === 'driver') {
-                // Verificar credenciais do motorista
-                if (drivers[username] && drivers[username].password === password) {
-                    currentUser = {
-                        name: username,
-                        phone: drivers[username].phone,
-                        plate: drivers[username].plate,
-                        car: drivers[username].car,
-                        type: 'driver'
-                    };
-                    
-                    loginModal.style.display = 'none';
-                    driverPanel.style.display = 'block';
-                    
-                    // Atualizar informações do motorista no painel
-                    document.getElementById('driverName').textContent = currentUser.name;
-                    document.getElementById('driverPlate').textContent = currentUser.plate;
-                    document.getElementById('driverCar').textContent = currentUser.car;
-                    
-                    // Escutar por solicitações de corrida
-                    listenForRideRequests();
-                    
-                    alert(`Login bem-sucedido! Bem-vindo, ${username}`);
-                } else {
-                    alert('Credenciais inválidas para motorista.');
-                }
-            } else if (userType === 'client') {
-                // Para clientes, qualquer login funciona (simulação)
-                currentUser = {
-                    name: username,
-                    type: 'client'
-                };
-                
-                loginModal.style.display = 'none';
-                alert(`Login bem-sucedido! Bem-vindo, ${username}`);
-            }
-        }
-        
-        // Função para processar pagamento
-        function handlePayment() {
-            // Simulação de processamento de pagamento com Stripe
-            // Em um ambiente real, você criaria um PaymentIntent no servidor
-            
-            confirmPaymentBtn.disabled = true;
-            confirmPaymentBtn.textContent = 'Processando...';
-            
-            // Simular processamento
-            setTimeout(() => {
-                paymentConfirmed = true;
-                confirmPaymentBtn.textContent = 'Pagamento Confirmado';
-                confirmPaymentBtn.style.backgroundColor = '#28a745';
-                sendWhatsappBtn.disabled = false;
-                
-                // Salvar dados da solicitação
-                rideRequest = {
-                    clientName: document.getElementById('name').value,
-                    pickup: document.getElementById('pickup').value,
-                    destination: document.getElementById('destination').value,
-                    passengers: document.getElementById('passengers').value,
-                    contact: document.getElementById('contact').value,
-                    arrivalTime: document.getElementById('arrivalTime').value,
-                    payment: document.getElementById('payment').value,
-                    notes: document.getElementById('notes').value,
-                    timestamp: new Date()
-                };
-                
-                // Encontrar motorista mais próximo
-                findNearestDriver();
-                
-                alert('Pagamento confirmado! Agora você pode enviar a solicitação via WhatsApp.');
-            }, 2000);
-        }
-        
-        // Função para encontrar motorista mais próximo
-        function findNearestDriver() {
-            // Em um sistema real, você consultaria o Firebase para encontrar motoristas online próximos
-            // Aqui vamos simular encontrando um motorista aleatório
-            
-            const driverNames = ['Mega', 'Heitor', 'Marcelo'];
-            const randomDriver = driverNames[Math.floor(Math.random() * driverNames.length)];
-            
-            selectedDriver = randomDriver;
-            
-            // Enviar solicitação para o motorista
-            sendRideRequestToDriver();
-        }
-        
-        // Função para enviar solicitação para o motorista
-        function sendRideRequestToDriver() {
-            // Em um sistema real, você salvaria a solicitação no Firebase
-            // e o motorista escutaria por novas solicitações
-            
-            // Simular envio
-            console.log(`Solicitação enviada para o motorista ${selectedDriver}`);
-            
-            // Mostrar notificação para o motorista (simulação)
-            if (currentUser && currentUser.type === 'driver' && currentUser.name === selectedDriver) {
-                showDriverNotification();
-            }
-        }
-        
-        // Função para mostrar notificação para o motorista
-        function showDriverNotification() {
-            document.getElementById('notifClient').textContent = rideRequest.clientName;
-            document.getElementById('notifOrigin').textContent = rideRequest.pickup;
-            document.getElementById('notifDestination').textContent = rideRequest.destination;
-            document.getElementById('notifContact').textContent = rideRequest.contact;
-            
-            driverNotification.style.display = 'block';
-            
-            // Iniciar contador
-            timeLeft = 60;
-            notificationTimerEl.textContent = `${timeLeft}s`;
-            
-            notificationTimer = setInterval(() => {
-                timeLeft--;
-                notificationTimerEl.textContent = `${timeLeft}s`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(notificationTimer);
-                    driverNotification.style.display = 'none';
-                    // Em um sistema real, você marcaria a solicitação como expirada no Firebase
-                }
-            }, 1000);
-        }
-        
-        // Função para aceitar corrida
-        function acceptRide() {
-            clearInterval(notificationTimer);
-            driverNotification.style.display = 'none';
-            
-            // Atualizar informações no painel do motorista
-            document.getElementById('rideClient').textContent = rideRequest.clientName;
-            document.getElementById('rideOrigin').textContent = rideRequest.pickup;
-            document.getElementById('rideDestination').textContent = rideRequest.destination;
-            document.getElementById('rideContact').textContent = rideRequest.contact;
-            document.getElementById('currentRide').style.display = 'block';
-            
-            // Enviar confirmação para o cliente
-            showClientNotification(
-                'Corrida Aceita!', 
-                `Seu motorista ${currentUser.name} está a caminho. Placa: ${currentUser.plate}, Carro: ${currentUser.car}. Aguarde a chegada.`
-            );
-            
-            // Em um sistema real, você atualizaria o status da corrida no Firebase
-        }
-        
-        // Função para rejeitar corrida
-        function rejectRide() {
-            clearInterval(notificationTimer);
-            driverNotification.style.display = 'none';
-            
-            // Em um sistema real, você marcaria a solicitação como rejeitada no Firebase
-            // e procuraria outro motorista
-            
-            showClientNotification(
-                'Corrida Rejeitada', 
-                'Infelizmente, o motorista rejeitou sua solicitação. Estamos procurando outro motorista.'
-            );
-            
-            // Procurar outro motorista (simulação)
-            setTimeout(() => {
-                findNearestDriver();
-            }, 3000);
-        }
-        
-        // Função para mostrar notificação para o cliente
-        function showClientNotification(title, message) {
-            document.getElementById('clientNotifTitle').textContent = title;
-            document.getElementById('clientNotifMessage').textContent = message;
-            clientNotification.style.display = 'block';
-            
-            setTimeout(() => {
-                clientNotification.style.display = 'none';
-            }, 5000);
-        }
-        
-        // Função para enviar WhatsApp
-        function sendWhatsapp() {
-            if (!paymentConfirmed) {
-                alert('Por favor, confirme o pagamento primeiro.');
-                return;
-            }
-            
-            const message = `Solicitação de Táxi - GoTáxi%0A%0A` +
-                           `Nome: ${rideRequest.clientName}%0A` +
-                           `Origem: ${rideRequest.pickup}%0A` +
-                           `Destino: ${rideRequest.destination}%0A` +
-                           `Passageiros: ${rideRequest.passengers}%0A` +
-                           `Contato: ${rideRequest.contact}%0A` +
-                           `Tempo de chegada: ${rideRequest.arrivalTime} min%0A` +
-                           `Pagamento: ${rideRequest.payment}%0A` +
-                           `Observação: ${rideRequest.notes}`;
-            
-            // Número do motorista (simulação)
-            const driverPhone = '351910603136'; // Número do Heitor como exemplo
-            
-            // Abrir WhatsApp
-            window.open(`https://wa.me/${driverPhone}?text=${message}`, '_blank');
-        }
-        
-        // Função para motorista ficar online
-        function goOnline() {
-            document.getElementById('driverStatus').textContent = 'Online';
-            goOnlineBtn.style.display = 'none';
-            goOfflineBtn.style.display = 'block';
-            
-            // Em um sistema real, você atualizaria o status do motorista no Firebase
-        }
-        
-        // Função para motorista ficar offline
-        function goOffline() {
-            document.getElementById('driverStatus').textContent = 'Offline';
-            goOnlineBtn.style.display = 'block';
-            goOfflineBtn.style.display = 'none';
-            
-            // Em um sistema real, você atualizaria o status do motorista no Firebase
-        }
-        
-        // Função para iniciar rastreamento
-        function startTracking() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: lisbon,
+                zoom: 13,
+                styles: [
+                    {
+                        "featureType": "all",
+                        "elementType": "geometry.fill",
+                        "stylers": [{ "weight": "2.00" }]
+                    },
+                    {
+                        "featureType": "all",
+                        "elementType": "geometry.stroke",
+                        "stylers": [{ "color": "#9c9c9c" }]
+                    },
+                    {
+                        "featureType": "landscape",
+                        "elementType": "all",
+                        "stylers": [{ "color": "#f2f2f2" }]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "all",
+                        "stylers": [
+                            { "saturation": -100 },
+                            { "lightness": 45 }
+                        ]
+                    },
+                    {
+                        "featureType": "road.highway",
+                        "elementType": "all",
+                        "stylers": [{ "visibility": "simplified" }]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": [
+                            { "color": "#46bcec" },
+                            { "visibility": "on" }
+                        ]
+                    }
+                ]
+            });
+
+            // Obter localização do usuário
             if (navigator.geolocation) {
-                // Parar rastreamento anterior se existir
-                if (driverWatchId) {
-                    navigator.geolocation.clearWatch(driverWatchId);
-                }
-                
-                // Iniciar novo rastreamento
-                driverWatchId = navigator.geolocation.watchPosition(
+                navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const driverLocation = {
+                        userLocation = {
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
                         };
                         
-                        // Atualizar marcador do motorista no mapa
-                        updateDriverMarker(driverLocation);
+                        map.setCenter(userLocation);
                         
-                        // Em um sistema real, você atualizaria a localização do motorista no Firebase
+                        userMarker = new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            title: 'Sua localização',
+                            icon: {
+                                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                                    <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="10" cy="10" r="8" fill="#4285F4" stroke="white" stroke-width="2"/>
+                                    </svg>
+                                `),
+                                scaledSize: new google.maps.Size(20, 20)
+                            }
+                        });
+                    },
+                    () => {
+                        userLocation = lisbon;
+                    }
+                );
+            } else {
+                userLocation = lisbon;
+            }
+
+            // Inicializar autocomplete
+            const pickupInput = document.getElementById('pickup');
+            const destinationInput = document.getElementById('destination');
+            
+            const pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput);
+            const destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput);
+            
+            listenForDrivers();
+        }
+
+        // Sistema de autenticação simplificado
+        function registerUser(userData) {
+            return new Promise((resolve, reject) => {
+                // Verificar se o usuário já existe
+                if (localUsers[userData.username] || registeredUsers[userData.username]) {
+                    reject('Nome de usuário já existe. Escolha outro.');
+                    return;
+                }
+                
+                // Adicionar usuário localmente
+                registeredUsers[userData.username] = {
+                    password: userData.password,
+                    type: 'client',
+                    name: userData.name,
+                    email: userData.email,
+                    phone: userData.phone
+                };
+                
+                // Salvar no localStorage
+                localStorage.setItem('gotaxi_users', JSON.stringify(registeredUsers));
+                
+                const user = {
+                    uid: 'local_' + userData.username,
+                    displayName: userData.name,
+                    ...userData,
+                    type: 'client'
+                };
+                
+                resolve(user);
+            });
+        }
+
+        function loginUser(username, password, type) {
+            return new Promise((resolve, reject) => {
+                // Verificar usuários pré-definidos primeiro
+                if (localUsers[username] && localUsers[username].password === password && localUsers[username].type === type) {
+                    const userData = localUsers[username];
+                    currentUser = {
+                        uid: 'predef_' + username,
+                        displayName: userData.name || username,
+                        ...userData
+                    };
+                    userType = type;
+                    resolve(currentUser);
+                    return;
+                }
+                
+                // Verificar usuários registrados
+                if (registeredUsers[username] && registeredUsers[username].password === password && registeredUsers[username].type === type) {
+                    const userData = registeredUsers[username];
+                    currentUser = {
+                        uid: 'local_' + username,
+                        displayName: userData.name || username,
+                        ...userData
+                    };
+                    userType = type;
+                    resolve(currentUser);
+                    return;
+                }
+                
+                reject('Usuário não encontrado ou senha incorreta. Use as credenciais de demonstração.');
+            });
+        }
+
+        // Resto das funções permanecem iguais...
+        function listenForDrivers() {
+            if (!firebaseInitialized) {
+                createDemoDrivers();
+                return;
+            }
+
+            rtdb.ref('drivers').on('value', (snapshot) => {
+                const driversData = snapshot.val();
+                
+                Object.values(drivers).forEach(driver => {
+                    if (driver.marker) {
+                        driver.marker.setMap(null);
+                    }
+                });
+                
+                drivers = {};
+                
+                if (driversData) {
+                    Object.keys(driversData).forEach(driverId => {
+                        const driver = driversData[driverId];
+                        if (driver.isOnline && driver.location) {
+                            createDriverMarker(driverId, driver);
+                        }
+                    });
+                }
+            });
+        }
+
+        function createDemoDrivers() {
+            const demoDrivers = {
+                'Mega': {
+                    name: 'Mega',
+                    isOnline: true,
+                    location: userLocation ? 
+                        { lat: userLocation.lat + 0.005, lng: userLocation.lng + 0.005 } :
+                        { lat: 38.7273, lng: -9.1343 }
+                },
+                'Heitor': {
+                    name: 'Heitor',
+                    isOnline: true,
+                    location: userLocation ? 
+                        { lat: userLocation.lat - 0.003, lng: userLocation.lng + 0.007 } :
+                        { lat: 38.7193, lng: -9.1323 }
+                },
+                'Marcelo': {
+                    name: 'Marcelo',
+                    isOnline: true,
+                    location: userLocation ? 
+                        { lat: userLocation.lat + 0.007, lng: userLocation.lng - 0.004 } :
+                        { lat: 38.7293, lng: -9.1433 }
+                }
+            };
+
+            Object.keys(demoDrivers).forEach(driverId => {
+                createDriverMarker(driverId, demoDrivers[driverId]);
+            });
+        }
+
+        function createDriverMarker(driverId, driver) {
+            const driverMarker = new google.maps.Marker({
+                position: driver.location,
+                map: map,
+                title: `Motorista ${driver.name}`,
+                icon: {
+                    url: 'https://www.flaticon.com/free-icon/transport_16062688', // URL do ícone do carrinho
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+            
+            driverMarker.addListener('click', () => {
+                if (currentUser && userType === 'client') {
+                    selectedDriver = driverId;
+                    alert(`Motorista ${driver.name} selecionado. Você pode agora solicitar um táxi.`);
+                }
+            });
+            
+            drivers[driverId] = {
+                ...driver,
+                marker: driverMarker
+            };
+        }
+
+        // Funções restantes (goOnline, goOffline, etc.) permanecem iguais
+        function goOnline() {
+            if (currentUser) {
+                isOnline = true;
+                if (firebaseInitialized) {
+                    rtdb.ref(`drivers/${currentUser.uid}`).update({
+                        isOnline: true,
+                        name: currentUser.displayName || 'Motorista'
+                    });
+                }
+                
+                document.getElementById('online-btn').style.display = 'none';
+                document.getElementById('offline-btn').style.display = 'block';
+                
+                listenForRequests();
+            }
+        }
+
+        function goOffline() {
+            if (currentUser) {
+                isOnline = false;
+                if (firebaseInitialized) {
+                    rtdb.ref(`drivers/${currentUser.uid}`).update({
+                        isOnline: false
+                    });
+                }
+                
+                document.getElementById('online-btn').style.display = 'block';
+                document.getElementById('offline-btn').style.display = 'none';
+                
+                stopTracking();
+            }
+        }
+
+        function startTracking() {
+            isTracking = true;
+            updateDriverLocation();
+            document.getElementById('tracking-btn').textContent = 'Rastreamento Ativo';
+            document.getElementById('tracking-btn').style.backgroundColor = '#4CAF50';
+        }
+
+        function stopTracking() {
+            isTracking = false;
+            document.getElementById('tracking-btn').textContent = 'Iniciar Rastreamento';
+            document.getElementById('tracking-btn').style.backgroundColor = '#2196F3';
+        }
+
+        function updateDriverLocation() {
+            if (navigator.geolocation && isTracking && isOnline && currentUser) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const location = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        if (firebaseInitialized) {
+                            rtdb.ref(`drivers/${currentUser.uid}`).update({
+                                location: location,
+                                lastUpdate: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        }
                     },
                     (error) => {
-                        console.error('Erro ao rastrear localização:', error);
+                        console.error('Erro ao obter localização:', error);
                     },
                     {
                         enableHighAccuracy: true,
@@ -940,41 +1170,159 @@
                         maximumAge: 0
                     }
                 );
-                
-                alert('Rastreamento iniciado! Sua localização está sendo compartilhada.');
-            } else {
-                alert('Geolocalização não suportada pelo navegador.');
             }
         }
-        
-        // Função para atualizar marcador do motorista
-        function updateDriverMarker(location) {
-            // Remover marcador anterior se existir
-            if (window.driverMarker) {
-                map.removeLayer(window.driverMarker);
+
+        function showUserInfo() {
+            if (currentUser) {
+                document.getElementById('user-welcome').textContent = `Bem-vindo, ${currentUser.name || currentUser.displayName}`;
+                document.getElementById('user-info').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            if (userType === 'driver' && isOnline) {
+                goOffline();
             }
             
-            // Adicionar novo marcador
-            window.driverMarker = L.marker([location.lat, location.lng], {
-                icon: L.divIcon({
-                    className: 'car-marker',
-                    iconSize: [20, 20]
-                })
-            }).addTo(map)
-            .bindPopup(`Motorista: ${currentUser.name}<br>Placa: ${currentUser.plate}<br>Carro: ${currentUser.car}`);
+            currentUser = null;
+            userType = null;
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('driver-panel').style.display = 'none';
+            alert('Logout realizado com sucesso.');
         }
-        
-        // Função para escutar por solicitações de corrida
-        function listenForRideRequests() {
-            // Em um sistema real, você escutaria por novas solicitações no Firebase
-            // Aqui é apenas uma simulação
-            console.log('Escutando por solicitações de corrida...');
-        }
-        
-        // Fechar modais ao clicar fora
-        window.addEventListener('click', (event) => {
-            if (event.target === loginModal) {
-                loginModal.style.display = 'none';
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            
+            document.getElementById('driver-btn').addEventListener('click', () => {
+                document.getElementById('login-modal').style.display = 'flex';
+                document.getElementById('login-title').textContent = 'Área do Motorista';
+                document.getElementById('login-subtitle').textContent = 'Entre na sua conta de motorista';
+                document.getElementById('driver-option').click();
+            });
+            
+            document.getElementById('client-btn').addEventListener('click', () => {
+                document.getElementById('login-modal').style.display = 'flex';
+                document.getElementById('login-title').textContent = 'Área do Cliente';
+                document.getElementById('login-subtitle').textContent = 'Entre na sua conta de cliente';
+                document.getElementById('client-option').click();
+            });
+            
+            document.getElementById('call-taxi-btn').addEventListener('click', () => {
+                if (currentUser && userType === 'client') {
+                    document.getElementById('form-modal').style.display = 'flex';
+                } else {
+                    alert('Por favor, faça login como cliente primeiro.');
+                    document.getElementById('client-btn').click();
+                }
+            });
+            
+            document.getElementById('close-form-btn').addEventListener('click', () => {
+                document.getElementById('form-modal').style.display = 'none';
+            });
+            
+            document.getElementById('client-option').addEventListener('click', () => {
+                document.getElementById('client-option').classList.add('active');
+                document.getElementById('driver-option').classList.remove('active');
+                userType = 'client';
+                document.getElementById('register-tab').style.display = 'flex';
+            });
+            
+            document.getElementById('driver-option').addEventListener('click', () => {
+                document.getElementById('driver-option').classList.add('active');
+                document.getElementById('client-option').classList.remove('active');
+                userType = 'driver';
+                document.getElementById('register-tab').style.display = 'none';
+            });
+            
+            document.getElementById('login-tab').addEventListener('click', () => {
+                document.getElementById('login-tab').classList.add('active');
+                document.getElementById('register-tab').classList.remove('active');
+                document.getElementById('login-form').classList.add('active');
+                document.getElementById('register-form').classList.remove('active');
+            });
+            
+            document.getElementById('register-tab').addEventListener('click', () => {
+                if (userType === 'client') {
+                    document.getElementById('register-tab').classList.add('active');
+                    document.getElementById('login-tab').classList.remove('active');
+                    document.getElementById('register-form').classList.add('active');
+                    document.getElementById('login-form').classList.remove('active');
+                } else {
+                    alert('Registro disponível apenas para clientes. Motoristas devem usar as credenciais pré-definidas.');
+                }
+            });
+            
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                loginUser(username, password, userType)
+                    .then((user) => {
+                        document.getElementById('login-modal').style.display = 'none';
+                        showUserInfo();
+                        
+                        if (userType === 'driver') {
+                            document.getElementById('driver-panel').style.display = 'block';
+                            alert('Login como motorista realizado com sucesso!');
+                        } else {
+                            alert('Login como cliente realizado com sucesso! Agora você pode selecionar um motorista no mapa.');
+                        }
+                    })
+                    .catch((error) => {
+                        alert(error);
+                    });
+            });
+            
+            document.getElementById('register-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const userData = {
+                    name: document.getElementById('reg-name').value,
+                    username: document.getElementById('reg-username').value,
+                    email: document.getElementById('reg-email').value,
+                    phone: document.getElementById('reg-phone').value,
+                    password: document.getElementById('reg-password').value
+                };
+                
+                const confirmPassword = document.getElementById('reg-confirm-password').value;
+                
+                if (userData.password !== confirmPassword) {
+                    alert('As senhas não coincidem.');
+                    return;
+                }
+                
+                if (userData.password.length < 6) {
+                    alert('A senha deve ter pelo menos 6 caracteres.');
+                    return;
+                }
+                
+                registerUser(userData)
+                    .then((user) => {
+                        document.getElementById('login-modal').style.display = 'none';
+                        showUserInfo();
+                        alert('Registro realizado com sucesso! Agora você pode selecionar um motorista no mapa.');
+                    })
+                    .catch((error) => {
+                        alert(error);
+                    });
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            
+            document.getElementById('online-btn').addEventListener('click', goOnline);
+            document.getElementById('offline-btn').addEventListener('click', goOffline);
+            document.getElementById('tracking-btn').addEventListener('click', startTracking);
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('form-modal')) {
+                document.getElementById('form-modal').style.display = 'none';
+            }
+            if (e.target === document.getElementById('login-modal')) {
+                document.getElementById('login-modal').style.display = 'none';
             }
         });
     </script>
