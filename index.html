@@ -186,6 +186,7 @@
         /* Página do Motorista */
         #driver-page {
             height: 100vh;
+            background: #f5f5f5;
         }
 
         .driver-header {
@@ -203,6 +204,13 @@
             border: none;
             font-size: 16px;
             cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
         }
 
         .tracking-btn {
@@ -225,6 +233,10 @@
             color: white;
         }
 
+        .tracking-btn.active:hover {
+            background: #45a049;
+        }
+
         #driver-map {
             height: calc(100vh - 70px);
             width: 100%;
@@ -235,16 +247,41 @@
             top: 80px;
             left: 20px;
             background: white;
-            padding: 15px;
+            padding: 15px 20px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             z-index: 999;
             font-weight: bold;
+            border-left: 4px solid #FFD700;
         }
 
         .driver-status.active {
             background: #4CAF50;
             color: white;
+            border-left-color: #45a049;
+        }
+
+        .driver-info {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 999;
+            text-align: center;
+        }
+
+        .driver-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .driver-id {
+            color: #666;
+            font-size: 14px;
         }
 
         /* Página de Formulário */
@@ -453,7 +490,13 @@
         </div>
         
         <div class="driver-status" id="driver-status">
+            <i class="fas fa-circle" style="color: #ff4444; margin-right: 8px;"></i>
             Status: Offline
+        </div>
+        
+        <div class="driver-info">
+            <div class="driver-name">Motorista: Mega</div>
+            <div class="driver-id">ID: MGA001</div>
         </div>
         
         <div id="driver-map"></div>
@@ -648,19 +691,27 @@
             homePage.classList.add('active');
         });
         
-        // Login do motorista
-        loginButton.addEventListener('click', () => {
+        // Login do motorista - CORRIGIDO
+        loginButton.addEventListener('click', function() {
             const login = driverLoginInput.value;
             const password = driverPasswordInput.value;
             
+            console.log('Tentando login:', login, password); // Debug
+            
             if (login === DRIVER_CREDENTIALS.login && password === DRIVER_CREDENTIALS.password) {
                 // Login bem-sucedido
+                console.log('Login bem-sucedido!'); // Debug
                 loginPage.classList.remove('active');
                 driverPage.classList.add('active');
                 initDriverMap();
                 loginError.style.display = 'none';
+                
+                // Limpar campos de login
+                driverLoginInput.value = '';
+                driverPasswordInput.value = '';
             } else {
                 // Login falhou
+                console.log('Login falhou!'); // Debug
                 loginError.style.display = 'block';
             }
         });
@@ -774,7 +825,34 @@
         function initDriverMap() {
             driverMap = new google.maps.Map(document.getElementById('driver-map'), {
                 center: { lat: 38.7223, lng: -9.1393 },
-                zoom: 13
+                zoom: 13,
+                styles: [
+                    {
+                        "featureType": "all",
+                        "elementType": "geometry.fill",
+                        "stylers": [{"weight": "2.00"}]
+                    },
+                    {
+                        "featureType": "all",
+                        "elementType": "geometry.stroke",
+                        "stylers": [{"color": "#9c9c9c"}]
+                    },
+                    {
+                        "featureType": "landscape",
+                        "elementType": "all",
+                        "stylers": [{"color": "#f2f2f2"}]
+                    },
+                    {
+                        "featureType": "road",
+                        "elementType": "all",
+                        "stylers": [{"saturation": -100}, {"lightness": 45}]
+                    },
+                    {
+                        "featureType": "water",
+                        "elementType": "all",
+                        "stylers": [{"color": "#46bcec"}, {"visibility": "on"}]
+                    }
+                ]
             });
             
             // Obter localização inicial do motorista
@@ -843,7 +921,7 @@
                 
                 startTrackingBtn.textContent = 'Parar Rastreamento';
                 startTrackingBtn.classList.add('active');
-                driverStatus.textContent = 'Status: Online - Rastreamento Ativo';
+                driverStatus.innerHTML = '<i class="fas fa-circle" style="color: #4CAF50; margin-right: 8px;"></i> Status: Online - Rastreamento Ativo';
                 driverStatus.classList.add('active');
                 isTracking = true;
                 
@@ -860,7 +938,7 @@
             
             startTrackingBtn.textContent = 'Iniciar Rastreamento';
             startTrackingBtn.classList.remove('active');
-            driverStatus.textContent = 'Status: Offline';
+            driverStatus.innerHTML = '<i class="fas fa-circle" style="color: #ff4444; margin-right: 8px;"></i> Status: Offline';
             driverStatus.classList.remove('active');
             isTracking = false;
             
@@ -873,7 +951,8 @@
             driverRef.set({
                 latitude: location.lat,
                 longitude: location.lng,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                driverName: 'Mega'
             }).catch(error => {
                 console.error('Erro ao salvar no Firebase:', error);
             });
@@ -897,7 +976,7 @@
                         driverMarkerMain = new google.maps.Marker({
                             position: driverLocation,
                             map: map,
-                            title: 'Motorista GoTáxi',
+                            title: 'Motorista GoTáxi - Mega',
                             icon: {
                                 url: driverIconUrl,
                                 scaledSize: new google.maps.Size(45, 45),
