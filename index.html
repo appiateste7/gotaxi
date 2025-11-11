@@ -164,6 +164,11 @@
             background: #FFC400;
         }
 
+        .tracking-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
         /* Página de Formulário */
         #form-page {
             min-height: 100vh;
@@ -306,6 +311,23 @@
             color: #C62828;
             display: block;
         }
+
+        .driver-status {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 999;
+            font-weight: bold;
+        }
+
+        .driver-status.active {
+            background: #4CAF50;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -327,8 +349,11 @@
             </div>
             <button class="btn-call" id="go-to-form">Chame GoTáxi - 0,50€</button>
         </div>
-        
+
         <div id="map"></div>
+        
+        <!-- Marcador do motorista no mapa principal -->
+        <div id="driver-marker-main" style="display: none;"></div>
     </div>
 
     <!-- Página do Motorista -->
@@ -338,6 +363,11 @@
             <div class="logo">Go<span>Táxi</span> Motorista</div>
             <button class="tracking-btn" id="start-tracking">Iniciar Rastreamento</button>
         </div>
+        
+        <div class="driver-status" id="driver-status">
+            Status: Offline
+        </div>
+        
         <div id="driver-map"></div>
     </div>
 
@@ -459,6 +489,7 @@
         const payButton = document.getElementById('pay-button');
         const whatsappButton = document.getElementById('whatsapp-button');
         const paymentStatus = document.getElementById('payment-status');
+        const driverStatus = document.getElementById('driver-status');
         
         const currentLocationInput = document.getElementById('current-location');
         const destinationInput = document.getElementById('destination');
@@ -469,9 +500,16 @@
         let selectedPaymentMethod = 'cash';
         
         // URLs dos ícones
-        const userIconUrl = 'https://cdn-icons-png.flaticon.com/128/4546/4546921.png'; // Novo ícone do usuário
-        const driverIconUrl = 'https://cdn-icons-png.flaticon.com/128/16062/16062688.png'; // Ícone do motorista ativo
+        const userIconUrl = 'https://cdn-icons-png.flaticon.com/128/4546/4546921.png';
+        const driverIconUrl = 'https://cdn-icons-png.flaticon.com/128/16062/16062688.png';
         
+        // Variáveis globais
+        let map, driverMap;
+        let userMarker, driverMarker, driverMarkerMain;
+        let autocomplete;
+        let watchId = null;
+        let isTracking = false;
+
         // Navegação entre páginas
         goToDriverBtn.addEventListener('click', () => {
             homePage.classList.remove('active');
@@ -488,7 +526,6 @@
             homePage.classList.remove('active');
             formPage.classList.add('active');
             
-            // Preencher campos de localização no formulário
             formCurrentLocationInput.value = currentLocationInput.value;
             formDestinationInput.value = destinationInput.value;
         });
@@ -508,174 +545,35 @@
         });
         
         // Inicializar mapa principal
-        let map, driverMap;
-        let userMarker, driverMarker;
-        let autocomplete;
-        
         function initMap() {
-            // Mapa principal
             map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 38.7223, lng: -9.1393 }, // Lisboa
+                center: { lat: 38.7223, lng: -9.1393 },
                 zoom: 13,
                 styles: [
                     {
                         "featureType": "all",
                         "elementType": "geometry.fill",
-                        "stylers": [
-                            {
-                                "weight": "2.00"
-                            }
-                        ]
+                        "stylers": [{"weight": "2.00"}]
                     },
                     {
                         "featureType": "all",
                         "elementType": "geometry.stroke",
-                        "stylers": [
-                            {
-                                "color": "#9c9c9c"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "all",
-                        "elementType": "labels.text",
-                        "stylers": [
-                            {
-                                "visibility": "on"
-                            }
-                        ]
+                        "stylers": [{"color": "#9c9c9c"}]
                     },
                     {
                         "featureType": "landscape",
                         "elementType": "all",
-                        "stylers": [
-                            {
-                                "color": "#f2f2f2"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "landscape",
-                        "elementType": "geometry.fill",
-                        "stylers": [
-                            {
-                                "color": "#ffffff"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "poi",
-                        "elementType": "all",
-                        "stylers": [
-                            {
-                                "visibility": "off"
-                            }
-                        ]
+                        "stylers": [{"color": "#f2f2f2"}]
                     },
                     {
                         "featureType": "road",
                         "elementType": "all",
-                        "stylers": [
-                            {
-                                "saturation": -100
-                            },
-                            {
-                                "lightness": 45
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "road",
-                        "elementType": "geometry.fill",
-                        "stylers": [
-                            {
-                                "color": "#eeeeee"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "road",
-                        "elementType": "labels.text.fill",
-                        "stylers": [
-                            {
-                                "color": "#7b7b7b"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "road",
-                        "elementType": "labels.text.stroke",
-                        "stylers": [
-                            {
-                                "color": "#ffffff"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "road.highway",
-                        "elementType": "all",
-                        "stylers": [
-                            {
-                                "visibility": "simplified"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "road.arterial",
-                        "elementType": "labels.icon",
-                        "stylers": [
-                            {
-                                "visibility": "off"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "transit",
-                        "elementType": "all",
-                        "stylers": [
-                            {
-                                "visibility": "off"
-                            }
-                        ]
+                        "stylers": [{"saturation": -100}, {"lightness": 45}]
                     },
                     {
                         "featureType": "water",
                         "elementType": "all",
-                        "stylers": [
-                            {
-                                "color": "#46bcec"
-                            },
-                            {
-                                "visibility": "on"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "water",
-                        "elementType": "geometry.fill",
-                        "stylers": [
-                            {
-                                "color": "#c8d7d4"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "water",
-                        "elementType": "labels.text.fill",
-                        "stylers": [
-                            {
-                                "color": "#070707"
-                            }
-                        ]
-                    },
-                    {
-                        "featureType": "water",
-                        "elementType": "labels.text.stroke",
-                        "stylers": [
-                            {
-                                "color": "#ffffff"
-                            }
-                        ]
+                        "stylers": [{"color": "#46bcec"}, {"visibility": "on"}]
                     }
                 ]
             });
@@ -689,10 +587,8 @@
                             lng: position.coords.longitude
                         };
                         
-                        // Centralizar mapa na localização do usuário
                         map.setCenter(userLocation);
                         
-                        // Adicionar marcador do usuário com o novo ícone
                         userMarker = new google.maps.Marker({
                             position: userLocation,
                             map: map,
@@ -704,7 +600,6 @@
                             }
                         });
                         
-                        // Preencher campo de localização atual
                         getAddressFromCoordinates(userLocation.lat, userLocation.lng)
                             .then(address => {
                                 currentLocationInput.value = address;
@@ -719,16 +614,13 @@
                 handleLocationError(false, map.getCenter());
             }
             
-            // Configurar autocomplete para o campo de destino
+            // Configurar autocomplete
             autocomplete = new google.maps.places.Autocomplete(destinationInput);
             autocomplete.bindTo('bounds', map);
             
-            // Quando um lugar é selecionado, centralizar o mapa nele
             autocomplete.addListener('place_changed', () => {
                 const place = autocomplete.getPlace();
-                if (!place.geometry) {
-                    return;
-                }
+                if (!place.geometry) return;
                 
                 if (place.geometry.viewport) {
                     map.fitBounds(place.geometry.viewport);
@@ -737,22 +629,19 @@
                     map.setZoom(17);
                 }
             });
+
+            // Iniciar escuta das atualizações do motorista
+            startDriverTrackingListener();
         }
         
         function initDriverMap() {
-            // Mapa do motorista
             driverMap = new google.maps.Map(document.getElementById('driver-map'), {
-                center: { lat: 38.7223, lng: -9.1393 }, // Lisboa
+                center: { lat: 38.7223, lng: -9.1393 },
                 zoom: 13
             });
             
-            // Inicializar rastreamento quando o botão for clicado
-            startTrackingBtn.addEventListener('click', startDriverTracking);
-        }
-        
-        function startDriverTracking() {
+            // Obter localização inicial do motorista
             if (navigator.geolocation) {
-                // Obter localização atual do motorista
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const driverLocation = {
@@ -760,10 +649,9 @@
                             lng: position.coords.longitude
                         };
                         
-                        // Centralizar mapa na localização do motorista
                         driverMap.setCenter(driverLocation);
                         
-                        // Adicionar marcador do carro com o ícone do motorista ativo
+                        // Adicionar marcador no mapa do motorista
                         driverMarker = new google.maps.Marker({
                             position: driverLocation,
                             map: driverMap,
@@ -774,56 +662,126 @@
                                 anchor: new google.maps.Point(25, 25)
                             }
                         });
-                        
-                        // Atualizar botão
-                        startTrackingBtn.textContent = 'Rastreamento Ativo';
-                        startTrackingBtn.style.background = '#4CAF50';
-                        startTrackingBtn.disabled = true;
-                        
-                        // Salvar localização no Firebase
-                        saveDriverLocation(driverLocation);
-                        
-                        // Atualizar localização em tempo real
-                        navigator.geolocation.watchPosition(
-                            (position) => {
-                                const newLocation = {
-                                    lat: position.coords.latitude,
-                                    lng: position.coords.longitude
-                                };
-                                
-                                // Atualizar marcador
-                                driverMarker.setPosition(newLocation);
-                                driverMap.setCenter(newLocation);
-                                
-                                // Atualizar Firebase
-                                saveDriverLocation(newLocation);
-                            },
-                            (error) => {
-                                console.error('Erro ao obter localização:', error);
-                            },
-                            {
-                                enableHighAccuracy: true,
-                                timeout: 5000,
-                                maximumAge: 0
-                            }
-                        );
                     },
                     (error) => {
                         console.error('Erro ao obter localização:', error);
-                        alert('Não foi possível obter sua localização. Verifique as permissões do navegador.');
                     }
                 );
+            }
+        }
+        
+        function startDriverTracking() {
+            if (isTracking) {
+                // Parar rastreamento
+                if (watchId) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+                
+                startTrackingBtn.textContent = 'Iniciar Rastreamento';
+                startTrackingBtn.classList.remove('active');
+                driverStatus.textContent = 'Status: Offline';
+                driverStatus.classList.remove('active');
+                isTracking = false;
+                
+                // Remover dados do Firebase
+                database.ref('drivers/activeDriver').remove();
+                return;
+            }
+            
+            // Iniciar rastreamento
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        const driverLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Atualizar marcador no mapa do motorista
+                        if (driverMarker) {
+                            driverMarker.setPosition(driverLocation);
+                            driverMap.setCenter(driverLocation);
+                        }
+                        
+                        // Salvar no Firebase
+                        saveDriverLocation(driverLocation);
+                    },
+                    (error) => {
+                        console.error('Erro ao obter localização:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+                
+                startTrackingBtn.textContent = 'Parar Rastreamento';
+                startTrackingBtn.classList.add('active');
+                driverStatus.textContent = 'Status: Online - Rastreamento Ativo';
+                driverStatus.classList.add('active');
+                isTracking = true;
+                
             } else {
                 alert('Seu navegador não suporta geolocalização.');
             }
         }
         
         function saveDriverLocation(location) {
-            const driverRef = database.ref('drivers/driver1');
+            const driverRef = database.ref('drivers/activeDriver');
             driverRef.set({
                 latitude: location.lat,
                 longitude: location.lng,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).catch(error => {
+                console.error('Erro ao salvar no Firebase:', error);
+            });
+        }
+        
+        function startDriverTrackingListener() {
+            // Escutar atualizações do motorista no Firebase
+            const driverRef = database.ref('drivers/activeDriver');
+            
+            driverRef.on('value', (snapshot) => {
+                const driverData = snapshot.val();
+                
+                if (driverData && driverData.latitude && driverData.longitude) {
+                    const driverLocation = {
+                        lat: driverData.latitude,
+                        lng: driverData.longitude
+                    };
+                    
+                    // Atualizar ou criar marcador do motorista no mapa principal
+                    if (!driverMarkerMain) {
+                        driverMarkerMain = new google.maps.Marker({
+                            position: driverLocation,
+                            map: map,
+                            title: 'Motorista GoTáxi',
+                            icon: {
+                                url: driverIconUrl,
+                                scaledSize: new google.maps.Size(45, 45),
+                                anchor: new google.maps.Point(22, 22)
+                            }
+                        });
+                    } else {
+                        driverMarkerMain.setPosition(driverLocation);
+                    }
+                    
+                    // Centralizar mapa no motorista se estiver muito longe
+                    const bounds = map.getBounds();
+                    if (!bounds || !bounds.contains(driverMarkerMain.getPosition())) {
+                        map.setCenter(driverLocation);
+                    }
+                } else {
+                    // Remover marcador se não há motorista ativo
+                    if (driverMarkerMain) {
+                        driverMarkerMain.setMap(null);
+                        driverMarkerMain = null;
+                    }
+                }
+            }, (error) => {
+                console.error('Erro ao escutar Firebase:', error);
             });
         }
         
@@ -843,36 +801,23 @@
         }
         
         function handleLocationError(browserHasGeolocation, pos) {
-            console.error(
-                browserHasGeolocation
-                    ? 'Erro: O serviço de geolocalização falhou.'
-                    : 'Erro: Seu navegador não suporta geolocalização.'
-            );
-            
-            // Definir localização padrão (Lisboa)
             currentLocationInput.value = 'Lisboa, Portugal';
             formCurrentLocationInput.value = 'Lisboa, Portugal';
         }
         
-        // Processamento de pagamento com Stripe
+        // Event Listeners
+        startTrackingBtn.addEventListener('click', startDriverTracking);
+        
         payButton.addEventListener('click', async () => {
-            // Desativar botão para evitar múltiplos cliques
             payButton.disabled = true;
             payButton.textContent = 'Processando...';
             
             try {
-                // Simulação de processamento de pagamento
-                // Em um ambiente real, você faria uma chamada para seu backend
-                // que criaria uma sessão de checkout com o Stripe
-                
-                // Simular atraso de processamento
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
-                // Simular sucesso no pagamento
                 paymentStatus.textContent = 'Pagamento processado com sucesso! Agora você pode enviar sua solicitação via WhatsApp.';
                 paymentStatus.className = 'status-message success';
                 
-                // Ativar botão do WhatsApp
                 whatsappButton.classList.add('active');
                 
             } catch (error) {
@@ -880,15 +825,12 @@
                 paymentStatus.textContent = 'Erro no processamento do pagamento. Tente novamente.';
                 paymentStatus.className = 'status-message error';
                 
-                // Reativar botão de pagamento
                 payButton.disabled = false;
                 payButton.textContent = 'Pagar 0,50€ e Confirmar Chamada';
             }
         });
         
-        // Envio via WhatsApp
         whatsappButton.addEventListener('click', () => {
-            // Coletar dados do formulário
             const formData = {
                 name: document.getElementById('name').value,
                 currentLocation: formCurrentLocationInput.value,
@@ -900,7 +842,6 @@
                 notes: document.getElementById('notes').value
             };
             
-            // Formatar mensagem para WhatsApp
             const message = `*Solicitação de Táxi - GoTáxi*%0A%0A` +
                            `*Nome:* ${formData.name}%0A` +
                            `*Onde está:* ${formData.currentLocation}%0A` +
@@ -911,7 +852,6 @@
                            `*Forma de pagamento:* ${formData.paymentMethod === 'cash' ? 'Dinheiro' : 'Cartão'}%0A` +
                            `*Observação:* ${formData.notes || 'Nenhuma'}`;
             
-            // Abrir WhatsApp com a mensagem pré-preenchida
             window.open(`https://wa.me/?text=${message}`, '_blank');
         });
     </script>
