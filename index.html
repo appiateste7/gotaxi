@@ -127,6 +127,62 @@
             background: #FFC400;
         }
 
+        /* Página de Login do Motorista */
+        #login-page {
+            height: 100vh;
+            background: linear-gradient(135deg, #000000, #333333);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .btn-login {
+            background: #FFD700;
+            color: black;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #FFC400;
+        }
+
+        .login-error {
+            color: #ff4444;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
         /* Página do Motorista */
         #driver-page {
             height: 100vh;
@@ -165,6 +221,28 @@
         }
 
         .tracking-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        #driver-map {
+            height: calc(100vh - 70px);
+            width: 100%;
+        }
+
+        .driver-status {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 999;
+            font-weight: bold;
+        }
+
+        .driver-status.active {
             background: #4CAF50;
             color: white;
         }
@@ -311,23 +389,6 @@
             color: #C62828;
             display: block;
         }
-
-        .driver-status {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 999;
-            font-weight: bold;
-        }
-
-        .driver-status.active {
-            background: #4CAF50;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -351,15 +412,42 @@
         </div>
 
         <div id="map"></div>
-        
-        <!-- Marcador do motorista no mapa principal -->
-        <div id="driver-marker-main" style="display: none;"></div>
+    </div>
+
+    <!-- Página de Login do Motorista -->
+    <div id="login-page" class="page">
+        <div class="login-container">
+            <div class="login-logo">
+                <div class="logo">Go<span>Táxi</span></div>
+            </div>
+            <h2 class="login-title">Área do Motorista</h2>
+            
+            <div class="form-group">
+                <label for="driver-login">Login</label>
+                <input type="text" id="driver-login" placeholder="Digite seu login">
+            </div>
+            
+            <div class="form-group">
+                <label for="driver-password">Senha</label>
+                <input type="password" id="driver-password" placeholder="Digite sua senha">
+            </div>
+            
+            <button class="btn-login" id="login-button">Entrar</button>
+            
+            <div class="login-error" id="login-error">
+                Login ou senha incorretos!
+            </div>
+            
+            <button class="back-btn" id="back-from-login" style="margin-top: 20px; background: #eee; padding: 10px; width: 100%; border-radius: 5px;">
+                <i class="fas fa-arrow-left"></i> Voltar para o Mapa
+            </button>
+        </div>
     </div>
 
     <!-- Página do Motorista -->
     <div id="driver-page" class="page">
         <div class="driver-header">
-            <button class="back-btn" id="back-from-driver"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <button class="back-btn" id="back-from-driver"><i class="fas fa-arrow-left"></i> Sair</button>
             <div class="logo">Go<span>Táxi</span> Motorista</div>
             <button class="tracking-btn" id="start-tracking">Iniciar Rastreamento</button>
         </div>
@@ -477,24 +565,30 @@
         
         // Elementos da página
         const homePage = document.getElementById('home-page');
+        const loginPage = document.getElementById('login-page');
         const driverPage = document.getElementById('driver-page');
         const formPage = document.getElementById('form-page');
         
         const goToDriverBtn = document.getElementById('go-to-driver');
+        const backFromLoginBtn = document.getElementById('back-from-login');
         const backFromDriverBtn = document.getElementById('back-from-driver');
         const goToFormBtn = document.getElementById('go-to-form');
         const backFromFormBtn = document.getElementById('back-from-form');
         
+        const loginButton = document.getElementById('login-button');
         const startTrackingBtn = document.getElementById('start-tracking');
         const payButton = document.getElementById('pay-button');
         const whatsappButton = document.getElementById('whatsapp-button');
         const paymentStatus = document.getElementById('payment-status');
         const driverStatus = document.getElementById('driver-status');
+        const loginError = document.getElementById('login-error');
         
         const currentLocationInput = document.getElementById('current-location');
         const destinationInput = document.getElementById('destination');
         const formCurrentLocationInput = document.getElementById('form-current-location');
         const formDestinationInput = document.getElementById('form-destination');
+        const driverLoginInput = document.getElementById('driver-login');
+        const driverPasswordInput = document.getElementById('driver-password');
         
         const paymentOptions = document.querySelectorAll('.payment-option');
         let selectedPaymentMethod = 'cash';
@@ -510,14 +604,33 @@
         let watchId = null;
         let isTracking = false;
 
+        // Credenciais do motorista
+        const DRIVER_CREDENTIALS = {
+            login: 'Mega',
+            password: '12345'
+        };
+
         // Navegação entre páginas
         goToDriverBtn.addEventListener('click', () => {
             homePage.classList.remove('active');
-            driverPage.classList.add('active');
-            initDriverMap();
+            loginPage.classList.add('active');
+        });
+        
+        backFromLoginBtn.addEventListener('click', () => {
+            loginPage.classList.remove('active');
+            homePage.classList.add('active');
+            // Limpar campos de login
+            driverLoginInput.value = '';
+            driverPasswordInput.value = '';
+            loginError.style.display = 'none';
         });
         
         backFromDriverBtn.addEventListener('click', () => {
+            // Parar rastreamento se estiver ativo
+            if (isTracking) {
+                stopTracking();
+            }
+            
             driverPage.classList.remove('active');
             homePage.classList.add('active');
         });
@@ -533,6 +646,30 @@
         backFromFormBtn.addEventListener('click', () => {
             formPage.classList.remove('active');
             homePage.classList.add('active');
+        });
+        
+        // Login do motorista
+        loginButton.addEventListener('click', () => {
+            const login = driverLoginInput.value;
+            const password = driverPasswordInput.value;
+            
+            if (login === DRIVER_CREDENTIALS.login && password === DRIVER_CREDENTIALS.password) {
+                // Login bem-sucedido
+                loginPage.classList.remove('active');
+                driverPage.classList.add('active');
+                initDriverMap();
+                loginError.style.display = 'none';
+            } else {
+                // Login falhou
+                loginError.style.display = 'block';
+            }
+        });
+        
+        // Enter para login
+        driverPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginButton.click();
+            }
         });
         
         // Seleção de método de pagamento
@@ -672,20 +809,7 @@
         
         function startDriverTracking() {
             if (isTracking) {
-                // Parar rastreamento
-                if (watchId) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-                
-                startTrackingBtn.textContent = 'Iniciar Rastreamento';
-                startTrackingBtn.classList.remove('active');
-                driverStatus.textContent = 'Status: Offline';
-                driverStatus.classList.remove('active');
-                isTracking = false;
-                
-                // Remover dados do Firebase
-                database.ref('drivers/activeDriver').remove();
+                stopTracking();
                 return;
             }
             
@@ -726,6 +850,22 @@
             } else {
                 alert('Seu navegador não suporta geolocalização.');
             }
+        }
+        
+        function stopTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            startTrackingBtn.textContent = 'Iniciar Rastreamento';
+            startTrackingBtn.classList.remove('active');
+            driverStatus.textContent = 'Status: Offline';
+            driverStatus.classList.remove('active');
+            isTracking = false;
+            
+            // Remover dados do Firebase
+            database.ref('drivers/activeDriver').remove();
         }
         
         function saveDriverLocation(location) {
