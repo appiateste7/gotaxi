@@ -653,15 +653,24 @@
             password: '12345'
         };
 
+        // Função para navegar entre páginas
+        function showPage(pageToShow) {
+            // Esconder todas as páginas
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Mostrar a página solicitada
+            pageToShow.classList.add('active');
+        }
+
         // Navegação entre páginas
         goToDriverBtn.addEventListener('click', () => {
-            homePage.classList.remove('active');
-            loginPage.classList.add('active');
+            showPage(loginPage);
         });
         
         backFromLoginBtn.addEventListener('click', () => {
-            loginPage.classList.remove('active');
-            homePage.classList.add('active');
+            showPage(homePage);
             // Limpar campos de login
             driverLoginInput.value = '';
             driverPasswordInput.value = '';
@@ -674,35 +683,31 @@
                 stopTracking();
             }
             
-            driverPage.classList.remove('active');
-            homePage.classList.add('active');
+            showPage(homePage);
         });
         
         goToFormBtn.addEventListener('click', () => {
-            homePage.classList.remove('active');
-            formPage.classList.add('active');
+            showPage(formPage);
             
             formCurrentLocationInput.value = currentLocationInput.value;
             formDestinationInput.value = destinationInput.value;
         });
         
         backFromFormBtn.addEventListener('click', () => {
-            formPage.classList.remove('active');
-            homePage.classList.add('active');
+            showPage(homePage);
         });
         
         // Login do motorista - CORRIGIDO
         loginButton.addEventListener('click', function() {
-            const login = driverLoginInput.value;
-            const password = driverPasswordInput.value;
+            const login = driverLoginInput.value.trim();
+            const password = driverPasswordInput.value.trim();
             
-            console.log('Tentando login:', login, password); // Debug
+            console.log('Tentando login:', login, password);
             
             if (login === DRIVER_CREDENTIALS.login && password === DRIVER_CREDENTIALS.password) {
                 // Login bem-sucedido
-                console.log('Login bem-sucedido!'); // Debug
-                loginPage.classList.remove('active');
-                driverPage.classList.add('active');
+                console.log('Login bem-sucedido!');
+                showPage(driverPage);
                 initDriverMap();
                 loginError.style.display = 'none';
                 
@@ -711,7 +716,7 @@
                 driverPasswordInput.value = '';
             } else {
                 // Login falhou
-                console.log('Login falhou!'); // Debug
+                console.log('Login falhou!');
                 loginError.style.display = 'block';
             }
         });
