@@ -1,97 +1,454 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área do Motorista - GoTáxi</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo span {
+            color: #ffc107;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: #333;
+        }
+        
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .request-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .request-card h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .request-details {
+            margin-bottom: 20px;
+        }
+        
+        .request-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-accept {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .timer {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
-        <div class="logo">
-            <h1>GoTáxi</h1>
-            <p>Área do Motorista</p>
-        </div>
-        <div class="header-buttons">
-            <button id="back-btn" onclick="window.location.href='index.html'">Voltar</button>
-            <button id="logout-btn" style="display:none;">Sair</button>
-        </div>
+        <div class="logo">Go<span>Táxi</span></div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Início</a></li>
+                <li><a href="cliente.html">Cliente</a></li>
+            </ul>
+        </nav>
     </header>
-
-    <!-- Mapa -->
+    
     <div id="map"></div>
-
-    <!-- Painel do motorista -->
-    <div class="driver-panel" id="driver-panel" style="display:none;">
-        <h3>Painel do Motorista</h3>
-        <div class="driver-info">
-            <p id="driver-name">Bem-vindo, </p>
-            <p id="driver-status" class="status-offline">Status: Offline</p>
-        </div>
-        <div class="driver-controls">
-            <button class="driver-btn online-btn" id="online-btn">Ficar Online</button>
-            <button class="driver-btn tracking-btn" id="tracking-btn">Iniciar Rastreamento</button>
-            <button class="driver-btn offline-btn" id="offline-btn" style="display:none;">Ficar Offline</button>
-        </div>
+    
+    <div class="controls">
+        <button id="startTracking" class="btn">Iniciar Rastreamento</button>
+        <button id="stopTracking" class="btn" disabled>Parar Rastreamento</button>
     </div>
-
-    <!-- Notificação de solicitação -->
-    <div class="request-notification" id="request-notification" style="display:none;">
-        <h3>Solicitação de Táxi</h3>
-        <div class="request-info" id="request-info">
-            <!-- Informações da solicitação serão preenchidas aqui -->
+    
+    <div id="notification" class="notification"></div>
+    
+    <div id="requestCard" class="request-card">
+        <h3>Nova Solicitação de Táxi</h3>
+        <div class="timer" id="timer">60</div>
+        <div class="request-details" id="requestDetails">
+            <!-- Detalhes da solicitação serão preenchidos aqui -->
         </div>
         <div class="request-actions">
-            <button class="accept-btn" id="accept-btn">Aceitar</button>
-            <button class="reject-btn" id="reject-btn">Rejeitar</button>
+            <button id="acceptRequest" class="btn btn-accept">Aceitar</button>
+            <button id="rejectRequest" class="btn btn-reject">Rejeitar</button>
         </div>
-        <div class="countdown" id="countdown">60s</div>
     </div>
 
-    <!-- Modal de login -->
-    <div class="login-modal" id="login-modal">
-        <div class="login-content">
-            <div class="login-header">
-                <h2>Área do Motorista</h2>
-                <p>Entre na sua conta</p>
-            </div>
-            <div class="warning-message" id="auth-warning" style="display: none;">
-                <i class="fas fa-exclamation-triangle"></i>
-                Sistema de autenticação temporariamente indisponível. Use as credenciais de demonstração.
-            </div>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variáveis globais
+        let map;
+        let marker;
+        let watchId;
+        let isTracking = false;
+        let countdown;
+        
+        // Inicializar mapa
+        function initMap() {
+            // Posição inicial (Lisboa)
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
             
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="username">Usuário</label>
-                    <input type="text" id="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" required>
-                </div>
-                <button type="submit" class="submit-btn">Entrar</button>
-            </form>
-
-            <div class="demo-credentials">
-                <h4>Credenciais de Demonstração:</h4>
-                <ul>
-                    <li><strong>Mega</strong> | Senha: 12345</li>
-                    <li><strong>Heitor</strong> | Senha: 12345</li>
-                    <li><strong>Marcelo</strong> | Senha: 12345</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <script src="firebase-config.js"></script>
-    <script src="auth.js"></script>
-    <script src="motorista.js"></script>
+            // Criar mapa
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+            
+            // Criar marcador inicial
+            marker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: "Sua Localização",
+                icon: {
+                    url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+            
+            // Tentar obter localização atual
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        marker.setPosition(pos);
+                        map.setCenter(pos);
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                // Navegador não suporta Geolocation
+                handleLocationError(false, map.getCenter());
+            }
+        }
+        
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            // Mostrar notificação de erro
+            showNotification("Não foi possível obter sua localização.", true);
+        }
+        
+        // Iniciar rastreamento
+        document.getElementById("startTracking").addEventListener("click", function() {
+            if (!navigator.geolocation) {
+                showNotification("Seu navegador não suporta geolocalização.", true);
+                return;
+            }
+            
+            isTracking = true;
+            document.getElementById("startTracking").disabled = true;
+            document.getElementById("stopTracking").disabled = false;
+            
+            showNotification("Rastreamento iniciado. Você está visível para os clientes.");
+            
+            // Atualizar status no Firebase
+            database.ref('drivers/driver1').update({
+                status: 'online',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Iniciar watch de posição
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    
+                    // Atualizar marcador no mapa
+                    marker.setPosition(pos);
+                    map.setCenter(pos);
+                    
+                    // Atualizar posição no Firebase
+                    database.ref('drivers/driver1').update({
+                        location: pos,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                },
+                (error) => {
+                    console.error("Erro ao obter localização:", error);
+                    showNotification("Erro ao obter localização.", true);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+            
+            // Escutar por solicitações de clientes
+            listenForRequests();
+        });
+        
+        // Parar rastreamento
+        document.getElementById("stopTracking").addEventListener("click", function() {
+            isTracking = false;
+            document.getElementById("startTracking").disabled = false;
+            document.getElementById("stopTracking").disabled = true;
+            
+            showNotification("Rastreamento parado. Você não está mais visível para os clientes.");
+            
+            // Parar watch de posição
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            
+            // Atualizar status no Firebase
+            database.ref('drivers/driver1').update({
+                status: 'offline',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        });
+        
+        // Escutar por solicitações de clientes
+        function listenForRequests() {
+            database.ref('ride_requests').on('child_added', (snapshot) => {
+                const request = snapshot.val();
+                
+                // Verificar se é uma solicitação pendente
+                if (request.status === 'pending') {
+                    showRequestCard(request, snapshot.key);
+                }
+            });
+        }
+        
+        // Mostrar card de solicitação
+        function showRequestCard(request, requestId) {
+            const requestCard = document.getElementById('requestCard');
+            const requestDetails = document.getElementById('requestDetails');
+            const timerElement = document.getElementById('timer');
+            
+            // Preencher detalhes da solicitação
+            requestDetails.innerHTML = `
+                <p><strong>De:</strong> ${request.origin}</p>
+                <p><strong>Para:</strong> ${request.destination}</p>
+                <p><strong>Passageiros:</strong> ${request.passengers}</p>
+                <p><strong>Contato:</strong> ${request.contact}</p>
+                ${request.notes ? `<p><strong>Observações:</strong> ${request.notes}</p>` : ''}
+            `;
+            
+            // Mostrar card
+            requestCard.style.display = 'block';
+            
+            // Iniciar contagem regressiva de 60 segundos
+            let timeLeft = 60;
+            countdown = setInterval(() => {
+                timerElement.textContent = timeLeft;
+                timeLeft--;
+                
+                if (timeLeft < 0) {
+                    clearInterval(countdown);
+                    // Tempo esgotado, rejeitar automaticamente
+                    rejectRequest(requestId);
+                }
+            }, 1000);
+            
+            // Configurar botões de aceitar e rejeitar
+            document.getElementById('acceptRequest').onclick = () => acceptRequest(requestId, request);
+            document.getElementById('rejectRequest').onclick = () => rejectRequest(requestId);
+        }
+        
+        // Aceitar solicitação
+        function acceptRequest(requestId, request) {
+            clearInterval(countdown);
+            
+            // Atualizar status da solicitação
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'accepted',
+                driverId: 'driver1',
+                acceptedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Esconder card de solicitação
+            document.getElementById('requestCard').style.display = 'none';
+            
+            // Mostrar notificação
+            showNotification("Você aceitou a solicitação. Entre em contato com o cliente.");
+            
+            // Enviar notificação para o cliente
+            database.ref(`notifications/clients/${request.clientId}`).push({
+                type: 'request_accepted',
+                message: 'Seu táxi foi aceito! O motorista entrará em contato em breve.',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+        
+        // Rejeitar solicitação
+        function rejectRequest(requestId) {
+            clearInterval(countdown);
+            
+            // Atualizar status da solicitação
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'rejected',
+                rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Esconder card de solicitação
+            document.getElementById('requestCard').style.display = 'none';
+            
+            // Mostrar notificação
+            showNotification("Você rejeitou a solicitação.");
+        }
+        
+        // Mostrar notificação
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+    
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
+    </script>
 </body>
 </html>

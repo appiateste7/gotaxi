@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente - GoTáxi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo span {
+            color: #ffc107;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: #333;
+        }
+        
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        
+        .location-card {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .call-taxi-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+        
+        .call-taxi-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .call-taxi-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .driver-info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Go<span>Táxi</span></div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Início</a></li>
+                <li><a href="motorista.html">Área do Motorista</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div id="map"></div>
+    
+    <div class="location-card">
+        <div class="form-group">
+            <label for="origin">Onde está?</label>
+            <input type="text" id="origin" placeholder="Digite sua localização atual">
+        </div>
+        <div class="form-group">
+            <label for="destination">Pra onde vai?</label>
+            <input type="text" id="destination" placeholder="Digite seu destino">
+        </div>
+    </div>
+    
+    <button id="callTaxi" class="call-taxi-btn">Chame GoTáxi</button>
+    
+    <div id="notification" class="notification"></div>
+    
+    <div id="driverInfo" class="driver-info">
+        <h3>Motorista a caminho</h3>
+        <p id="driverDetails"></p>
+        <p id="estimatedTime"></p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variáveis globais
+        let map;
+        let userMarker;
+        let driverMarker;
+        let originAutocomplete;
+        let destinationAutocomplete;
+        let userLocation;
+        let clientId;
+        
+        // Gerar ID único para o cliente
+        clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+        
+        // Inicializar mapa
+        function initMap() {
+            // Posição inicial (Lisboa)
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
+            
+            // Criar mapa
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+            
+            // Criar marcador do usuário
+            userMarker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: "Sua Localização",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                }
+            });
+            
+            // Tentar obter localização atual do usuário
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        // Preencher automaticamente o campo de origem
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                // Navegador não suporta Geolocation
+                handleLocationError(false, map.getCenter());
+            }
+            
+            // Inicializar autocomplete para os campos de endereço
+            originAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('origin'),
+                { types: ['geocode'] }
+            );
+            
+            destinationAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('destination'),
+                { types: ['geocode'] }
+            );
+            
+            // Escutar por motoristas online
+            listenForDrivers();
+            
+            // Escutar por notificações
+            listenForNotifications();
+        }
+        
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            // Mostrar notificação de erro
+            showNotification("Não foi possível obter sua localização. Digite manualmente.", true);
+        }
+        
+        // Escutar por motoristas online
+        function listenForDrivers() {
+            database.ref('drivers/driver1').on('value', (snapshot) => {
+                const driver = snapshot.val();
+                
+                if (driver && driver.status === 'online' && driver.location) {
+                    // Atualizar marcador do motorista
+                    if (!driverMarker) {
+                        driverMarker = new google.maps.Marker({
+                            position: driver.location,
+                            map: map,
+                            title: "Motorista Disponível",
+                            icon: {
+                                url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
+                                scaledSize: new google.maps.Size(40, 40)
+                            }
+                        });
+                    } else {
+                        driverMarker.setPosition(driver.location);
+                    }
+                    
+                    // Habilitar botão de chamar táxi
+                    document.getElementById('callTaxi').disabled = false;
+                } else {
+                    // Desabilitar botão de chamar táxi se não houver motoristas
+                    document.getElementById('callTaxi').disabled = true;
+                    
+                    // Remover marcador do motorista
+                    if (driverMarker) {
+                        driverMarker.setMap(null);
+                        driverMarker = null;
+                    }
+                }
+            });
+        }
+        
+        // Escutar por notificações
+        function listenForNotifications() {
+            database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'request_accepted') {
+                    showNotification(notification.message);
+                    
+                    // Mostrar informações do motorista
+                    showDriverInfo();
+                    
+                    // Remover a notificação após processá-la
+                    snapshot.ref.remove();
+                } else if (notification.type === 'request_rejected') {
+                    showNotification(notification.message, true);
+                    
+                    // Remover a notificação após processá-la
+                    snapshot.ref.remove();
+                }
+            });
+        }
+        
+        // Chamar táxi
+        document.getElementById('callTaxi').addEventListener('click', function() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!origin || !destination) {
+                showNotification("Por favor, preencha origem e destino.", true);
+                return;
+            }
+            
+            // Desabilitar botão temporariamente
+            document.getElementById('callTaxi').disabled = true;
+            showNotification("Solicitando táxi...");
+            
+            // Criar solicitação no Firebase
+            const requestId = database.ref('ride_requests').push().key;
+            
+            database.ref(`ride_requests/${requestId}`).set({
+                origin: origin,
+                destination: destination,
+                clientId: clientId,
+                status: 'pending',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Aguardar resposta do motorista
+            database.ref(`ride_requests/${requestId}`).on('value', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (request.status === 'accepted') {
+                    showNotification("Seu táxi foi aceito! O motorista está a caminho.");
+                    
+                    // Mostrar informações do motorista
+                    showDriverInfo();
+                    
+                    // Parar de escutar esta solicitação
+                    snapshot.ref.off();
+                } else if (request.status === 'rejected') {
+                    showNotification("Nenhum motorista disponível no momento. Tente novamente.", true);
+                    document.getElementById('callTaxi').disabled = false;
+                    
+                    // Parar de escutar esta solicitação
+                    snapshot.ref.off();
+                }
+            });
+            
+            // Timeout de 60 segundos
+            setTimeout(() => {
+                database.ref(`ride_requests/${requestId}`).once('value', (snapshot) => {
+                    const request = snapshot.val();
+                    
+                    if (request && request.status === 'pending') {
+                        showNotification("Tempo esgotado. Nenhum motorista respondeu.", true);
+                        document.getElementById('callTaxi').disabled = false;
+                        
+                        // Atualizar status para expirado
+                        database.ref(`ride_requests/${requestId}`).update({
+                            status: 'expired'
+                        });
+                    }
+                });
+            }, 60000);
+        });
+        
+        // Mostrar informações do motorista
+        function showDriverInfo() {
+            const driverInfo = document.getElementById('driverInfo');
+            const driverDetails = document.getElementById('driverDetails');
+            
+            driverDetails.textContent = "Motorista: João Silva | Veículo: Toyota Prius | Placa: AB-12-CD";
+            document.getElementById('estimatedTime').textContent = "Tempo estimado: 5-10 minutos";
+            
+            driverInfo.style.display = 'block';
+        }
+        
+        // Mostrar notificação
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+    
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
+    </script>
+</body>
+</html>
