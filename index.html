@@ -14,7 +14,6 @@
         
         body {
             background-color: #f5f5f5;
-            color: #333;
         }
         
         header {
@@ -24,10 +23,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
         }
         
         .logo {
@@ -60,81 +55,142 @@
             background-color: #333;
         }
         
-        .hero {
-            height: 100vh;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1554110397-9bac083977c6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-            padding: 0 20px;
-            margin-top: 60px;
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
         }
         
-        .hero h1 {
-            font-size: 48px;
-            margin-bottom: 20px;
+        .location-card {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
         }
         
-        .hero p {
-            font-size: 20px;
-            margin-bottom: 30px;
-            max-width: 700px;
+        .form-group {
+            margin-bottom: 15px;
         }
         
-        .cta-button {
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .call-taxi-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             background-color: #ffc107;
             color: #000;
-            padding: 15px 30px;
             border: none;
+            padding: 15px 30px;
             border-radius: 30px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
             transition: background-color 0.3s;
         }
         
-        .cta-button:hover {
+        .call-taxi-btn:hover {
             background-color: #e0a800;
         }
         
-        .features {
-            padding: 80px 20px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 30px;
+        .call-taxi-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .call-taxi-btn.active {
+            background-color: #ffc107;
+            cursor: pointer;
         }
         
-        .feature-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            width: 300px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .feature-card i {
-            font-size: 40px;
-            color: #ffc107;
-            margin-bottom: 20px;
-        }
-        
-        .feature-card h3 {
-            margin-bottom: 15px;
-            font-size: 22px;
-        }
-        
-        footer {
-            background-color: #000;
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
             color: white;
-            text-align: center;
-            padding: 30px 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .driver-info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .floating-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-btn:hover {
+            background-color: #e0a800;
+        }
+
+        .welcome-message {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 300px;
         }
     </style>
 </head>
@@ -144,38 +200,287 @@
         <nav>
             <ul>
                 <li><a href="motorista.html">Área do Motorista</a></li>
-                <li><a href="cliente.html">Cliente</a></li>
             </ul>
         </nav>
     </header>
     
-    <section class="hero">
-        <h1>Seu Táxi Em Lisboa, Quando Precisar!</h1>
-        <p>Serviço de táxi rápido e confiável em Lisboa. Baixe o app ou solicite online.</p>
-        <button class="cta-button" onclick="window.location.href='cliente.html'">Chamar um Táxi</button>
-    </section>
+    <div id="map"></div>
     
-    <section class="features">
-        <div class="feature-card">
-            <i>🚗</i>
-            <h3>Motoristas Verificados</h3>
-            <p>Todos os nossos motoristas passam por rigorosa verificação de antecedentes.</p>
-        </div>
-        <div class="feature-card">
-            <i>💳</i>
-            <h3>Pagamento Fácil</h3>
-            <p>Aceitamos múltiplas formas de pagamento, incluindo cartão e dinheiro.</p>
-        </div>
-        <div class="feature-card">
-            <i>📍</i>
-            <h3>Rastreamento em Tempo Real</h3>
-            <p>Acompanhe seu táxi em tempo real desde o momento da solicitação.</p>
-        </div>
-    </section>
+    <div class="welcome-message">
+        <h3>Seu Táxi Em Lisboa, Quando Precisar!</h3>
+        <p>Serviço de táxi rápido e confiável em Lisboa. Solicite online com apenas alguns cliques.</p>
+    </div>
     
-    <footer>
-        <p>&copy; 2023 GoTáxi - Todos os direitos reservados</p>
-        <p>Lisboa, Portugal</p>
-    </footer>
+    <div class="location-card">
+        <div class="form-group">
+            <label for="origin">Onde está?</label>
+            <input type="text" id="origin" placeholder="Digite sua localização atual">
+        </div>
+        <div class="form-group">
+            <label for="destination">Pra onde vai?</label>
+            <input type="text" id="destination" placeholder="Digite seu destino">
+        </div>
+    </div>
+
+    <div class="floating-buttons">
+        <button class="floating-btn" onclick="window.location.href='formulario.html'" title="Chamar Táxi">
+            🚗
+        </button>
+        <button class="floating-btn" onclick="getCurrentLocation()" title="Minha Localização">
+            📍
+        </button>
+    </div>
+    
+    <button id="callTaxi" class="call-taxi-btn" onclick="window.location.href='formulario.html'">Chame GoTáxi</button>
+    
+    <div id="notification" class="notification"></div>
+    
+    <div id="driverInfo" class="driver-info">
+        <h3>Motorista a caminho</h3>
+        <p id="driverDetails"></p>
+        <p id="estimatedTime"></p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Variáveis globais
+        let map;
+        let userMarker;
+        let driverMarker;
+        let originAutocomplete;
+        let destinationAutocomplete;
+        let userLocation;
+        let clientId;
+        
+        // Gerar ID único para o cliente
+        clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+        
+        // Inicializar mapa
+        function initMap() {
+            // Posição inicial (Lisboa)
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
+            
+            // Criar mapa
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+            
+            // Criar marcador do usuário
+            userMarker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: "Sua Localização",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                }
+            });
+            
+            // Tentar obter localização atual do usuário
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        // Preencher automaticamente o campo de origem
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                // Navegador não suporta Geolocation
+                handleLocationError(false, map.getCenter());
+            }
+            
+            // Inicializar autocomplete para os campos de endereço
+            originAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('origin'),
+                { types: ['geocode'] }
+            );
+            
+            destinationAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('destination'),
+                { types: ['geocode'] }
+            );
+            
+            // Escutar por motoristas online
+            listenForDrivers();
+            
+            // Escutar por notificações
+            listenForNotifications();
+        }
+        
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            // Mostrar notificação de erro
+            showNotification("Não foi possível obter sua localização. Digite manualmente.", true);
+        }
+
+        // Obter localização atual
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        // Preencher automaticamente o campo de origem
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                        
+                        showNotification("Localização atualizada!");
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            }
+        }
+        
+        // Escutar por motoristas online
+        function listenForDrivers() {
+            database.ref('drivers').on('value', (snapshot) => {
+                const drivers = snapshot.val();
+                let onlineDriver = null;
+                
+                // Verificar se há algum motorista online
+                for (const driverId in drivers) {
+                    if (drivers[driverId].status === 'online') {
+                        onlineDriver = drivers[driverId];
+                        break;
+                    }
+                }
+                
+                if (onlineDriver && onlineDriver.location) {
+                    // Atualizar marcador do motorista
+                    if (!driverMarker) {
+                        driverMarker = new google.maps.Marker({
+                            position: onlineDriver.location,
+                            map: map,
+                            title: "Motorista Disponível",
+                            icon: {
+                                url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
+                                scaledSize: new google.maps.Size(40, 40)
+                            }
+                        });
+                    } else {
+                        driverMarker.setPosition(onlineDriver.location);
+                    }
+                    
+                    // Habilitar botão de chamar táxi
+                    document.getElementById('callTaxi').disabled = false;
+                    document.getElementById('callTaxi').classList.add('active');
+                } else {
+                    // Desabilitar botão de chamar táxi se não houver motoristas
+                    document.getElementById('callTaxi').disabled = true;
+                    document.getElementById('callTaxi').classList.remove('active');
+                    
+                    // Remover marcador do motorista
+                    if (driverMarker) {
+                        driverMarker.setMap(null);
+                        driverMarker = null;
+                    }
+                }
+            });
+        }
+        
+        // Escutar por notificações
+        function listenForNotifications() {
+            database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'request_accepted') {
+                    showNotification(notification.message);
+                    
+                    // Mostrar informações do motorista
+                    showDriverInfo();
+                    
+                    // Remover a notificação após processá-la
+                    snapshot.ref.remove();
+                } else if (notification.type === 'request_rejected') {
+                    showNotification(notification.message, true);
+                    
+                    // Remover a notificação após processá-la
+                    snapshot.ref.remove();
+                }
+            });
+        }
+        
+        // Mostrar informações do motorista
+        function showDriverInfo() {
+            const driverInfo = document.getElementById('driverInfo');
+            const driverDetails = document.getElementById('driverDetails');
+            
+            driverDetails.textContent = "Motorista: João Silva | Veículo: Toyota Prius | Placa: AB-12-CD";
+            document.getElementById('estimatedTime').textContent = "Tempo estimado: 5-10 minutos";
+            
+            driverInfo.style.display = 'block';
+        }
+        
+        // Mostrar notificação
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+    
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
+    </script>
 </body>
 </html>
