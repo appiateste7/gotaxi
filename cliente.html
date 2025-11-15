@@ -116,6 +116,11 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+
+        .call-taxi-btn.active {
+            background-color: #ffc107;
+            cursor: pointer;
+        }
         
         .notification {
             position: fixed;
@@ -145,6 +150,36 @@
             z-index: 1000;
             display: none;
         }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .floating-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-btn:hover {
+            background-color: #e0a800;
+        }
     </style>
 </head>
 <body>
@@ -170,8 +205,17 @@
             <input type="text" id="destination" placeholder="Digite seu destino">
         </div>
     </div>
+
+    <div class="floating-buttons">
+        <button class="floating-btn" onclick="window.location.href='formulario.html'" title="Chamar Táxi">
+            🚗
+        </button>
+        <button class="floating-btn" onclick="getCurrentLocation()" title="Minha Localização">
+            📍
+        </button>
+    </div>
     
-    <button id="callTaxi" class="call-taxi-btn">Chame GoTáxi</button>
+    <button id="callTaxi" class="call-taxi-btn" onclick="window.location.href='formulario.html'">Chame GoTáxi</button>
     
     <div id="notification" class="notification"></div>
     
@@ -294,6 +338,36 @@
             // Mostrar notificação de erro
             showNotification("Não foi possível obter sua localização. Digite manualmente.", true);
         }
+
+        // Obter localização atual
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        // Preencher automaticamente o campo de origem
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                        
+                        showNotification("Localização atualizada!");
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            }
+        }
         
         // Escutar por motoristas online
         function listenForDrivers() {
@@ -318,9 +392,11 @@
                     
                     // Habilitar botão de chamar táxi
                     document.getElementById('callTaxi').disabled = false;
+                    document.getElementById('callTaxi').classList.add('active');
                 } else {
                     // Desabilitar botão de chamar táxi se não houver motoristas
                     document.getElementById('callTaxi').disabled = true;
+                    document.getElementById('callTaxi').classList.remove('active');
                     
                     // Remover marcador do motorista
                     if (driverMarker) {
@@ -353,8 +429,8 @@
             });
         }
         
-        // Chamar táxi
-        document.getElementById('callTaxi').addEventListener('click', function() {
+        // Chamar táxi (função alternativa)
+        function callTaxi() {
             const origin = document.getElementById('origin').value;
             const destination = document.getElementById('destination').value;
             
@@ -363,59 +439,14 @@
                 return;
             }
             
-            // Desabilitar botão temporariamente
-            document.getElementById('callTaxi').disabled = true;
-            showNotification("Solicitando táxi...");
-            
-            // Criar solicitação no Firebase
-            const requestId = database.ref('ride_requests').push().key;
-            
-            database.ref(`ride_requests/${requestId}`).set({
+            // Redirecionar para a página de formulário com os dados preenchidos
+            const params = new URLSearchParams({
                 origin: origin,
-                destination: destination,
-                clientId: clientId,
-                status: 'pending',
-                createdAt: firebase.database.ServerValue.TIMESTAMP
+                destination: destination
             });
             
-            // Aguardar resposta do motorista
-            database.ref(`ride_requests/${requestId}`).on('value', (snapshot) => {
-                const request = snapshot.val();
-                
-                if (request.status === 'accepted') {
-                    showNotification("Seu táxi foi aceito! O motorista está a caminho.");
-                    
-                    // Mostrar informações do motorista
-                    showDriverInfo();
-                    
-                    // Parar de escutar esta solicitação
-                    snapshot.ref.off();
-                } else if (request.status === 'rejected') {
-                    showNotification("Nenhum motorista disponível no momento. Tente novamente.", true);
-                    document.getElementById('callTaxi').disabled = false;
-                    
-                    // Parar de escutar esta solicitação
-                    snapshot.ref.off();
-                }
-            });
-            
-            // Timeout de 60 segundos
-            setTimeout(() => {
-                database.ref(`ride_requests/${requestId}`).once('value', (snapshot) => {
-                    const request = snapshot.val();
-                    
-                    if (request && request.status === 'pending') {
-                        showNotification("Tempo esgotado. Nenhum motorista respondeu.", true);
-                        document.getElementById('callTaxi').disabled = false;
-                        
-                        // Atualizar status para expirado
-                        database.ref(`ride_requests/${requestId}`).update({
-                            status: 'expired'
-                        });
-                    }
-                });
-            }, 60000);
-        });
+            window.location.href = `formulario.html?${params.toString()}`;
+        }
         
         // Mostrar informações do motorista
         function showDriverInfo() {
@@ -439,6 +470,12 @@
                 notification.style.display = 'none';
             }, 5000);
         }
+
+        // Adicionar evento de clique alternativo ao botão
+        document.getElementById('callTaxi').addEventListener('click', function(e) {
+            // Esta função é apenas um fallback, o redirecionamento principal é via onclick no HTML
+            callTaxi();
+        });
     </script>
     
     <!-- Google Maps API -->
