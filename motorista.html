@@ -215,6 +215,19 @@
         .login-btn:hover {
             background-color: #e0a800;
         }
+
+        .driver-name-badge {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background-color: #ffc107;
+            color: #000;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -257,6 +270,10 @@
     <!-- Área do Mapa (após login) -->
     <div id="map"></div>
     
+    <div class="driver-name-badge" id="driverNameBadge" style="display: none;">
+        Motorista: <span id="driverNameDisplay"></span>
+    </div>
+    
     <div class="controls" id="controls">
         <button id="startTracking" class="btn">Iniciar Rastreamento</button>
         <button id="stopTracking" class="btn" disabled>Parar Rastreamento</button>
@@ -266,7 +283,7 @@
     
     <div id="requestCard" class="request-card">
         <h3>🚕 Nova Solicitação de Táxi</h3>
-        <div class="timer" id="timer">60 segundos</div>
+        <div class="timer" id="timer">120 segundos</div>
         <div class="request-details" id="requestDetails">
             <!-- Detalhes da solicitação serão preenchidos aqui -->
         </div>
@@ -275,6 +292,11 @@
             <button id="rejectRequest" class="btn btn-reject">❌ Rejeitar</button>
         </div>
     </div>
+
+    <!-- Áudio para notificação -->
+    <audio id="notificationSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -304,6 +326,9 @@
         let countdown;
         let currentDriver = null;
         let currentRequestId = null;
+        let directionsService;
+        let directionsRenderer;
+        let currentRoutes = [];
         
         // Credenciais dos motoristas
         const drivers = {
@@ -332,6 +357,8 @@
                 document.getElementById('map').style.display = 'block';
                 document.getElementById('controls').style.display = 'block';
                 document.getElementById('logoutBtn').style.display = 'block';
+                document.getElementById('driverNameBadge').style.display = 'block';
+                document.getElementById('driverNameDisplay').textContent = username;
                 
                 // Inicializar mapa
                 initMap();
@@ -357,6 +384,7 @@
             document.getElementById('map').style.display = 'none';
             document.getElementById('controls').style.display = 'none';
             document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('driverNameBadge').style.display = 'none';
             
             // Limpar campos de login
             document.getElementById('username').value = '';
@@ -378,11 +406,18 @@
                 fullscreenControl: false
             });
             
+            // Inicializar serviços de rota
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true
+            });
+            
             // Criar marcador inicial
             marker = new google.maps.Marker({
                 position: lisbon,
                 map: map,
-                title: "Sua Localização",
+                title: `Motorista: ${currentDriver.username}`,
                 icon: {
                     url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
                     scaledSize: new google.maps.Size(40, 40)
@@ -503,11 +538,22 @@
                 
                 console.log('Nova solicitação recebida:', request);
                 
-                // Verificar se é uma solicitação pendente e se não foi processada
-                if (request.status === 'pending' && request.paymentStatus === 'paid') {
+                // Verificar se é uma solicitação pendente
+                if (request.status === 'pending' && request.paymentStatus === 'free') {
+                    // Tocar som de notificação
+                    playNotificationSound();
+                    
+                    // Mostrar card de solicitação
                     showRequestCard(request, requestId);
                 }
             });
+        }
+        
+        // Tocar som de notificação
+        function playNotificationSound() {
+            const audio = document.getElementById('notificationSound');
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Erro ao tocar som:', e));
         }
         
         // Mostrar card de solicitação
@@ -533,8 +579,8 @@
             // Mostrar card
             requestCard.style.display = 'block';
             
-            // Iniciar contagem regressiva de 60 segundos
-            let timeLeft = 60;
+            // Iniciar contagem regressiva de 120 segundos (2 minutos)
+            let timeLeft = 120;
             updateTimerDisplay(timerElement, timeLeft);
             
             countdown = setInterval(() => {
@@ -555,11 +601,14 @@
         
         // Atualizar display do timer
         function updateTimerDisplay(timerElement, timeLeft) {
-            timerElement.textContent = `${timeLeft} segundos`;
-            if (timeLeft <= 10) {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 30) {
                 timerElement.style.color = '#f44336';
                 timerElement.style.fontWeight = 'bold';
-            } else if (timeLeft <= 30) {
+            } else if (timeLeft <= 60) {
                 timerElement.style.color = '#ff9800';
             } else {
                 timerElement.style.color = '#4CAF50';
@@ -569,6 +618,9 @@
         // Aceitar solicitação
         function acceptRequest(requestId, request) {
             clearInterval(countdown);
+            
+            // Calcular rotas
+            calculateRoutes(request);
             
             // Atualizar status da solicitação
             database.ref(`ride_requests/${requestId}`).update({
@@ -582,19 +634,73 @@
             document.getElementById('requestCard').style.display = 'none';
             
             // Mostrar notificação
-            showNotification("✅ Você aceitou a solicitação! Entre em contato com o cliente.");
+            showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
             
             // Enviar notificação para o cliente
             if (request.clientId) {
                 database.ref(`notifications/clients/${request.clientId}`).push({
                     type: 'request_accepted',
-                    message: '🎉 Seu táxi foi aceito! O motorista entrará em contato em breve.',
+                    message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
                     driverName: currentDriver.username,
                     timestamp: firebase.database.ServerValue.TIMESTAMP
                 });
             }
             
             currentRequestId = null;
+        }
+        
+        // Calcular rotas
+        function calculateRoutes(request) {
+            // Limpar rotas anteriores
+            if (currentRoutes.length > 0) {
+                currentRoutes.forEach(route => route.setMap(null));
+                currentRoutes = [];
+            }
+            
+            const driverPosition = marker.getPosition();
+            
+            // Rota 1: Motorista -> Cliente (cinza escuro)
+            calculateRoute(
+                driverPosition,
+                request.origin,
+                '#666666', // Cinza escuro
+                6
+            );
+            
+            // Rota 2: Cliente -> Destino (azul)
+            setTimeout(() => {
+                calculateRoute(
+                    request.origin,
+                    request.destination,
+                    '#2196F3', // Azul
+                    4
+                );
+            }, 1000);
+        }
+        
+        // Calcular rota individual
+        function calculateRoute(origin, destination, color, width) {
+            directionsService.route({
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (response, status) => {
+                if (status === 'OK') {
+                    const routeRenderer = new google.maps.DirectionsRenderer({
+                        map: map,
+                        directions: response,
+                        suppressMarkers: true,
+                        polylineOptions: {
+                            strokeColor: color,
+                            strokeOpacity: 0.8,
+                            strokeWeight: width
+                        }
+                    });
+                    currentRoutes.push(routeRenderer);
+                } else {
+                    console.error('Erro ao calcular rota:', status);
+                }
+            });
         }
         
         // Rejeitar solicitação
@@ -648,7 +754,7 @@
     
     <!-- Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
     </script>
 </body>
 </html>

@@ -181,18 +181,6 @@
             background-color: #e0a800;
         }
 
-        .welcome-message {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            max-width: 300px;
-        }
-
         .online-drivers-counter {
             position: absolute;
             top: 80px;
@@ -219,11 +207,6 @@
     </header>
     
     <div id="map"></div>
-    
-    <div class="welcome-message">
-        <h3>Seu Táxi Em Lisboa, Quando Precisar!</h3>
-        <p>Serviço de táxi rápido e confiável em Lisboa. Solicite online com apenas alguns cliques.</p>
-    </div>
 
     <div id="onlineDriversCounter" class="online-drivers-counter" style="display: none;">
         🚗 <span id="driversCount">0</span> motoristas online
@@ -282,7 +265,7 @@
         // Variáveis globais
         let map;
         let userMarker;
-        let driverMarkers = {}; // Objeto para armazenar múltiplos marcadores
+        let driverMarkers = {};
         let originAutocomplete;
         let destinationAutocomplete;
         let userLocation;
@@ -506,7 +489,7 @@
                     showNotification(notification.message);
                     
                     // Mostrar informações do motorista
-                    showDriverInfo();
+                    showDriverInfo(notification.driverName);
                     
                     // Remover a notificação após processá-la
                     snapshot.ref.remove();
@@ -520,11 +503,11 @@
         }
         
         // Mostrar informações do motorista
-        function showDriverInfo() {
+        function showDriverInfo(driverName) {
             const driverInfo = document.getElementById('driverInfo');
             const driverDetails = document.getElementById('driverDetails');
             
-            driverDetails.textContent = "Motorista: João Silva | Veículo: Toyota Prius | Placa: AB-12-CD";
+            driverDetails.textContent = `Motorista: ${driverName}`;
             document.getElementById('estimatedTime').textContent = "Tempo estimado: 5-10 minutos";
             
             driverInfo.style.display = 'block';
