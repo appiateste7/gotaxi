@@ -223,7 +223,7 @@
     </div>
 
     <div class="floating-buttons">
-        <button class="floating-btn" onclick="window.location.href='formulario.html'" title="Chamar Táxi">
+        <button class="floating-btn" onclick="goToForm()" title="Chamar Táxi">
             🚗
         </button>
         <button class="floating-btn" onclick="getCurrentLocation()" title="Minha Localização">
@@ -231,7 +231,7 @@
         </button>
     </div>
     
-    <button id="callTaxi" class="call-taxi-btn" onclick="window.location.href='formulario.html'">Chame GoTáxi</button>
+    <button id="callTaxi" class="call-taxi-btn" onclick="goToForm()">Chame GoTáxi</button>
     
     <div id="notification" class="notification"></div>
     
@@ -272,6 +272,20 @@
         
         // Gerar ID único para o cliente
         clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+        
+        // Função para ir para o formulário
+        function goToForm() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            // Criar URL com parâmetros
+            const params = new URLSearchParams();
+            if (origin) params.append('origin', origin);
+            if (destination) params.append('destination', destination);
+            
+            // Redirecionar para o formulário
+            window.location.href = `formulario.html?${params.toString()}`;
+        }
         
         // Inicializar mapa
         function initMap() {

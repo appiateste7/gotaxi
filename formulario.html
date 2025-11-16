@@ -169,14 +169,6 @@
         .notification.error {
             background-color: #f44336;
         }
-        
-        .driver-contact {
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f0f0f0;
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
@@ -186,7 +178,6 @@
             <ul>
                 <li><a href="index.html">Início</a></li>
                 <li><a href="motorista.html">Área do Motorista</a></li>
-                <li><a href="cliente.html">Cliente</a></li>
             </ul>
         </nav>
     </header>
@@ -266,10 +257,6 @@
                     Enviar Via WhatsApp
                 </button>
             </form>
-            
-            <div class="driver-contact">
-                <p><strong>Motorista Disponível:</strong> 351 939 354 112</p>
-            </div>
         </div>
     </div>
 
@@ -286,6 +273,21 @@
         const notification = document.getElementById('notification');
         const taxiForm = document.getElementById('taxiForm');
         
+        // Verificar se há parâmetros na URL e preencher os campos
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const origin = urlParams.get('origin');
+            const destination = urlParams.get('destination');
+            
+            if (origin) {
+                document.getElementById('origin').value = origin;
+            }
+            
+            if (destination) {
+                document.getElementById('destination').value = destination;
+            }
+        }
+        
         // Inicializar autocomplete para os campos de endereço
         function initAutocomplete() {
             if (typeof google !== 'undefined') {
@@ -297,13 +299,11 @@
             }
         }
         
-        // Inicializar autocomplete quando a API do Google Maps estiver carregada
-        if (typeof google !== 'undefined') {
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUrlParams();
             initAutocomplete();
-        } else {
-            // Tentar novamente após um tempo
-            setTimeout(initAutocomplete, 1000);
-        }
+        });
         
         // Processar pagamento
         payButton.addEventListener('click', async function() {
@@ -318,28 +318,6 @@
             payButton.textContent = "Processando...";
             
             try {
-                // Criar sessão de pagamento no servidor (em produção, isso seria feito no backend)
-                // Para demonstração, vamos simular um pagamento bem-sucedido
-                
-                // Em um ambiente real, você faria uma chamada para seu servidor
-                // const response = await fetch('/create-checkout-session', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //     },
-                //     body: JSON.stringify({
-                //         amount: 50, // 0.50€ em centavos
-                //         currency: 'eur',
-                //     }),
-                // });
-                // 
-                // const session = await response.json();
-                // 
-                // // Redirecionar para o Checkout do Stripe
-                // const result = await stripe.redirectToCheckout({
-                //     sessionId: session.id,
-                // });
-                
                 // Simulação de pagamento bem-sucedido (remover em produção)
                 setTimeout(() => {
                     showNotification("Pagamento processado com sucesso! Agora você pode enviar a solicitação via WhatsApp.");
