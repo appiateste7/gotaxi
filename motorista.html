@@ -625,6 +625,9 @@
             clearInterval(countdown);
             hasPlayedSound = false; // Resetar flag do som
             
+            // Esconder card de solicitação IMEDIATAMENTE
+            document.getElementById('requestCard').style.display = 'none';
+            
             // Geocodificar endereços para obter coordenadas
             geocodeAddress(request.origin, (originLocation) => {
                 geocodeAddress(request.destination, (destinationLocation) => {
@@ -643,26 +646,26 @@
                         originLocation: originLocation,
                         destinationLocation: destinationLocation,
                         acceptedAt: firebase.database.ServerValue.TIMESTAMP
+                    }).then(() => {
+                        // Mostrar notificação APÓS atualizar o Firebase
+                        showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
+                        
+                        // Enviar notificação para o cliente
+                        if (request.clientId) {
+                            database.ref(`notifications/clients/${request.clientId}`).push({
+                                type: 'request_accepted',
+                                message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
+                                driverName: currentDriver.username,
+                                driverLocation: marker.getPosition(),
+                                originLocation: originLocation,
+                                destinationLocation: destinationLocation,
+                                timestamp: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        }
+                    }).catch((error) => {
+                        console.error('Erro ao atualizar solicitação:', error);
+                        showNotification("❌ Erro ao aceitar solicitação.", true);
                     });
-                    
-                    // Esconder card de solicitação
-                    document.getElementById('requestCard').style.display = 'none';
-                    
-                    // Mostrar notificação
-                    showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
-                    
-                    // Enviar notificação para o cliente
-                    if (request.clientId) {
-                        database.ref(`notifications/clients/${request.clientId}`).push({
-                            type: 'request_accepted',
-                            message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
-                            driverName: currentDriver.username,
-                            driverLocation: marker.getPosition(),
-                            originLocation: originLocation,
-                            destinationLocation: destinationLocation,
-                            timestamp: firebase.database.ServerValue.TIMESTAMP
-                        });
-                    }
                     
                     currentRequestId = null;
                 });
@@ -761,17 +764,20 @@
             clearInterval(countdown);
             hasPlayedSound = false; // Resetar flag do som
             
+            // Esconder card de solicitação IMEDIATAMENTE
+            document.getElementById('requestCard').style.display = 'none';
+            
             // Atualizar status da solicitação
             database.ref(`ride_requests/${requestId}`).update({
                 status: 'rejected',
                 rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                // Mostrar notificação APÓS atualizar o Firebase
+                showNotification("❌ Você rejeitou a solicitação.");
+            }).catch((error) => {
+                console.error('Erro ao rejeitar solicitação:', error);
+                showNotification("❌ Erro ao rejeitar solicitação.", true);
             });
-            
-            // Esconder card de solicitação
-            document.getElementById('requestCard').style.display = 'none';
-            
-            // Mostrar notificação
-            showNotification("❌ Você rejeitou a solicitação.");
             
             currentRequestId = null;
         }
