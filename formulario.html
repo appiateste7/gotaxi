@@ -145,12 +145,6 @@
             display: none;
         }
         
-        .btn-back-home {
-            background-color: #ff9800;
-            color: white;
-            display: none;
-        }
-        
         .notification {
             background-color: #4CAF50;
             color: white;
@@ -199,24 +193,6 @@
             border: 1px solid #f5c6cb;
         }
 
-        .redirect-countdown {
-            text-align: center;
-            font-size: 16px;
-            color: #666;
-            margin-top: 10px;
-        }
-
-        .accepted-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .accepted-actions .btn {
-            margin-top: 0;
-            flex: 1;
-        }
-
         .accepted-message {
             text-align: center;
             padding: 20px;
@@ -224,6 +200,7 @@
             border-radius: 10px;
             margin: 20px 0;
             border: 2px solid #4CAF50;
+            display: none;
         }
 
         .accepted-message h3 {
@@ -234,6 +211,13 @@
         .accepted-message p {
             color: #1b5e20;
             margin: 5px 0;
+        }
+
+        .countdown-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -251,7 +235,6 @@
     <div class="container">
         <div id="notification" class="notification"></div>
         <div id="statusIndicator" class="status-indicator" style="display: none;"></div>
-        <div id="redirectCountdown" class="redirect-countdown" style="display: none;"></div>
         
         <div class="form-card">
             <h2>🚕 Solicitar Táxi</h2>
@@ -320,20 +303,13 @@
                     📱 Enviar Via WhatsApp
                 </button>
 
-                <div id="acceptedMessage" class="accepted-message" style="display: none;">
-                    <h3>🎉 Táxi Confirmado!</h3>
-                    <p id="driverAcceptedName"></p>
+                <div id="acceptedMessage" class="accepted-message">
+                    <h3>✅ Taxista Confirmou!</h3>
+                    <p id="driverAcceptedName">Motorista: <span id="driverNameSpan">Carregando...</span></p>
                     <p>🛣️ <strong>Rota calculada:</strong> Motorista a caminho do seu local</p>
-                    <p>⏱️ <strong>Redirecionando em:</strong> <span id="countdownTimer">3</span> segundos</p>
-                </div>
-
-                <div id="acceptedActions" class="accepted-actions" style="display: none;">
-                    <button type="button" id="backHomeButton" class="btn btn-back-home">
-                        🗺️ Ver Rota em Tempo Real
-                    </button>
-                    <button type="button" id="whatsappButtonAccepted" class="btn btn-whatsapp">
-                        📱 Contatar Motorista
-                    </button>
+                    <div class="countdown-display">
+                        Redirecionando em: <span id="countdownTimer">3</span> segundos
+                    </div>
                 </div>
             </form>
         </div>
@@ -362,20 +338,15 @@
         // Elementos do DOM
         const callTaxiButton = document.getElementById('callTaxiButton');
         const whatsappButton = document.getElementById('whatsappButton');
-        const backHomeButton = document.getElementById('backHomeButton');
-        const whatsappButtonAccepted = document.getElementById('whatsappButtonAccepted');
-        const acceptedActions = document.getElementById('acceptedActions');
         const acceptedMessage = document.getElementById('acceptedMessage');
-        const driverAcceptedName = document.getElementById('driverAcceptedName');
+        const driverNameSpan = document.getElementById('driverNameSpan');
         const countdownTimer = document.getElementById('countdownTimer');
         const notification = document.getElementById('notification');
         const statusIndicator = document.getElementById('statusIndicator');
-        const redirectCountdown = document.getElementById('redirectCountdown');
         
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
         let redirectTimer = null;
-        let currentDriverName = '';
         let isRedirecting = false;
         
         // Verificar se há parâmetros na URL e preencher os campos
@@ -447,6 +418,7 @@
                     
                     // Alterar texto do botão
                     callTaxiButton.textContent = "✅ Solicitação Enviada";
+                    callTaxiButton.style.backgroundColor = '#cccccc';
                     
                     // Escutar por atualizações na solicitação
                     listenForRequestUpdates();
@@ -461,64 +433,78 @@
                 });
         });
         
-        // Escutar por atualizações na solicitação
+        // Escutar por atualizações na solicitação - CORRIGIDO
         function listenForRequestUpdates() {
             if (!currentRequestId) return;
             
+            console.log('Escutando atualizações para solicitação:', currentRequestId);
+            
+            // Usar 'on' para escutar mudanças em tempo real
             database.ref(`ride_requests/${currentRequestId}`).on('value', (snapshot) => {
                 const request = snapshot.val();
+                console.log('Atualização recebida:', request);
                 
                 if (request) {
                     if (request.status === 'accepted') {
-                        // Atualizar imediatamente a mensagem para "aceito"
-                        currentDriverName = request.driverName;
+                        console.log('Motorista aceitou a solicitação!');
                         
-                        // Esconder elementos antigos
-                        callTaxiButton.style.display = 'none';
-                        whatsappButton.style.display = 'none';
-                        statusIndicator.style.display = 'none';
-                        
-                        // Mostrar mensagem de aceitação
-                        showAcceptedMessage(request.driverName);
-                        
-                        // Salvar dados da rota no localStorage para a página inicial
-                        localStorage.setItem('rideAccepted', 'true');
-                        localStorage.setItem('driverName', request.driverName);
-                        localStorage.setItem('origin', request.origin);
-                        localStorage.setItem('destination', request.destination);
-                        if (request.driverLocation) {
-                            localStorage.setItem('driverLocation', JSON.stringify(request.driverLocation));
-                        }
-                        if (request.originLocation) {
-                            localStorage.setItem('originLocation', JSON.stringify(request.originLocation));
-                        }
-                        if (request.destinationLocation) {
-                            localStorage.setItem('destinationLocation', JSON.stringify(request.destinationLocation));
-                        }
-                        
-                        // Iniciar contagem regressiva para redirecionamento automático
-                        startAutoRedirect();
+                        // ATUALIZAR IMEDIATAMENTE a interface
+                        handleRequestAccepted(request);
                         
                     } else if (request.status === 'rejected') {
-                        updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
-                        showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
-                        
-                        // Reabilitar botão de chamar táxi
-                        callTaxiButton.disabled = false;
-                        callTaxiButton.textContent = "🚗 Chamar Táxi Novamente";
-                        callTaxiButton.style.display = 'block';
+                        console.log('Motorista rejeitou a solicitação');
+                        handleRequestRejected();
                     }
                 }
             });
         }
         
-        // Mostrar mensagem de aceitação
-        function showAcceptedMessage(driverName) {
-            driverAcceptedName.textContent = `👤 Motorista: ${driverName}`;
+        // Manipular aceitação da solicitação
+        function handleRequestAccepted(request) {
+            // Esconder elementos antigos
+            callTaxiButton.style.display = 'none';
+            whatsappButton.style.display = 'none';
+            statusIndicator.style.display = 'none';
+            
+            // Atualizar mensagem com nome do motorista
+            const driverName = request.driverName || 'Motorista';
+            driverNameSpan.textContent = driverName;
+            
+            // Mostrar mensagem de aceitação
             acceptedMessage.style.display = 'block';
             
             // Mostrar notificação de sucesso
-            showNotification(`🎉 Táxi aceito por ${driverName}! Redirecionando...`, false, 'success');
+            showNotification(`✅ ${driverName} aceitou sua corrida!`, false, 'success');
+            
+            // Salvar dados da rota no localStorage para a página inicial
+            localStorage.setItem('rideAccepted', 'true');
+            localStorage.setItem('driverName', driverName);
+            localStorage.setItem('origin', request.origin);
+            localStorage.setItem('destination', request.destination);
+            if (request.driverLocation) {
+                localStorage.setItem('driverLocation', JSON.stringify(request.driverLocation));
+            }
+            if (request.originLocation) {
+                localStorage.setItem('originLocation', JSON.stringify(request.originLocation));
+            }
+            if (request.destinationLocation) {
+                localStorage.setItem('destinationLocation', JSON.stringify(request.destinationLocation));
+            }
+            
+            // Iniciar contagem regressiva para redirecionamento automático
+            startAutoRedirect();
+        }
+        
+        // Manipular rejeição da solicitação
+        function handleRequestRejected() {
+            updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
+            showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
+            
+            // Reabilitar botão de chamar táxi
+            callTaxiButton.disabled = false;
+            callTaxiButton.textContent = "🚗 Chamar Táxi Novamente";
+            callTaxiButton.style.display = 'block';
+            callTaxiButton.style.backgroundColor = '#2196F3';
         }
         
         // Iniciar redirecionamento automático
@@ -542,36 +528,11 @@
         
         // Redirecionar para página inicial
         function redirectToHomePage() {
+            console.log('Redirecionando para página inicial...');
             window.location.href = 'index.html';
         }
         
-        // Voltar para a página inicial (botão manual)
-        backHomeButton.addEventListener('click', function() {
-            redirectToHomePage();
-        });
-        
-        // Enviar via WhatsApp (após aceitação)
-        whatsappButtonAccepted.addEventListener('click', function() {
-            // Coletar dados do formulário
-            const formData = getFormData();
-            
-            // Formatar mensagem para WhatsApp
-            const message = formatWhatsAppMessageAccepted(formData, currentDriverName);
-            
-            // Codificar mensagem para URL
-            const encodedMessage = encodeURIComponent(message);
-            
-            // Número do motorista
-            const phoneNumber = "351939354112";
-            
-            // Criar URL do WhatsApp
-            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-            
-            // Abrir WhatsApp em nova aba
-            window.open(whatsappUrl, '_blank');
-        });
-        
-        // Enviar via WhatsApp (antes da aceitação)
+        // Enviar via WhatsApp
         whatsappButton.addEventListener('click', function() {
             // Coletar dados do formulário
             const formData = getFormData();
@@ -622,7 +583,7 @@
             };
         }
         
-        // Formatar mensagem para WhatsApp (antes da aceitação)
+        // Formatar mensagem para WhatsApp
         function formatWhatsAppMessage(data) {
             return `🚕 *SOLICITAÇÃO DE TÁXI - GoTáxi* 🚕
 
@@ -638,24 +599,6 @@ ${data.notes ? `*Observações:* ${data.notes}` : ''}
 *Solicitado em:* ${data.timestamp}
 
 _Por favor, confirme esta solicitação._`;
-        }
-        
-        // Formatar mensagem para WhatsApp (após aceitação)
-        function formatWhatsAppMessageAccepted(data, driverName) {
-            return `🚕 *CONTATO DO MOTORISTA - GoTáxi* 🚕
-
-*Olá ${driverName}!*
-
-*Passageiro:* ${data.name}
-*De:* ${data.origin}
-*Para:* ${data.destination}
-*Passageiros:* ${data.passengers}
-*Contato:* ${data.contact}
-*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
-${data.notes ? `*Observações:* ${data.notes}` : ''}
-
-_Estou aguardando seu táxi!_
-`;
         }
         
         // Obter texto do método de pagamento
