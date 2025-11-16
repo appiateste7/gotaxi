@@ -192,6 +192,20 @@
             z-index: 1000;
             max-width: 300px;
         }
+
+        .online-drivers-counter {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -209,6 +223,10 @@
     <div class="welcome-message">
         <h3>Seu Táxi Em Lisboa, Quando Precisar!</h3>
         <p>Serviço de táxi rápido e confiável em Lisboa. Solicite online com apenas alguns cliques.</p>
+    </div>
+
+    <div id="onlineDriversCounter" class="online-drivers-counter" style="display: none;">
+        🚗 <span id="driversCount">0</span> motoristas online
     </div>
     
     <div class="location-card">
@@ -264,7 +282,7 @@
         // Variáveis globais
         let map;
         let userMarker;
-        let driverMarker;
+        let driverMarkers = {}; // Objeto para armazenar múltiplos marcadores
         let originAutocomplete;
         let destinationAutocomplete;
         let userLocation;
@@ -403,47 +421,80 @@
         function listenForDrivers() {
             database.ref('drivers').on('value', (snapshot) => {
                 const drivers = snapshot.val();
-                let onlineDriver = null;
+                let onlineDriversCount = 0;
                 
-                // Verificar se há algum motorista online
-                for (const driverId in drivers) {
-                    if (drivers[driverId].status === 'online') {
-                        onlineDriver = drivers[driverId];
-                        break;
+                // Limpar marcadores antigos
+                for (const driverId in driverMarkers) {
+                    driverMarkers[driverId].setMap(null);
+                }
+                driverMarkers = {};
+                
+                // Verificar todos os motoristas
+                if (drivers) {
+                    for (const driverId in drivers) {
+                        const driver = drivers[driverId];
+                        
+                        if (driver.status === 'online' && driver.location) {
+                            onlineDriversCount++;
+                            
+                            // Criar marcador para cada motorista online
+                            const driverMarker = new google.maps.Marker({
+                                position: driver.location,
+                                map: map,
+                                title: `Motorista: ${driver.username || driverId}`,
+                                icon: {
+                                    url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
+                                    scaledSize: new google.maps.Size(40, 40)
+                                }
+                            });
+                            
+                            // Adicionar info window com nome do motorista
+                            const infoWindow = new google.maps.InfoWindow({
+                                content: `<div style="padding: 10px;">
+                                    <strong>🚗 ${driver.username || driverId}</strong><br>
+                                    <em>Motorista GoTáxi</em>
+                                </div>`
+                            });
+                            
+                            driverMarker.addListener('click', () => {
+                                infoWindow.open(map, driverMarker);
+                            });
+                            
+                            // Armazenar marcador no objeto
+                            driverMarkers[driverId] = driverMarker;
+                        }
                     }
                 }
                 
-                if (onlineDriver && onlineDriver.location) {
-                    // Atualizar marcador do motorista
-                    if (!driverMarker) {
-                        driverMarker = new google.maps.Marker({
-                            position: onlineDriver.location,
-                            map: map,
-                            title: "Motorista Disponível",
-                            icon: {
-                                url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
-                                scaledSize: new google.maps.Size(40, 40)
-                            }
-                        });
-                    } else {
-                        driverMarker.setPosition(onlineDriver.location);
-                    }
-                    
-                    // Habilitar botão de chamar táxi
+                // Atualizar contador de motoristas online
+                updateOnlineDriversCounter(onlineDriversCount);
+                
+                // Habilitar/desabilitar botão baseado na quantidade de motoristas online
+                if (onlineDriversCount > 0) {
                     document.getElementById('callTaxi').disabled = false;
                     document.getElementById('callTaxi').classList.add('active');
                 } else {
-                    // Desabilitar botão de chamar táxi se não houver motoristas
                     document.getElementById('callTaxi').disabled = true;
                     document.getElementById('callTaxi').classList.remove('active');
-                    
-                    // Remover marcador do motorista
-                    if (driverMarker) {
-                        driverMarker.setMap(null);
-                        driverMarker = null;
-                    }
                 }
             });
+        }
+        
+        // Atualizar contador de motoristas online
+        function updateOnlineDriversCounter(count) {
+            const counterElement = document.getElementById('onlineDriversCounter');
+            const countElement = document.getElementById('driversCount');
+            
+            countElement.textContent = count;
+            
+            if (count > 0) {
+                counterElement.style.display = 'block';
+                counterElement.style.backgroundColor = count >= 3 ? '#4CAF50' : 
+                                                     count === 2 ? '#ff9800' : 
+                                                     '#f44336';
+            } else {
+                counterElement.style.display = 'none';
+            }
         }
         
         // Escutar por notificações
