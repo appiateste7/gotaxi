@@ -329,6 +329,8 @@
         let directionsService;
         let directionsRenderer;
         let currentRoutes = [];
+        let destinationMarker = null;
+        let hasPlayedSound = false;
         
         // Credenciais dos motoristas
         const drivers = {
@@ -540,8 +542,11 @@
                 
                 // Verificar se é uma solicitação pendente
                 if (request.status === 'pending' && request.paymentStatus === 'free') {
-                    // Tocar som de notificação
-                    playNotificationSound();
+                    // Tocar som de notificação (apenas uma vez)
+                    if (!hasPlayedSound) {
+                        playNotificationSound();
+                        hasPlayedSound = true;
+                    }
                     
                     // Mostrar card de solicitação
                     showRequestCard(request, requestId);
@@ -618,39 +623,87 @@
         // Aceitar solicitação
         function acceptRequest(requestId, request) {
             clearInterval(countdown);
+            hasPlayedSound = false; // Resetar flag do som
             
-            // Calcular rotas
-            calculateRoutes(request);
-            
-            // Atualizar status da solicitação
-            database.ref(`ride_requests/${requestId}`).update({
-                status: 'accepted',
-                driverId: currentDriver.driverId,
-                driverName: currentDriver.username,
-                acceptedAt: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            // Esconder card de solicitação
-            document.getElementById('requestCard').style.display = 'none';
-            
-            // Mostrar notificação
-            showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
-            
-            // Enviar notificação para o cliente
-            if (request.clientId) {
-                database.ref(`notifications/clients/${request.clientId}`).push({
-                    type: 'request_accepted',
-                    message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
-                    driverName: currentDriver.username,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
+            // Geocodificar endereços para obter coordenadas
+            geocodeAddress(request.origin, (originLocation) => {
+                geocodeAddress(request.destination, (destinationLocation) => {
+                    // Calcular rotas com as coordenadas
+                    calculateRoutes(originLocation, destinationLocation);
+                    
+                    // Adicionar marcador vermelho no destino
+                    addDestinationMarker(destinationLocation);
+                    
+                    // Atualizar status da solicitação
+                    database.ref(`ride_requests/${requestId}`).update({
+                        status: 'accepted',
+                        driverId: currentDriver.driverId,
+                        driverName: currentDriver.username,
+                        driverLocation: marker.getPosition(),
+                        originLocation: originLocation,
+                        destinationLocation: destinationLocation,
+                        acceptedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    // Esconder card de solicitação
+                    document.getElementById('requestCard').style.display = 'none';
+                    
+                    // Mostrar notificação
+                    showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
+                    
+                    // Enviar notificação para o cliente
+                    if (request.clientId) {
+                        database.ref(`notifications/clients/${request.clientId}`).push({
+                            type: 'request_accepted',
+                            message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
+                            driverName: currentDriver.username,
+                            driverLocation: marker.getPosition(),
+                            originLocation: originLocation,
+                            destinationLocation: destinationLocation,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    }
+                    
+                    currentRequestId = null;
                 });
+            });
+        }
+        
+        // Geocodificar endereço
+        function geocodeAddress(address, callback) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: address }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                    callback(results[0].geometry.location);
+                } else {
+                    console.error('Geocode falhou:', status);
+                    // Fallback para Lisboa central
+                    callback({ lat: 38.7223, lng: -9.1393 });
+                }
+            });
+        }
+        
+        // Adicionar marcador vermelho no destino
+        function addDestinationMarker(destinationLocation) {
+            // Remover marcador anterior se existir
+            if (destinationMarker) {
+                destinationMarker.setMap(null);
             }
             
-            currentRequestId = null;
+            // Criar marcador vermelho no destino
+            destinationMarker = new google.maps.Marker({
+                position: destinationLocation,
+                map: map,
+                title: "Destino do Cliente",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                    scaledSize: new google.maps.Size(32, 32)
+                }
+            });
         }
         
         // Calcular rotas
-        function calculateRoutes(request) {
+        function calculateRoutes(originLocation, destinationLocation) {
             // Limpar rotas anteriores
             if (currentRoutes.length > 0) {
                 currentRoutes.forEach(route => route.setMap(null));
@@ -662,7 +715,7 @@
             // Rota 1: Motorista -> Cliente (cinza escuro)
             calculateRoute(
                 driverPosition,
-                request.origin,
+                originLocation,
                 '#666666', // Cinza escuro
                 6
             );
@@ -670,8 +723,8 @@
             // Rota 2: Cliente -> Destino (azul)
             setTimeout(() => {
                 calculateRoute(
-                    request.origin,
-                    request.destination,
+                    originLocation,
+                    destinationLocation,
                     '#2196F3', // Azul
                     4
                 );
@@ -706,6 +759,7 @@
         // Rejeitar solicitação
         function rejectRequest(requestId) {
             clearInterval(countdown);
+            hasPlayedSound = false; // Resetar flag do som
             
             // Atualizar status da solicitação
             database.ref(`ride_requests/${requestId}`).update({
@@ -754,7 +808,7 @@
     
     <!-- Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions,geometry">
     </script>
 </body>
 </html>

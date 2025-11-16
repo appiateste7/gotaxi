@@ -188,6 +188,13 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        .redirect-countdown {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +211,7 @@
     <div class="container">
         <div id="notification" class="notification"></div>
         <div id="statusIndicator" class="status-indicator" style="display: none;"></div>
+        <div id="redirectCountdown" class="redirect-countdown" style="display: none;"></div>
         
         <div class="form-card">
             <h2>🚕 Solicitar Táxi</h2>
@@ -300,9 +308,11 @@
         const whatsappButton = document.getElementById('whatsappButton');
         const notification = document.getElementById('notification');
         const statusIndicator = document.getElementById('statusIndicator');
+        const redirectCountdown = document.getElementById('redirectCountdown');
         
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
+        let redirectTimer = null;
         
         // Verificar se há parâmetros na URL e preencher os campos
         function checkUrlParams() {
@@ -398,12 +408,48 @@
                     if (request.status === 'accepted') {
                         updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
                         showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
+                        
+                        // Salvar dados da rota no localStorage para a página inicial
+                        localStorage.setItem('rideAccepted', 'true');
+                        localStorage.setItem('driverName', request.driverName);
+                        localStorage.setItem('origin', request.origin);
+                        localStorage.setItem('destination', request.destination);
+                        if (request.driverLocation) {
+                            localStorage.setItem('driverLocation', JSON.stringify(request.driverLocation));
+                        }
+                        if (request.originLocation) {
+                            localStorage.setItem('originLocation', JSON.stringify(request.originLocation));
+                        }
+                        if (request.destinationLocation) {
+                            localStorage.setItem('destinationLocation', JSON.stringify(request.destinationLocation));
+                        }
+                        
+                        // Iniciar contagem regressiva para redirecionamento
+                        startRedirectCountdown();
+                        
                     } else if (request.status === 'rejected') {
                         updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
                         showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
                     }
                 }
             });
+        }
+        
+        // Iniciar contagem regressiva para redirecionamento
+        function startRedirectCountdown() {
+            let countdown = 5;
+            redirectCountdown.style.display = 'block';
+            redirectCountdown.textContent = `Redirecionando para a página inicial em ${countdown} segundos...`;
+            
+            redirectTimer = setInterval(() => {
+                countdown--;
+                redirectCountdown.textContent = `Redirecionando para a página inicial em ${countdown} segundos...`;
+                
+                if (countdown <= 0) {
+                    clearInterval(redirectTimer);
+                    window.location.href = 'index.html';
+                }
+            }, 1000);
         }
         
         // Enviar via WhatsApp
