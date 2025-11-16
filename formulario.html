@@ -169,6 +169,10 @@
             background-color: #2196F3;
         }
         
+        .notification.success {
+            background-color: #4CAF50;
+        }
+        
         .status-indicator {
             text-align: center;
             padding: 10px;
@@ -211,6 +215,25 @@
         .accepted-actions .btn {
             margin-top: 0;
             flex: 1;
+        }
+
+        .accepted-message {
+            text-align: center;
+            padding: 20px;
+            background-color: #e8f5e8;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #4CAF50;
+        }
+
+        .accepted-message h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+
+        .accepted-message p {
+            color: #1b5e20;
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -297,6 +320,13 @@
                     📱 Enviar Via WhatsApp
                 </button>
 
+                <div id="acceptedMessage" class="accepted-message" style="display: none;">
+                    <h3>🎉 Táxi Confirmado!</h3>
+                    <p id="driverAcceptedName"></p>
+                    <p>🛣️ <strong>Rota calculada:</strong> Motorista a caminho do seu local</p>
+                    <p>⏱️ <strong>Redirecionando em:</strong> <span id="countdownTimer">3</span> segundos</p>
+                </div>
+
                 <div id="acceptedActions" class="accepted-actions" style="display: none;">
                     <button type="button" id="backHomeButton" class="btn btn-back-home">
                         🗺️ Ver Rota em Tempo Real
@@ -335,6 +365,9 @@
         const backHomeButton = document.getElementById('backHomeButton');
         const whatsappButtonAccepted = document.getElementById('whatsappButtonAccepted');
         const acceptedActions = document.getElementById('acceptedActions');
+        const acceptedMessage = document.getElementById('acceptedMessage');
+        const driverAcceptedName = document.getElementById('driverAcceptedName');
+        const countdownTimer = document.getElementById('countdownTimer');
         const notification = document.getElementById('notification');
         const statusIndicator = document.getElementById('statusIndicator');
         const redirectCountdown = document.getElementById('redirectCountdown');
@@ -343,6 +376,7 @@
         let currentRequestId = null;
         let redirectTimer = null;
         let currentDriverName = '';
+        let isRedirecting = false;
         
         // Verificar se há parâmetros na URL e preencher os campos
         function checkUrlParams() {
@@ -436,9 +470,16 @@
                 
                 if (request) {
                     if (request.status === 'accepted') {
+                        // Atualizar imediatamente a mensagem para "aceito"
                         currentDriverName = request.driverName;
-                        updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
-                        showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
+                        
+                        // Esconder elementos antigos
+                        callTaxiButton.style.display = 'none';
+                        whatsappButton.style.display = 'none';
+                        statusIndicator.style.display = 'none';
+                        
+                        // Mostrar mensagem de aceitação
+                        showAcceptedMessage(request.driverName);
                         
                         // Salvar dados da rota no localStorage para a página inicial
                         localStorage.setItem('rideAccepted', 'true');
@@ -455,8 +496,8 @@
                             localStorage.setItem('destinationLocation', JSON.stringify(request.destinationLocation));
                         }
                         
-                        // Mostrar botões de ação após aceitação
-                        showAcceptedActions();
+                        // Iniciar contagem regressiva para redirecionamento automático
+                        startAutoRedirect();
                         
                     } else if (request.status === 'rejected') {
                         updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
@@ -465,24 +506,48 @@
                         // Reabilitar botão de chamar táxi
                         callTaxiButton.disabled = false;
                         callTaxiButton.textContent = "🚗 Chamar Táxi Novamente";
+                        callTaxiButton.style.display = 'block';
                     }
                 }
             });
         }
         
-        // Mostrar botões de ação após aceitação
-        function showAcceptedActions() {
-            // Esconder botões antigos
-            callTaxiButton.style.display = 'none';
-            whatsappButton.style.display = 'none';
+        // Mostrar mensagem de aceitação
+        function showAcceptedMessage(driverName) {
+            driverAcceptedName.textContent = `👤 Motorista: ${driverName}`;
+            acceptedMessage.style.display = 'block';
             
-            // Mostrar novos botões
-            acceptedActions.style.display = 'flex';
+            // Mostrar notificação de sucesso
+            showNotification(`🎉 Táxi aceito por ${driverName}! Redirecionando...`, false, 'success');
         }
         
-        // Voltar para a página inicial
-        backHomeButton.addEventListener('click', function() {
+        // Iniciar redirecionamento automático
+        function startAutoRedirect() {
+            if (isRedirecting) return;
+            isRedirecting = true;
+            
+            let countdown = 3;
+            countdownTimer.textContent = countdown;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownTimer.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    redirectToHomePage();
+                }
+            }, 1000);
+        }
+        
+        // Redirecionar para página inicial
+        function redirectToHomePage() {
             window.location.href = 'index.html';
+        }
+        
+        // Voltar para a página inicial (botão manual)
+        backHomeButton.addEventListener('click', function() {
+            redirectToHomePage();
         });
         
         // Enviar via WhatsApp (após aceitação)
@@ -616,6 +681,8 @@ _Estou aguardando seu táxi!_
             
             if (type === 'info') {
                 notification.className = 'notification info';
+            } else if (type === 'success') {
+                notification.className = 'notification success';
             } else {
                 notification.className = isError ? 'notification error' : 'notification';
             }
