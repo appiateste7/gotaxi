@@ -194,19 +194,6 @@
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
-        .accepted-ride-info {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            max-width: 300px;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -223,12 +210,6 @@
 
     <div id="onlineDriversCounter" class="online-drivers-counter" style="display: none;">
         🚗 <span id="driversCount">0</span> motoristas online
-    </div>
-
-    <div id="acceptedRideInfo" class="accepted-ride-info">
-        <h3>🚕 Táxi Confirmado!</h3>
-        <p id="driverNameInfo"></p>
-        <p id="routeInfo"></p>
     </div>
     
     <div class="location-card">
@@ -289,10 +270,6 @@
         let destinationAutocomplete;
         let userLocation;
         let clientId;
-        let directionsService;
-        let directionsRenderer;
-        let currentRoutes = [];
-        let destinationMarker = null;
         
         // Gerar ID único para o cliente
         clientId = 'client_' + Math.random().toString(36).substr(2, 9);
@@ -325,13 +302,6 @@
                 fullscreenControl: true
             });
             
-            // Inicializar serviços de rota
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: map,
-                suppressMarkers: true
-            });
-            
             // Criar marcador do usuário
             userMarker = new google.maps.Marker({
                 position: lisbon,
@@ -341,9 +311,6 @@
                     url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
                 }
             });
-            
-            // Verificar se há uma corrida aceita
-            checkAcceptedRide();
             
             // Tentar obter localização atual do usuário
             if (navigator.geolocation) {
@@ -390,122 +357,6 @@
             
             // Escutar por notificações
             listenForNotifications();
-        }
-        
-        // Verificar se há uma corrida aceita
-        function checkAcceptedRide() {
-            const rideAccepted = localStorage.getItem('rideAccepted');
-            if (rideAccepted === 'true') {
-                const driverName = localStorage.getItem('driverName');
-                const origin = localStorage.getItem('origin');
-                const destination = localStorage.getItem('destination');
-                const driverLocation = JSON.parse(localStorage.getItem('driverLocation') || '{}');
-                const originLocation = JSON.parse(localStorage.getItem('originLocation') || '{}');
-                const destinationLocation = JSON.parse(localStorage.getItem('destinationLocation') || '{}');
-                
-                // Mostrar informações da corrida
-                showAcceptedRideInfo(driverName, origin, destination);
-                
-                // Calcular e mostrar rotas
-                if (originLocation.lat && destinationLocation.lat) {
-                    calculateClientRoutes(originLocation, destinationLocation, driverLocation);
-                }
-                
-                // Limpar localStorage
-                localStorage.removeItem('rideAccepted');
-                localStorage.removeItem('driverName');
-                localStorage.removeItem('origin');
-                localStorage.removeItem('destination');
-                localStorage.removeItem('driverLocation');
-                localStorage.removeItem('originLocation');
-                localStorage.removeItem('destinationLocation');
-            }
-        }
-        
-        // Mostrar informações da corrida aceita
-        function showAcceptedRideInfo(driverName, origin, destination) {
-            const acceptedRideInfo = document.getElementById('acceptedRideInfo');
-            const driverNameInfo = document.getElementById('driverNameInfo');
-            const routeInfo = document.getElementById('routeInfo');
-            
-            driverNameInfo.textContent = `Motorista: ${driverName}`;
-            routeInfo.innerHTML = `📍 <strong>De:</strong> ${origin}<br>🎯 <strong>Para:</strong> ${destination}`;
-            
-            acceptedRideInfo.style.display = 'block';
-        }
-        
-        // Calcular rotas para o cliente
-        function calculateClientRoutes(originLocation, destinationLocation, driverLocation) {
-            // Limpar rotas anteriores
-            if (currentRoutes.length > 0) {
-                currentRoutes.forEach(route => route.setMap(null));
-                currentRoutes = [];
-            }
-            
-            // Adicionar marcador vermelho no destino
-            addDestinationMarker(destinationLocation);
-            
-            // Rota 1: Motorista -> Cliente (cinza escuro)
-            calculateRoute(
-                driverLocation,
-                originLocation,
-                '#666666', // Cinza escuro
-                6
-            );
-            
-            // Rota 2: Cliente -> Destino (azul)
-            setTimeout(() => {
-                calculateRoute(
-                    originLocation,
-                    destinationLocation,
-                    '#2196F3', // Azul
-                    4
-                );
-            }, 1000);
-        }
-        
-        // Adicionar marcador vermelho no destino
-        function addDestinationMarker(destinationLocation) {
-            // Remover marcador anterior se existir
-            if (destinationMarker) {
-                destinationMarker.setMap(null);
-            }
-            
-            // Criar marcador vermelho no destino
-            destinationMarker = new google.maps.Marker({
-                position: destinationLocation,
-                map: map,
-                title: "Seu Destino",
-                icon: {
-                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-                    scaledSize: new google.maps.Size(32, 32)
-                }
-            });
-        }
-        
-        // Calcular rota individual
-        function calculateRoute(origin, destination, color, width) {
-            directionsService.route({
-                origin: origin,
-                destination: destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            }, (response, status) => {
-                if (status === 'OK') {
-                    const routeRenderer = new google.maps.DirectionsRenderer({
-                        map: map,
-                        directions: response,
-                        suppressMarkers: true,
-                        polylineOptions: {
-                            strokeColor: color,
-                            strokeOpacity: 0.8,
-                            strokeWeight: width
-                        }
-                    });
-                    currentRoutes.push(routeRenderer);
-                } else {
-                    console.error('Erro ao calcular rota:', status);
-                }
-            });
         }
         
         function handleLocationError(browserHasGeolocation, pos) {
@@ -677,7 +528,7 @@
     
     <!-- Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions,geometry">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>

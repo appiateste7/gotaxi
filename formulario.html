@@ -163,10 +163,6 @@
             background-color: #2196F3;
         }
         
-        .notification.success {
-            background-color: #4CAF50;
-        }
-        
         .status-indicator {
             text-align: center;
             padding: 10px;
@@ -191,33 +187,6 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-        }
-
-        .accepted-message {
-            text-align: center;
-            padding: 20px;
-            background-color: #e8f5e8;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 2px solid #4CAF50;
-            display: none;
-        }
-
-        .accepted-message h3 {
-            color: #2e7d32;
-            margin-bottom: 10px;
-        }
-
-        .accepted-message p {
-            color: #1b5e20;
-            margin: 5px 0;
-        }
-
-        .countdown-display {
-            font-size: 18px;
-            font-weight: bold;
-            color: #d32f2f;
-            margin: 10px 0;
         }
     </style>
 </head>
@@ -302,15 +271,6 @@
                 <button type="button" id="whatsappButton" class="btn btn-whatsapp" disabled>
                     📱 Enviar Via WhatsApp
                 </button>
-
-                <div id="acceptedMessage" class="accepted-message">
-                    <h3>✅ Taxista Confirmou!</h3>
-                    <p id="driverAcceptedName">Motorista: <span id="driverNameSpan">Carregando...</span></p>
-                    <p>🛣️ <strong>Rota calculada:</strong> Motorista a caminho do seu local</p>
-                    <div class="countdown-display">
-                        Redirecionando em: <span id="countdownTimer">3</span> segundos
-                    </div>
-                </div>
             </form>
         </div>
     </div>
@@ -338,16 +298,11 @@
         // Elementos do DOM
         const callTaxiButton = document.getElementById('callTaxiButton');
         const whatsappButton = document.getElementById('whatsappButton');
-        const acceptedMessage = document.getElementById('acceptedMessage');
-        const driverNameSpan = document.getElementById('driverNameSpan');
-        const countdownTimer = document.getElementById('countdownTimer');
         const notification = document.getElementById('notification');
         const statusIndicator = document.getElementById('statusIndicator');
         
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
-        let redirectTimer = null;
-        let isRedirecting = false;
         
         // Verificar se há parâmetros na URL e preencher os campos
         function checkUrlParams() {
@@ -418,7 +373,6 @@
                     
                     // Alterar texto do botão
                     callTaxiButton.textContent = "✅ Solicitação Enviada";
-                    callTaxiButton.style.backgroundColor = '#cccccc';
                     
                     // Escutar por atualizações na solicitação
                     listenForRequestUpdates();
@@ -433,103 +387,23 @@
                 });
         });
         
-        // Escutar por atualizações na solicitação - CORRIGIDO
+        // Escutar por atualizações na solicitação
         function listenForRequestUpdates() {
             if (!currentRequestId) return;
             
-            console.log('Escutando atualizações para solicitação:', currentRequestId);
-            
-            // Usar 'on' para escutar mudanças em tempo real
             database.ref(`ride_requests/${currentRequestId}`).on('value', (snapshot) => {
                 const request = snapshot.val();
-                console.log('Atualização recebida:', request);
                 
                 if (request) {
                     if (request.status === 'accepted') {
-                        console.log('Motorista aceitou a solicitação!');
-                        
-                        // ATUALIZAR IMEDIATAMENTE a interface
-                        handleRequestAccepted(request);
-                        
+                        updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
+                        showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
                     } else if (request.status === 'rejected') {
-                        console.log('Motorista rejeitou a solicitação');
-                        handleRequestRejected();
+                        updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
+                        showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
                     }
                 }
             });
-        }
-        
-        // Manipular aceitação da solicitação
-        function handleRequestAccepted(request) {
-            // Esconder elementos antigos
-            callTaxiButton.style.display = 'none';
-            whatsappButton.style.display = 'none';
-            statusIndicator.style.display = 'none';
-            
-            // Atualizar mensagem com nome do motorista
-            const driverName = request.driverName || 'Motorista';
-            driverNameSpan.textContent = driverName;
-            
-            // Mostrar mensagem de aceitação
-            acceptedMessage.style.display = 'block';
-            
-            // Mostrar notificação de sucesso
-            showNotification(`✅ ${driverName} aceitou sua corrida!`, false, 'success');
-            
-            // Salvar dados da rota no localStorage para a página inicial
-            localStorage.setItem('rideAccepted', 'true');
-            localStorage.setItem('driverName', driverName);
-            localStorage.setItem('origin', request.origin);
-            localStorage.setItem('destination', request.destination);
-            if (request.driverLocation) {
-                localStorage.setItem('driverLocation', JSON.stringify(request.driverLocation));
-            }
-            if (request.originLocation) {
-                localStorage.setItem('originLocation', JSON.stringify(request.originLocation));
-            }
-            if (request.destinationLocation) {
-                localStorage.setItem('destinationLocation', JSON.stringify(request.destinationLocation));
-            }
-            
-            // Iniciar contagem regressiva para redirecionamento automático
-            startAutoRedirect();
-        }
-        
-        // Manipular rejeição da solicitação
-        function handleRequestRejected() {
-            updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
-            showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
-            
-            // Reabilitar botão de chamar táxi
-            callTaxiButton.disabled = false;
-            callTaxiButton.textContent = "🚗 Chamar Táxi Novamente";
-            callTaxiButton.style.display = 'block';
-            callTaxiButton.style.backgroundColor = '#2196F3';
-        }
-        
-        // Iniciar redirecionamento automático
-        function startAutoRedirect() {
-            if (isRedirecting) return;
-            isRedirecting = true;
-            
-            let countdown = 3;
-            countdownTimer.textContent = countdown;
-            
-            const countdownInterval = setInterval(() => {
-                countdown--;
-                countdownTimer.textContent = countdown;
-                
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    redirectToHomePage();
-                }
-            }, 1000);
-        }
-        
-        // Redirecionar para página inicial
-        function redirectToHomePage() {
-            console.log('Redirecionando para página inicial...');
-            window.location.href = 'index.html';
         }
         
         // Enviar via WhatsApp
@@ -624,8 +498,6 @@ _Por favor, confirme esta solicitação._`;
             
             if (type === 'info') {
                 notification.className = 'notification info';
-            } else if (type === 'success') {
-                notification.className = 'notification success';
             } else {
                 notification.className = isError ? 'notification error' : 'notification';
             }
