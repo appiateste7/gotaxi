@@ -153,6 +153,8 @@
             text-align: center;
             font-weight: bold;
             margin-bottom: 10px;
+            color: #f44336;
+            font-size: 18px;
         }
         
         .login-container {
@@ -261,14 +263,14 @@
     <div id="notification" class="notification"></div>
     
     <div id="requestCard" class="request-card">
-        <h3>Nova Solicitação de Táxi</h3>
-        <div class="timer" id="timer">60</div>
+        <h3>🚕 Nova Solicitação de Táxi</h3>
+        <div class="timer" id="timer">60 segundos</div>
         <div class="request-details" id="requestDetails">
             <!-- Detalhes da solicitação serão preenchidos aqui -->
         </div>
         <div class="request-actions">
-            <button id="acceptRequest" class="btn btn-accept">Aceitar</button>
-            <button id="rejectRequest" class="btn btn-reject">Rejeitar</button>
+            <button id="acceptRequest" class="btn btn-accept">✅ Aceitar</button>
+            <button id="rejectRequest" class="btn btn-reject">❌ Rejeitar</button>
         </div>
     </div>
 
@@ -299,6 +301,7 @@
         let isTracking = false;
         let countdown;
         let currentDriver = null;
+        let currentRequestId = null;
         
         // Credenciais dos motoristas
         const drivers = {
@@ -492,10 +495,13 @@
         function listenForRequests() {
             database.ref('ride_requests').on('child_added', (snapshot) => {
                 const request = snapshot.val();
+                const requestId = snapshot.key;
                 
-                // Verificar se é uma solicitação pendente
-                if (request.status === 'pending') {
-                    showRequestCard(request, snapshot.key);
+                console.log('Nova solicitação recebida:', request);
+                
+                // Verificar se é uma solicitação pendente e se não foi processada
+                if (request.status === 'pending' && request.paymentStatus === 'paid') {
+                    showRequestCard(request, requestId);
                 }
             });
         }
@@ -506,13 +512,18 @@
             const requestDetails = document.getElementById('requestDetails');
             const timerElement = document.getElementById('timer');
             
+            currentRequestId = requestId;
+            
             // Preencher detalhes da solicitação
             requestDetails.innerHTML = `
-                <p><strong>De:</strong> ${request.origin}</p>
-                <p><strong>Para:</strong> ${request.destination}</p>
-                <p><strong>Passageiros:</strong> ${request.passengers || '1'}</p>
-                <p><strong>Contato:</strong> ${request.contact || 'Não informado'}</p>
-                ${request.notes ? `<p><strong>Observações:</strong> ${request.notes}</p>` : ''}
+                <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
+                <p><strong>📍 De:</strong> ${request.origin}</p>
+                <p><strong>🎯 Para:</strong> ${request.destination}</p>
+                <p><strong>👥 Passageiros:</strong> ${request.passengers || '1'}</p>
+                <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
+                <p><strong>⏰ Chegada:</strong> ${request.arrivalTime || '10'} minutos</p>
+                <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
+                ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
             `;
             
             // Mostrar card
@@ -520,11 +531,13 @@
             
             // Iniciar contagem regressiva de 60 segundos
             let timeLeft = 60;
+            updateTimerDisplay(timerElement, timeLeft);
+            
             countdown = setInterval(() => {
-                timerElement.textContent = timeLeft;
                 timeLeft--;
+                updateTimerDisplay(timerElement, timeLeft);
                 
-                if (timeLeft < 0) {
+                if (timeLeft <= 0) {
                     clearInterval(countdown);
                     // Tempo esgotado, rejeitar automaticamente
                     rejectRequest(requestId);
@@ -534,6 +547,19 @@
             // Configurar botões de aceitar e rejeitar
             document.getElementById('acceptRequest').onclick = () => acceptRequest(requestId, request);
             document.getElementById('rejectRequest').onclick = () => rejectRequest(requestId);
+        }
+        
+        // Atualizar display do timer
+        function updateTimerDisplay(timerElement, timeLeft) {
+            timerElement.textContent = `${timeLeft} segundos`;
+            if (timeLeft <= 10) {
+                timerElement.style.color = '#f44336';
+                timerElement.style.fontWeight = 'bold';
+            } else if (timeLeft <= 30) {
+                timerElement.style.color = '#ff9800';
+            } else {
+                timerElement.style.color = '#4CAF50';
+            }
         }
         
         // Aceitar solicitação
@@ -552,15 +578,19 @@
             document.getElementById('requestCard').style.display = 'none';
             
             // Mostrar notificação
-            showNotification("Você aceitou a solicitação. Entre em contato com o cliente.");
+            showNotification("✅ Você aceitou a solicitação! Entre em contato com o cliente.");
             
             // Enviar notificação para o cliente
-            database.ref(`notifications/clients/${request.clientId}`).push({
-                type: 'request_accepted',
-                message: 'Seu táxi foi aceito! O motorista entrará em contato em breve.',
-                driverName: currentDriver.username,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
+            if (request.clientId) {
+                database.ref(`notifications/clients/${request.clientId}`).push({
+                    type: 'request_accepted',
+                    message: '🎉 Seu táxi foi aceito! O motorista entrará em contato em breve.',
+                    driverName: currentDriver.username,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+            
+            currentRequestId = null;
         }
         
         // Rejeitar solicitação
@@ -577,7 +607,19 @@
             document.getElementById('requestCard').style.display = 'none';
             
             // Mostrar notificação
-            showNotification("Você rejeitou a solicitação.");
+            showNotification("❌ Você rejeitou a solicitação.");
+            
+            currentRequestId = null;
+        }
+        
+        // Obter texto do método de pagamento
+        function getPaymentMethodText(method) {
+            switch(method) {
+                case 'cash': return '💵 Dinheiro';
+                case 'card': return '💳 Cartão';
+                case 'mbway': return '📱 MBWay';
+                default: return method;
+            }
         }
         
         // Mostrar notificação
