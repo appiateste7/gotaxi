@@ -343,7 +343,10 @@
             <div class="popup-icon">✅</div>
             <h2 class="popup-title">Táxi Confirmado!</h2>
             <p class="popup-message" id="popupDriverMessage">Seu táxi foi aceito e está a caminho!</p>
-            <p class="popup-message">Você será redirecionado para a página inicial em <span id="countdown">3</span> segundos...</p>
+            <p class="popup-message">O motorista entrará em contato com você em breve.</p>
+            <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;">
+                🏠 Voltar para o Início
+            </button>
         </div>
     </div>
 
@@ -478,7 +481,7 @@
                         updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
                         showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
                         
-                        // Mostrar popup de sucesso e redirecionar
+                        // Mostrar popup de sucesso SEM redirecionamento automático
                         showSuccessPopup(request.driverName);
                         
                     } else if (request.status === 'rejected') {
@@ -547,8 +550,8 @@
                     acceptedAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 
-                // Mostrar popup de sucesso e redirecionar
-                showSuccessPopup(notification.driverName);
+                // Mostrar popup de sucesso SEM redirecionamento automático
+                showReservationSuccessPopup(notification.driverName, notification.reservationTime);
                 
             }).catch((error) => {
                 console.error('Erro ao aceitar reserva:', error);
@@ -579,28 +582,37 @@
             });
         }
         
-        // Mostrar popup de sucesso e iniciar contagem regressiva para redirecionamento
+        // Mostrar popup de sucesso SEM redirecionamento automático
         function showSuccessPopup(driverName) {
-            // Atualizar mensagem do popup com o nome do motorista
+            // Atualizar mensagem do popup
             popupDriverMessage.textContent = `Seu táxi foi aceito por ${driverName || 'um motorista'} e está a caminho!`;
             
             // Mostrar popup
             successPopup.classList.add('active');
+        }
+        
+        // Mostrar popup de sucesso para reserva SEM redirecionamento automático
+        function showReservationSuccessPopup(driverName, reservationTime) {
+            const popupContent = document.querySelector('.popup-content');
+            popupContent.innerHTML = `
+                <div class="popup-icon">📅</div>
+                <h2 class="popup-title">Reserva Confirmada!</h2>
+                <p class="popup-message">Sua reserva com ${driverName} foi confirmada para daqui a ${reservationTime} minutos!</p>
+                <p class="popup-message">O motorista entrará em contato com você em breve.</p>
+                <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;">
+                    🏠 Voltar para o Início
+                </button>
+            `;
             
-            // Iniciar contagem regressiva
-            let seconds = 3;
-            countdownElement.textContent = seconds;
-            
-            redirectCountdown = setInterval(() => {
-                seconds--;
-                countdownElement.textContent = seconds;
-                
-                if (seconds <= 0) {
-                    clearInterval(redirectCountdown);
-                    // Redirecionar para a página inicial
-                    window.location.href = 'index.html';
-                }
-            }, 1000);
+            // Mostrar popup
+            successPopup.classList.add('active');
+        }
+        
+        // Fechar popup e redirecionar manualmente
+        function closePopupAndRedirect() {
+            successPopup.classList.remove('active');
+            // Redirecionar para a página inicial apenas quando o usuário clicar
+            window.location.href = 'index.html';
         }
         
         // Reconfigurar formulário para nova tentativa

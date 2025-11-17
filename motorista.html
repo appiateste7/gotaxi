@@ -412,14 +412,6 @@
             'Marcelo': { password: '12345', driverId: 'marcelo' },
             'Suzane': { password: '12345', driverId: 'suzane' }
         };
-
-        // Números dos motoristas
-        const driverNumbers = {
-            'marcelo': '351939057350',
-            'heitor': '351910603136', 
-            'suzane': '351967903210',
-            'mega': '351939354112'
-        };
         
         // Função de login
         function login() {
@@ -767,9 +759,6 @@
                         acceptedAt: firebase.database.ServerValue.TIMESTAMP
                     });
                     
-                    // Enviar WhatsApp para o motorista
-                    sendReservationWhatsApp(notification.requestId, notification);
-                    
                     // Remover a notificação
                     snapshot.ref.remove();
                     
@@ -787,46 +776,7 @@
             });
         }
         
-        // Enviar WhatsApp para reserva aceita
-        function sendReservationWhatsApp(requestId, reservationData) {
-            database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
-                const request = snapshot.val();
-                
-                if (request) {
-                    const driverNumber = driverNumbers[currentDriver.driverId] || driverNumbers['mega'];
-                    const message = formatReservationMessage(request, reservationData);
-                    const encodedMessage = encodeURIComponent(message);
-                    const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
-                    
-                    setTimeout(() => {
-                        window.open(whatsappUrl, '_blank');
-                    }, 1000);
-                }
-            });
-        }
-        
-        // Formatar mensagem de reserva
-        function formatReservationMessage(data, reservation) {
-            return `📅 *RESERVA CONFIRMADA - GoTáxi* 📅
-
-*Detalhes do Cliente:*
-*Nome:* ${data.name}
-*Contato:* ${data.contact}
-*De:* ${data.origin}
-*Para:* ${data.destination}
-
-*Detalhes da Reserva:*
-*Tempo:* ${reservation.reservationTime} minutos
-*Passageiros:* ${data.passengers}
-*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
-${data.notes ? `*Observações:* ${data.notes}` : ''}
-
-*Reserva confirmada em:* ${new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' })}
-
-_Reserva confirmada! Cliente aguarda em ${reservation.reservationTime} minutos._`;
-        }
-        
-        // Aceitar solicitação (SEM ROTAS)
+        // Aceitar solicitação
         function acceptRequest(requestId, request) {
             clearInterval(countdown);
             
@@ -852,56 +802,13 @@ _Reserva confirmada! Cliente aguarda em ${reservation.reservationTime} minutos._
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     });
                 }
-
-                // Enviar WhatsApp para o motorista
-                sendWhatsAppToDriver(requestId, request);
+                
             }).catch((error) => {
                 console.error('Erro ao aceitar solicitação:', error);
                 showNotification("❌ Erro ao aceitar solicitação.", true);
             });
             
             currentRequestId = null;
-        }
-        
-        // Enviar mensagem WhatsApp para o motorista
-        function sendWhatsAppToDriver(requestId, requestData) {
-            // Obter número do motorista baseado no ID
-            const driverNumber = driverNumbers[currentDriver.driverId] || driverNumbers['mega'];
-            
-            // Formatar mensagem para o motorista
-            const message = formatDriverMessage(requestData);
-            
-            // Codificar mensagem para URL
-            const encodedMessage = encodeURIComponent(message);
-            
-            // Criar URL do WhatsApp
-            const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
-            
-            // Abrir WhatsApp em nova aba (silenciosamente)
-            setTimeout(() => {
-                window.open(whatsappUrl, '_blank');
-            }, 1000);
-        }
-        
-        // Formatar mensagem para o motorista
-        function formatDriverMessage(data) {
-            return `🚕 *NOVA CORRIDA ACEITA - GoTáxi* 🚕
-
-*Detalhes do Cliente:*
-*Nome:* ${data.name}
-*Contato:* ${data.contact}
-*De:* ${data.origin}
-*Para:* ${data.destination}
-
-*Detalhes da Corrida:*
-*Passageiros:* ${data.passengers}
-*Tempo de Chegada:* ${data.arrivalTime} minutos
-*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
-${data.notes ? `*Observações:* ${data.notes}` : ''}
-
-*Solicitado em:* ${data.timestamp}
-
-_Cliente está aguardando. Por favor, confirme a chegada._`;
         }
         
         // Rejeitar solicitação
