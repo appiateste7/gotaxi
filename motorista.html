@@ -326,9 +326,6 @@
         let countdown;
         let currentDriver = null;
         let currentRequestId = null;
-        let directionsService;
-        let directionsRenderer;
-        let currentRoutes = [];
         
         // Credenciais dos motoristas
         const drivers = {
@@ -404,13 +401,6 @@
                 mapTypeControl: false,
                 streetViewControl: false,
                 fullscreenControl: false
-            });
-            
-            // Inicializar serviços de rota
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: map,
-                suppressMarkers: true
             });
             
             // Criar marcador inicial
@@ -615,12 +605,12 @@
             }
         }
         
-        // Aceitar solicitação
+        // Aceitar solicitação (SEM ROTAS)
         function acceptRequest(requestId, request) {
             clearInterval(countdown);
             
-            // Calcular rotas
-            calculateRoutes(request);
+            // Esconder card de solicitação
+            document.getElementById('requestCard').style.display = 'none';
             
             // Atualizar status da solicitação
             database.ref(`ride_requests/${requestId}`).update({
@@ -628,96 +618,45 @@
                 driverId: currentDriver.driverId,
                 driverName: currentDriver.username,
                 acceptedAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                // Mostrar notificação após atualizar o Firebase
+                showNotification("✅ Você aceitou a solicitação!");
+                
+                // Enviar notificação para o cliente
+                if (request.clientId) {
+                    database.ref(`notifications/clients/${request.clientId}`).push({
+                        type: 'request_accepted',
+                        message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
+                        driverName: currentDriver.username,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            }).catch((error) => {
+                console.error('Erro ao aceitar solicitação:', error);
+                showNotification("❌ Erro ao aceitar solicitação.", true);
             });
-            
-            // Esconder card de solicitação
-            document.getElementById('requestCard').style.display = 'none';
-            
-            // Mostrar notificação
-            showNotification("✅ Você aceitou a solicitação! Rotas calculadas.");
-            
-            // Enviar notificação para o cliente
-            if (request.clientId) {
-                database.ref(`notifications/clients/${request.clientId}`).push({
-                    type: 'request_accepted',
-                    message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.username} está a caminho.`,
-                    driverName: currentDriver.username,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-            }
             
             currentRequestId = null;
-        }
-        
-        // Calcular rotas
-        function calculateRoutes(request) {
-            // Limpar rotas anteriores
-            if (currentRoutes.length > 0) {
-                currentRoutes.forEach(route => route.setMap(null));
-                currentRoutes = [];
-            }
-            
-            const driverPosition = marker.getPosition();
-            
-            // Rota 1: Motorista -> Cliente (cinza escuro)
-            calculateRoute(
-                driverPosition,
-                request.origin,
-                '#666666', // Cinza escuro
-                6
-            );
-            
-            // Rota 2: Cliente -> Destino (azul)
-            setTimeout(() => {
-                calculateRoute(
-                    request.origin,
-                    request.destination,
-                    '#2196F3', // Azul
-                    4
-                );
-            }, 1000);
-        }
-        
-        // Calcular rota individual
-        function calculateRoute(origin, destination, color, width) {
-            directionsService.route({
-                origin: origin,
-                destination: destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            }, (response, status) => {
-                if (status === 'OK') {
-                    const routeRenderer = new google.maps.DirectionsRenderer({
-                        map: map,
-                        directions: response,
-                        suppressMarkers: true,
-                        polylineOptions: {
-                            strokeColor: color,
-                            strokeOpacity: 0.8,
-                            strokeWeight: width
-                        }
-                    });
-                    currentRoutes.push(routeRenderer);
-                } else {
-                    console.error('Erro ao calcular rota:', status);
-                }
-            });
         }
         
         // Rejeitar solicitação
         function rejectRequest(requestId) {
             clearInterval(countdown);
             
+            // Esconder card de solicitação
+            document.getElementById('requestCard').style.display = 'none';
+            
             // Atualizar status da solicitação
             database.ref(`ride_requests/${requestId}`).update({
                 status: 'rejected',
                 rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                // Mostrar notificação após atualizar o Firebase
+                showNotification("❌ Você rejeitou a solicitação.");
+            }).catch((error) => {
+                console.error('Erro ao rejeitar solicitação:', error);
+                showNotification("❌ Erro ao rejeitar solicitação.", true);
             });
-            
-            // Esconder card de solicitação
-            document.getElementById('requestCard').style.display = 'none';
-            
-            // Mostrar notificação
-            showNotification("❌ Você rejeitou a solicitação.");
             
             currentRequestId = null;
         }
@@ -754,7 +693,7 @@
     
     <!-- Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>
