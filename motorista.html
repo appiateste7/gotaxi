@@ -137,6 +137,7 @@
         .request-actions {
             display: flex;
             justify-content: space-between;
+            gap: 10px;
         }
         
         .btn-accept {
@@ -146,6 +147,11 @@
         
         .btn-reject {
             background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-reserve {
+            background-color: #2196F3;
             color: white;
         }
         
@@ -228,6 +234,54 @@
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
+
+        /* Card de Reserva */
+        .reservation-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .reservation-card h3 {
+            margin-bottom: 15px;
+            text-align: center;
+            color: #2196F3;
+        }
+
+        .reservation-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .time-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .reservation-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .reservation-actions .btn {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -287,9 +341,32 @@
         <div class="request-details" id="requestDetails">
             <!-- Detalhes da solicitação serão preenchidos aqui -->
         </div>
-        <div class="request-actions">
-            <button id="acceptRequest" class="btn btn-accept">✅ Aceitar</button>
-            <button id="rejectRequest" class="btn btn-reject">❌ Rejeitar</button>
+        <div class="request-actions" id="requestActions">
+            <!-- Botões serão preenchidos dinamicamente -->
+        </div>
+    </div>
+
+    <!-- Card de Reserva -->
+    <div id="reservationCard" class="reservation-card">
+        <h3>📅 Fazer Reserva</h3>
+        <div class="reservation-details" id="reservationDetails">
+            <!-- Detalhes da reserva serão preenchidos aqui -->
+        </div>
+        
+        <div class="form-group">
+            <label for="reservationTime">⏰ Tempo de Reserva:</label>
+            <select id="reservationTime" class="time-select">
+                <option value="5">5 minutos</option>
+                <option value="10">10 minutos</option>
+                <option value="20">20 minutos</option>
+                <option value="30">30 minutos</option>
+                <option value="40">40 minutos</option>
+            </select>
+        </div>
+        
+        <div class="reservation-actions">
+            <button id="sendReservation" class="btn btn-reserve">📤 Enviar Reserva</button>
+            <button id="cancelReservation" class="btn btn-reject">❌ Cancelar</button>
         </div>
     </div>
 
@@ -326,6 +403,7 @@
         let countdown;
         let currentDriver = null;
         let currentRequestId = null;
+        let currentReservationId = null;
         
         // Credenciais dos motoristas
         const drivers = {
@@ -333,6 +411,14 @@
             'Heitor': { password: '12345', driverId: 'heitor' },
             'Marcelo': { password: '12345', driverId: 'marcelo' },
             'Suzane': { password: '12345', driverId: 'suzane' }
+        };
+
+        // Números dos motoristas
+        const driverNumbers = {
+            'marcelo': '351939057350',
+            'heitor': '351910603136', 
+            'suzane': '351967903210',
+            'mega': '351939354112'
         };
         
         // Função de login
@@ -498,6 +584,8 @@
             
             // Escutar por solicitações de clientes
             listenForRequests();
+            // Escutar por respostas de reserva
+            listenForReservationResponses();
         });
         
         // Parar rastreamento
@@ -551,6 +639,7 @@
             const requestCard = document.getElementById('requestCard');
             const requestDetails = document.getElementById('requestDetails');
             const timerElement = document.getElementById('timer');
+            const requestActions = document.getElementById('requestActions');
             
             currentRequestId = requestId;
             
@@ -564,6 +653,13 @@
                 <p><strong>⏰ Chegada:</strong> ${request.arrivalTime || '10'} minutos</p>
                 <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
                 ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
+            `;
+            
+            // Configurar botões
+            requestActions.innerHTML = `
+                <button id="acceptRequest" class="btn btn-accept">✅ Aceitar</button>
+                <button id="reserveRequest" class="btn btn-reserve">📅 Reserva</button>
+                <button id="rejectRequest" class="btn btn-reject">❌ Rejeitar</button>
             `;
             
             // Mostrar card
@@ -586,23 +682,148 @@
             
             // Configurar botões de aceitar e rejeitar
             document.getElementById('acceptRequest').onclick = () => acceptRequest(requestId, request);
+            document.getElementById('reserveRequest').onclick = () => showReservationCard(request, requestId);
             document.getElementById('rejectRequest').onclick = () => rejectRequest(requestId);
         }
         
-        // Atualizar display do timer
-        function updateTimerDisplay(timerElement, timeLeft) {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // Mostrar card de reserva
+        function showReservationCard(request, requestId) {
+            const reservationCard = document.getElementById('reservationCard');
+            const reservationDetails = document.getElementById('reservationDetails');
             
-            if (timeLeft <= 30) {
-                timerElement.style.color = '#f44336';
-                timerElement.style.fontWeight = 'bold';
-            } else if (timeLeft <= 60) {
-                timerElement.style.color = '#ff9800';
-            } else {
-                timerElement.style.color = '#4CAF50';
-            }
+            currentRequestId = requestId;
+            
+            // Preencher detalhes da reserva
+            reservationDetails.innerHTML = `
+                <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
+                <p><strong>📍 De:</strong> ${request.origin}</p>
+                <p><strong>🎯 Para:</strong> ${request.destination}</p>
+                <p><strong>👥 Passageiros:</strong> ${request.passengers || '1'}</p>
+                <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
+                <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
+                ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
+            `;
+            
+            // Mostrar card de reserva
+            reservationCard.style.display = 'block';
+            
+            // Configurar botões de reserva
+            document.getElementById('sendReservation').onclick = () => sendReservation(requestId, request);
+            document.getElementById('cancelReservation').onclick = () => cancelReservation();
+        }
+        
+        // Enviar proposta de reserva
+        function sendReservation(requestId, request) {
+            const reservationTime = document.getElementById('reservationTime').value;
+            
+            // Esconder card de reserva
+            document.getElementById('reservationCard').style.display = 'none';
+            
+            // Criar ID único para a reserva
+            currentReservationId = 'reservation_' + Math.random().toString(36).substr(2, 9);
+            
+            // Enviar notificação de reserva para o cliente
+            database.ref(`notifications/clients/${request.clientId}`).push({
+                type: 'reservation_proposal',
+                message: `📅 O motorista ${currentDriver.username} propõe uma reserva para daqui a ${reservationTime} minutos. Aceita?`,
+                reservationTime: reservationTime,
+                driverName: currentDriver.username,
+                driverId: currentDriver.driverId,
+                requestId: requestId,
+                reservationId: currentReservationId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                showNotification(`📅 Proposta de reserva enviada para o cliente (${reservationTime} minutos)`);
+                
+                // Atualizar status da solicitação para "reservation_pending"
+                database.ref(`ride_requests/${requestId}`).update({
+                    status: 'reservation_pending',
+                    reservationTime: reservationTime,
+                    reservationId: currentReservationId
+                });
+            }).catch((error) => {
+                console.error('Erro ao enviar reserva:', error);
+                showNotification("❌ Erro ao enviar reserva.", true);
+            });
+        }
+        
+        // Cancelar reserva
+        function cancelReservation() {
+            document.getElementById('reservationCard').style.display = 'none';
+            currentRequestId = null;
+        }
+        
+        // Escutar por respostas de reserva
+        function listenForReservationResponses() {
+            database.ref(`notifications/drivers/${currentDriver.driverId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'reservation_accepted') {
+                    showNotification(`✅ Cliente aceitou a reserva para daqui a ${notification.reservationTime} minutos!`);
+                    
+                    // Atualizar status da solicitação
+                    database.ref(`ride_requests/${notification.requestId}`).update({
+                        status: 'reservation_accepted',
+                        acceptedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    // Enviar WhatsApp para o motorista
+                    sendReservationWhatsApp(notification.requestId, notification);
+                    
+                    // Remover a notificação
+                    snapshot.ref.remove();
+                    
+                } else if (notification.type === 'reservation_rejected') {
+                    showNotification("❌ Cliente rejeitou a reserva.", true);
+                    
+                    // Atualizar status da solicitação
+                    database.ref(`ride_requests/${notification.requestId}`).update({
+                        status: 'reservation_rejected'
+                    });
+                    
+                    // Remover a notificação
+                    snapshot.ref.remove();
+                }
+            });
+        }
+        
+        // Enviar WhatsApp para reserva aceita
+        function sendReservationWhatsApp(requestId, reservationData) {
+            database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
+                const request = snapshot.val();
+                
+                if (request) {
+                    const driverNumber = driverNumbers[currentDriver.driverId] || driverNumbers['mega'];
+                    const message = formatReservationMessage(request, reservationData);
+                    const encodedMessage = encodeURIComponent(message);
+                    const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
+                    
+                    setTimeout(() => {
+                        window.open(whatsappUrl, '_blank');
+                    }, 1000);
+                }
+            });
+        }
+        
+        // Formatar mensagem de reserva
+        function formatReservationMessage(data, reservation) {
+            return `📅 *RESERVA CONFIRMADA - GoTáxi* 📅
+
+*Detalhes do Cliente:*
+*Nome:* ${data.name}
+*Contato:* ${data.contact}
+*De:* ${data.origin}
+*Para:* ${data.destination}
+
+*Detalhes da Reserva:*
+*Tempo:* ${reservation.reservationTime} minutos
+*Passageiros:* ${data.passengers}
+*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
+${data.notes ? `*Observações:* ${data.notes}` : ''}
+
+*Reserva confirmada em:* ${new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' })}
+
+_Reserva confirmada! Cliente aguarda em ${reservation.reservationTime} minutos._`;
         }
         
         // Aceitar solicitação (SEM ROTAS)
@@ -631,12 +852,56 @@
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     });
                 }
+
+                // Enviar WhatsApp para o motorista
+                sendWhatsAppToDriver(requestId, request);
             }).catch((error) => {
                 console.error('Erro ao aceitar solicitação:', error);
                 showNotification("❌ Erro ao aceitar solicitação.", true);
             });
             
             currentRequestId = null;
+        }
+        
+        // Enviar mensagem WhatsApp para o motorista
+        function sendWhatsAppToDriver(requestId, requestData) {
+            // Obter número do motorista baseado no ID
+            const driverNumber = driverNumbers[currentDriver.driverId] || driverNumbers['mega'];
+            
+            // Formatar mensagem para o motorista
+            const message = formatDriverMessage(requestData);
+            
+            // Codificar mensagem para URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Criar URL do WhatsApp
+            const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
+            
+            // Abrir WhatsApp em nova aba (silenciosamente)
+            setTimeout(() => {
+                window.open(whatsappUrl, '_blank');
+            }, 1000);
+        }
+        
+        // Formatar mensagem para o motorista
+        function formatDriverMessage(data) {
+            return `🚕 *NOVA CORRIDA ACEITA - GoTáxi* 🚕
+
+*Detalhes do Cliente:*
+*Nome:* ${data.name}
+*Contato:* ${data.contact}
+*De:* ${data.origin}
+*Para:* ${data.destination}
+
+*Detalhes da Corrida:*
+*Passageiros:* ${data.passengers}
+*Tempo de Chegada:* ${data.arrivalTime} minutos
+*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
+${data.notes ? `*Observações:* ${data.notes}` : ''}
+
+*Solicitado em:* ${data.timestamp}
+
+_Cliente está aguardando. Por favor, confirme a chegada._`;
         }
         
         // Rejeitar solicitação
@@ -659,6 +924,22 @@
             });
             
             currentRequestId = null;
+        }
+        
+        // Atualizar display do timer
+        function updateTimerDisplay(timerElement, timeLeft) {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 30) {
+                timerElement.style.color = '#f44336';
+                timerElement.style.fontWeight = 'bold';
+            } else if (timeLeft <= 60) {
+                timerElement.style.color = '#ff9800';
+            } else {
+                timerElement.style.color = '#4CAF50';
+            }
         }
         
         // Obter texto do método de pagamento

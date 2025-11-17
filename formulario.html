@@ -376,14 +376,6 @@
         const popupDriverMessage = document.getElementById('popupDriverMessage');
         const countdownElement = document.getElementById('countdown');
         
-        // Números dos motoristas
-        const driverNumbers = {
-            'marcelo': '351939057350',
-            'heitor': '351910603136', 
-            'suzane': '351967903210',
-            'mega': '351939354112' // Número padrão
-        };
-        
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
         let redirectCountdown = null;
@@ -418,6 +410,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkUrlParams();
             initAutocomplete();
+            
+            // Escutar por notificações de reserva
+            listenForReservationProposals();
         });
         
         // Chamar táxi
@@ -483,9 +478,6 @@
                         updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
                         showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
                         
-                        // Enviar mensagem WhatsApp para o motorista
-                        sendWhatsAppToDriver(request.driverId, request);
-                        
                         // Mostrar popup de sucesso e redirecionar
                         showSuccessPopup(request.driverName);
                         
@@ -500,45 +492,91 @@
             });
         }
         
-        // Enviar mensagem WhatsApp para o motorista
-        function sendWhatsAppToDriver(driverId, requestData) {
-            // Obter número do motorista baseado no ID
-            const driverNumber = driverNumbers[driverId] || driverNumbers['mega'];
-            
-            // Formatar mensagem para o motorista
-            const message = formatDriverMessage(requestData);
-            
-            // Codificar mensagem para URL
-            const encodedMessage = encodeURIComponent(message);
-            
-            // Criar URL do WhatsApp
-            const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
-            
-            // Abrir WhatsApp em nova aba (silenciosamente)
-            setTimeout(() => {
-                window.open(whatsappUrl, '_blank');
-            }, 1000);
+        // Escutar por propostas de reserva
+        function listenForReservationProposals() {
+            database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'reservation_proposal') {
+                    // Mostrar confirmação de reserva
+                    showReservationConfirmation(notification);
+                    
+                    // Remover a notificação após processar
+                    snapshot.ref.remove();
+                }
+            });
         }
         
-        // Formatar mensagem para o motorista
-        function formatDriverMessage(data) {
-            return `🚕 *NOVA CORRIDA ACEITA - GoTáxi* 🚕
-
-*Detalhes do Cliente:*
-*Nome:* ${data.name}
-*Contato:* ${data.contact}
-*De:* ${data.origin}
-*Para:* ${data.destination}
-
-*Detalhes da Corrida:*
-*Passageiros:* ${data.passengers}
-*Tempo de Chegada:* ${data.arrivalTime} minutos
-*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
-${data.notes ? `*Observações:* ${data.notes}` : ''}
-
-*Solicitado em:* ${data.timestamp}
-
-_Cliente está aguardando. Por favor, confirme a chegada._`;
+        // Mostrar confirmação de reserva
+        function showReservationConfirmation(notification) {
+            const userResponse = confirm(
+                `📅 ${notification.message}\n\n` +
+                `Detalhes da reserva:\n` +
+                `• Motorista: ${notification.driverName}\n` +
+                `• Tempo: ${notification.reservationTime} minutos\n\n` +
+                `Clique em "OK" para aceitar ou "Cancelar" para rejeitar.`
+            );
+            
+            if (userResponse) {
+                // Cliente aceitou a reserva
+                acceptReservation(notification);
+            } else {
+                // Cliente rejeitou a reserva
+                rejectReservation(notification);
+            }
+        }
+        
+        // Aceitar reserva
+        function acceptReservation(notification) {
+            // Enviar notificação de aceitação para o motorista
+            database.ref(`notifications/drivers/${notification.driverId}`).push({
+                type: 'reservation_accepted',
+                message: `✅ Cliente aceitou a reserva para daqui a ${notification.reservationTime} minutos!`,
+                reservationTime: notification.reservationTime,
+                requestId: notification.requestId,
+                reservationId: notification.reservationId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                showNotification(`✅ Reserva confirmada para daqui a ${notification.reservationTime} minutos!`, false, 'info');
+                
+                // Atualizar status da solicitação
+                database.ref(`ride_requests/${notification.requestId}`).update({
+                    status: 'reservation_accepted',
+                    driverId: notification.driverId,
+                    driverName: notification.driverName,
+                    acceptedAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Mostrar popup de sucesso e redirecionar
+                showSuccessPopup(notification.driverName);
+                
+            }).catch((error) => {
+                console.error('Erro ao aceitar reserva:', error);
+                showNotification("❌ Erro ao aceitar reserva.", true);
+            });
+        }
+        
+        // Rejeitar reserva
+        function rejectReservation(notification) {
+            // Enviar notificação de rejeição para o motorista
+            database.ref(`notifications/drivers/${notification.driverId}`).push({
+                type: 'reservation_rejected',
+                message: `❌ Cliente rejeitou a reserva para daqui a ${notification.reservationTime} minutos.`,
+                requestId: notification.requestId,
+                reservationId: notification.reservationId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                showNotification("❌ Reserva rejeitada.", true);
+                
+                // Atualizar status da solicitação
+                database.ref(`ride_requests/${notification.requestId}`).update({
+                    status: 'reservation_rejected'
+                });
+                
+            }).catch((error) => {
+                console.error('Erro ao rejeitar reserva:', error);
+                showNotification("❌ Erro ao rejeitar reserva.", true);
+            });
         }
         
         // Mostrar popup de sucesso e iniciar contagem regressiva para redirecionamento
@@ -579,7 +617,7 @@ _Cliente está aguardando. Por favor, confirme a chegada._`;
             currentRequestId = null;
         }
         
-        // Enviar via WhatsApp (para o cliente enviar manualmente)
+        // Enviar via WhatsApp
         whatsappButton.addEventListener('click', function() {
             // Coletar dados do formulário
             const formData = getFormData();
@@ -590,7 +628,7 @@ _Cliente está aguardando. Por favor, confirme a chegada._`;
             // Codificar mensagem para URL
             const encodedMessage = encodeURIComponent(message);
             
-            // Número padrão para envio manual
+            // Número do motorista
             const phoneNumber = "351939354112";
             
             // Criar URL do WhatsApp
@@ -630,7 +668,7 @@ _Cliente está aguardando. Por favor, confirme a chegada._`;
             };
         }
         
-        // Formatar mensagem para WhatsApp (envio manual)
+        // Formatar mensagem para WhatsApp
         function formatWhatsAppMessage(data) {
             return `🚕 *SOLICITAÇÃO DE TÁXI - GoTáxi* 🚕
 
