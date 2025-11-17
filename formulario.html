@@ -376,6 +376,14 @@
         const popupDriverMessage = document.getElementById('popupDriverMessage');
         const countdownElement = document.getElementById('countdown');
         
+        // Números dos motoristas
+        const driverNumbers = {
+            'marcelo': '351939057350',
+            'heitor': '351910603136', 
+            'suzane': '351967903210',
+            'mega': '351939354112' // Número padrão
+        };
+        
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
         let redirectCountdown = null;
@@ -475,6 +483,9 @@
                         updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
                         showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
                         
+                        // Enviar mensagem WhatsApp para o motorista
+                        sendWhatsAppToDriver(request.driverId, request);
+                        
                         // Mostrar popup de sucesso e redirecionar
                         showSuccessPopup(request.driverName);
                         
@@ -487,6 +498,47 @@
                     }
                 }
             });
+        }
+        
+        // Enviar mensagem WhatsApp para o motorista
+        function sendWhatsAppToDriver(driverId, requestData) {
+            // Obter número do motorista baseado no ID
+            const driverNumber = driverNumbers[driverId] || driverNumbers['mega'];
+            
+            // Formatar mensagem para o motorista
+            const message = formatDriverMessage(requestData);
+            
+            // Codificar mensagem para URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Criar URL do WhatsApp
+            const whatsappUrl = `https://wa.me/${driverNumber}?text=${encodedMessage}`;
+            
+            // Abrir WhatsApp em nova aba (silenciosamente)
+            setTimeout(() => {
+                window.open(whatsappUrl, '_blank');
+            }, 1000);
+        }
+        
+        // Formatar mensagem para o motorista
+        function formatDriverMessage(data) {
+            return `🚕 *NOVA CORRIDA ACEITA - GoTáxi* 🚕
+
+*Detalhes do Cliente:*
+*Nome:* ${data.name}
+*Contato:* ${data.contact}
+*De:* ${data.origin}
+*Para:* ${data.destination}
+
+*Detalhes da Corrida:*
+*Passageiros:* ${data.passengers}
+*Tempo de Chegada:* ${data.arrivalTime} minutos
+*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
+${data.notes ? `*Observações:* ${data.notes}` : ''}
+
+*Solicitado em:* ${data.timestamp}
+
+_Cliente está aguardando. Por favor, confirme a chegada._`;
         }
         
         // Mostrar popup de sucesso e iniciar contagem regressiva para redirecionamento
@@ -527,7 +579,7 @@
             currentRequestId = null;
         }
         
-        // Enviar via WhatsApp
+        // Enviar via WhatsApp (para o cliente enviar manualmente)
         whatsappButton.addEventListener('click', function() {
             // Coletar dados do formulário
             const formData = getFormData();
@@ -538,7 +590,7 @@
             // Codificar mensagem para URL
             const encodedMessage = encodeURIComponent(message);
             
-            // Número do motorista
+            // Número padrão para envio manual
             const phoneNumber = "351939354112";
             
             // Criar URL do WhatsApp
@@ -578,7 +630,7 @@
             };
         }
         
-        // Formatar mensagem para WhatsApp
+        // Formatar mensagem para WhatsApp (envio manual)
         function formatWhatsAppMessage(data) {
             return `🚕 *SOLICITAÇÃO DE TÁXI - GoTáxi* 🚕
 
