@@ -433,6 +433,8 @@
         let currentDriver = null;
         let currentRequestId = null;
         let currentReservationId = null;
+        let lastPosition = null;
+        let markerRotation = 0;
         
         // Credenciais dos motoristas
         const drivers = {
@@ -482,6 +484,7 @@
             
             // Limpar dados de sessão
             currentDriver = null;
+            lastPosition = null;
             
             // Mostrar tela de login
             document.getElementById('loginContainer').style.display = 'flex';
@@ -516,10 +519,20 @@
                 map: map,
                 title: `Motorista: ${currentDriver.username}`,
                 icon: {
-                    url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
-                    scaledSize: new google.maps.Size(40, 40)
+                    url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                    scaledSize: new google.maps.Size(40, 40),
+                    anchor: new google.maps.Point(20, 20)
                 }
             });
+            
+            // Adicionar estilo CSS para animação
+            const style = document.createElement('style');
+            style.textContent = `
+                img[src*="Screenshot-7-removebg-preview"] {
+                    transition: all 0.5s ease !important;
+                }
+            `;
+            document.head.appendChild(style);
             
             // Tentar obter localização atual
             if (navigator.geolocation) {
@@ -532,6 +545,7 @@
                         
                         marker.setPosition(pos);
                         map.setCenter(pos);
+                        lastPosition = pos;
                     },
                     () => {
                         handleLocationError(true, map.getCenter());
@@ -552,6 +566,75 @@
             
             // Mostrar notificação de erro
             showNotification("Não foi possível obter sua localização.", true);
+        }
+        
+        // Calcular direção entre dois pontos (em graus)
+        function calculateBearing(start, end) {
+            const startLat = start.lat * Math.PI / 180;
+            const startLng = start.lng * Math.PI / 180;
+            const endLat = end.lat * Math.PI / 180;
+            const endLng = end.lng * Math.PI / 180;
+
+            const y = Math.sin(endLng - startLng) * Math.cos(endLat);
+            const x = Math.cos(startLat) * Math.sin(endLat) -
+                      Math.sin(startLat) * Math.cos(endLat) * Math.cos(endLng - startLng);
+            
+            let bearing = Math.atan2(y, x);
+            bearing = bearing * 180 / Math.PI;
+            bearing = (bearing + 360) % 360;
+            
+            return bearing;
+        }
+        
+        // Função de easing para movimento natural
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+        
+        // Animação suave do marcador
+        function animateMarkerSmooth(marker, newPos, duration) {
+            const startPos = marker.getPosition();
+            if (!startPos) return;
+
+            const startLat = startPos.lat();
+            const startLng = startPos.lng();
+            const deltaLat = newPos.lat - startLat;
+            const deltaLng = newPos.lng - startLng;
+            
+            const startTime = performance.now();
+            
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function para movimento mais natural
+                const easeProgress = easeInOutCubic(progress);
+                
+                const currentLat = startLat + (deltaLat * easeProgress);
+                const currentLng = startLng + (deltaLng * easeProgress);
+                
+                marker.setPosition({
+                    lat: currentLat,
+                    lng: currentLng
+                });
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Garantir posição final exata
+                    marker.setPosition(newPos);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Atualizar rotação do marcador
+        function updateMarkerRotation(marker, angle) {
+            const markerElement = marker.getElement();
+            if (markerElement) {
+                markerElement.style.transform = `rotate(${angle}deg)`;
+            }
         }
         
         // Iniciar rastreamento
@@ -577,18 +660,34 @@
             // Iniciar watch de posição
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    const pos = {
+                    const newPos = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     };
                     
-                    // Atualizar marcador no mapa
-                    marker.setPosition(pos);
-                    map.setCenter(pos);
+                    // Se é a primeira posição
+                    if (!lastPosition) {
+                        marker.setPosition(newPos);
+                        map.setCenter(newPos);
+                        markerRotation = 0;
+                    } else {
+                        // Calcular direção e ângulo
+                        const angle = calculateBearing(lastPosition, newPos);
+                        markerRotation = angle;
+                        
+                        // Animação suave para a nova posição
+                        animateMarkerSmooth(marker, newPos, 2000);
+                        
+                        // Atualizar rotação do marcador
+                        updateMarkerRotation(marker, angle);
+                    }
+                    
+                    lastPosition = newPos;
                     
                     // Atualizar posição no Firebase
                     database.ref(`drivers/${currentDriver.driverId}`).update({
-                        location: pos,
+                        location: newPos,
+                        rotation: markerRotation,
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     });
                 },
