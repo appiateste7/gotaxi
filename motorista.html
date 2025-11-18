@@ -635,6 +635,15 @@
             
             currentRequestId = requestId;
             
+            // Calcular distância entre motorista e cliente
+            let distanceText = "Calculando distância...";
+            if (marker && marker.getPosition() && request.originCoords) {
+                const driverPos = marker.getPosition();
+                const clientPos = new google.maps.LatLng(request.originCoords.lat, request.originCoords.lng);
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(driverPos, clientPos);
+                distanceText = `📏 ${(distance / 1000).toFixed(1)} km de distância`;
+            }
+            
             // Preencher detalhes da solicitação
             requestDetails.innerHTML = `
                 <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
@@ -644,6 +653,7 @@
                 <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
                 <p><strong>⏰ Chegada:</strong> ${request.arrivalTime || '10'} minutos</p>
                 <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
+                <p><strong>${distanceText}</strong></p>
                 ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
             `;
             
@@ -685,6 +695,15 @@
             
             currentRequestId = requestId;
             
+            // Calcular distância entre motorista e cliente
+            let distanceText = "Calculando distância...";
+            if (marker && marker.getPosition() && request.originCoords) {
+                const driverPos = marker.getPosition();
+                const clientPos = new google.maps.LatLng(request.originCoords.lat, request.originCoords.lng);
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(driverPos, clientPos);
+                distanceText = `📏 ${(distance / 1000).toFixed(1)} km de distância`;
+            }
+            
             // Preencher detalhes da reserva
             reservationDetails.innerHTML = `
                 <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
@@ -693,23 +712,27 @@
                 <p><strong>👥 Passageiros:</strong> ${request.passengers || '1'}</p>
                 <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
                 <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
+                <p><strong>${distanceText}</strong></p>
                 ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
             `;
             
             // Mostrar card de reserva
             reservationCard.style.display = 'block';
             
-            // Configurar botões de reserva
-            document.getElementById('sendReservation').onclick = () => sendReservation(requestId, request);
-            document.getElementById('cancelReservation').onclick = () => cancelReservation();
+            // Configurar botões de reserva - FECHAR IMEDIATAMENTE AO CLICAR
+            document.getElementById('sendReservation').onclick = () => {
+                sendReservation(requestId, request);
+                reservationCard.style.display = 'none';
+            };
+            document.getElementById('cancelReservation').onclick = () => {
+                cancelReservation();
+                reservationCard.style.display = 'none';
+            };
         }
         
         // Enviar proposta de reserva
         function sendReservation(requestId, request) {
             const reservationTime = document.getElementById('reservationTime').value;
-            
-            // Esconder card de reserva
-            document.getElementById('reservationCard').style.display = 'none';
             
             // Criar ID único para a reserva
             currentReservationId = 'reservation_' + Math.random().toString(36).substr(2, 9);
@@ -741,7 +764,6 @@
         
         // Cancelar reserva
         function cancelReservation() {
-            document.getElementById('reservationCard').style.display = 'none';
             currentRequestId = null;
         }
         
@@ -879,9 +901,9 @@
         });
     </script>
     
-    <!-- Google Maps API -->
+    <!-- Google Maps API com biblioteca de geometria -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,geometry">
     </script>
 </body>
 </html>

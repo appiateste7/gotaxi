@@ -433,41 +433,73 @@
             // Coletar dados do formulário
             const formData = getFormData();
             
-            // Criar solicitação no Firebase
-            currentRequestId = database.ref('ride_requests').push().key;
-            
-            const requestData = {
-                ...formData,
-                clientId: clientId,
-                status: 'pending',
-                paymentStatus: 'free',
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            };
-            
-            database.ref(`ride_requests/${currentRequestId}`).set(requestData)
-                .then(() => {
-                    showNotification("🚕 Solicitação enviada! Aguardando motorista...", false, 'info');
-                    updateStatusIndicator('pending', '🕒 Aguardando resposta do motorista...');
-                    
-                    // Habilitar botão do WhatsApp
-                    whatsappButton.disabled = false;
-                    whatsappButton.style.display = 'block';
-                    
-                    // Alterar texto do botão
-                    callTaxiButton.textContent = "✅ Solicitação Enviada";
-                    
-                    // Escutar por atualizações na solicitação
-                    listenForRequestUpdates();
-                })
-                .catch((error) => {
-                    console.error('Erro ao enviar solicitação:', error);
-                    showNotification("❌ Erro ao enviar solicitação. Tente novamente.", true);
-                    
-                    // Reabilitar botão
-                    callTaxiButton.disabled = false;
-                    callTaxiButton.textContent = "🚗 Chamar Táxi";
-                });
+            // Obter coordenadas do endereço de origem
+            getCoordinates(formData.origin).then(originCoords => {
+                // Criar solicitação no Firebase
+                currentRequestId = database.ref('ride_requests').push().key;
+                
+                const requestData = {
+                    ...formData,
+                    clientId: clientId,
+                    status: 'pending',
+                    paymentStatus: 'free',
+                    originCoords: originCoords, // Adicionar coordenadas
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                database.ref(`ride_requests/${currentRequestId}`).set(requestData)
+                    .then(() => {
+                        showNotification("🚕 Solicitação enviada! Aguardando motorista...", false, 'info');
+                        updateStatusIndicator('pending', '🕒 Aguardando resposta do motorista...');
+                        
+                        // Habilitar botão do WhatsApp
+                        whatsappButton.disabled = false;
+                        whatsappButton.style.display = 'block';
+                        
+                        // Alterar texto do botão
+                        callTaxiButton.textContent = "✅ Solicitação Enviada";
+                        
+                        // Escutar por atualizações na solicitação
+                        listenForRequestUpdates();
+                    })
+                    .catch((error) => {
+                        console.error('Erro ao enviar solicitação:', error);
+                        showNotification("❌ Erro ao enviar solicitação. Tente novamente.", true);
+                        
+                        // Reabilitar botão
+                        callTaxiButton.disabled = false;
+                        callTaxiButton.textContent = "🚗 Chamar Táxi";
+                    });
+            }).catch(error => {
+                console.error('Erro ao obter coordenadas:', error);
+                showNotification("❌ Erro ao processar endereço. Tente novamente.", true);
+                callTaxiButton.disabled = false;
+                callTaxiButton.textContent = "🚗 Chamar Táxi";
+            });
         });
+        
+        // Função para obter coordenadas do endereço
+        function getCoordinates(address) {
+            return new Promise((resolve, reject) => {
+                if (typeof google === 'undefined') {
+                    reject('Google Maps não carregado');
+                    return;
+                }
+                
+                const geocoder = new google.maps.Geocoder();
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK' && results[0]) {
+                        const location = results[0].geometry.location;
+                        resolve({
+                            lat: location.lat(),
+                            lng: location.lng()
+                        });
+                    } else {
+                        reject('Endereço não encontrado: ' + status);
+                    }
+                });
+            });
+        }
         
         // Escutar por atualizações na solicitação
         function listenForRequestUpdates() {
@@ -733,9 +765,9 @@ _Por favor, confirme esta solicitação._`;
         }
     </script>
     
-    <!-- Google Maps API para autocomplete -->
+    <!-- Google Maps API com biblioteca de geometria -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places&callback=initAutocomplete">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places,geometry&callback=initAutocomplete">
     </script>
 </body>
 </html>
