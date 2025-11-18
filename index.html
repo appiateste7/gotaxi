@@ -352,15 +352,6 @@
                 { types: ['geocode'] }
             );
             
-            // Adicionar estilo CSS para animação dos marcadores
-            const style = document.createElement('style');
-            style.textContent = `
-                img[src*="16062688"] {
-                    transition: all 1s ease !important;
-                }
-            `;
-            document.head.appendChild(style);
-            
             // Escutar por motoristas online
             listenForDrivers();
             
@@ -409,72 +400,17 @@
             }
         }
         
-        // Função de easing para movimento natural
-        function easeInOutCubic(t) {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        }
-        
-        // Animação suave do marcador do motorista
-        function animateDriverMarker(marker, newPos, newRotation) {
-            const currentPos = marker.getPosition();
-            if (!currentPos) {
-                marker.setPosition(newPos);
-                return;
-            }
-
-            const startLat = currentPos.lat();
-            const startLng = currentPos.lng();
-            const deltaLat = newPos.lat - startLat;
-            const deltaLng = newPos.lng - startLng;
-            
-            const startTime = performance.now();
-            const duration = 2000; // 2 segundos
-            
-            function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                const easeProgress = easeInOutCubic(progress);
-                
-                const currentLat = startLat + (deltaLat * easeProgress);
-                const currentLng = startLng + (deltaLng * easeProgress);
-                
-                marker.setPosition({
-                    lat: currentLat,
-                    lng: currentLng
-                });
-                
-                // Atualizar rotação gradualmente
-                if (newRotation !== undefined) {
-                    const markerElement = marker.getElement();
-                    if (markerElement) {
-                        markerElement.style.transform = `rotate(${newRotation}deg)`;
-                    }
-                }
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    marker.setPosition(newPos);
-                }
-            }
-            
-            requestAnimationFrame(animate);
-        }
-        
         // Escutar por motoristas online
         function listenForDrivers() {
             database.ref('drivers').on('value', (snapshot) => {
                 const drivers = snapshot.val();
                 let onlineDriversCount = 0;
                 
-                // Limpar marcadores antigos de motoristas offline
+                // Limpar marcadores antigos
                 for (const driverId in driverMarkers) {
-                    if (!drivers || !drivers[driverId] || drivers[driverId].status !== 'online') {
-                        driverMarkers[driverId].setMap(null);
-                        delete driverMarkers[driverId];
-                    }
+                    driverMarkers[driverId].setMap(null);
                 }
+                driverMarkers = {};
                 
                 // Verificar todos os motoristas
                 if (drivers) {
@@ -484,39 +420,31 @@
                         if (driver.status === 'online' && driver.location) {
                             onlineDriversCount++;
                             
-                            if (driverMarkers[driverId]) {
-                                // Motorista já existe - animar para nova posição
-                                const currentMarker = driverMarkers[driverId];
-                                animateDriverMarker(currentMarker, driver.location, driver.rotation);
-                            } else {
-                                // Novo motorista - criar marcador
-                                const driverMarker = new google.maps.Marker({
-                                    position: driver.location,
-                                    map: map,
-                                    title: `Motorista: ${driver.username || driverId}`,
-                                    icon: {
-                                        url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
-                                        scaledSize: new google.maps.Size(40, 40),
-                                        anchor: new google.maps.Point(20, 20),
-                                        rotation: driver.rotation || 0
-                                    }
-                                });
-                                
-                                // Adicionar info window com nome do motorista
-                                const infoWindow = new google.maps.InfoWindow({
-                                    content: `<div style="padding: 10px;">
-                                        <strong>🚗 ${driver.username || driverId}</strong><br>
-                                        <em>Motorista GoTáxi</em>
-                                    </div>`
-                                });
-                                
-                                driverMarker.addListener('click', () => {
-                                    infoWindow.open(map, driverMarker);
-                                });
-                                
-                                // Armazenar marcador no objeto
-                                driverMarkers[driverId] = driverMarker;
-                            }
+                            // Criar marcador para cada motorista online
+                            const driverMarker = new google.maps.Marker({
+                                position: driver.location,
+                                map: map,
+                                title: `Motorista: ${driver.username || driverId}`,
+                                icon: {
+                                    url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
+                                    scaledSize: new google.maps.Size(40, 40)
+                                }
+                            });
+                            
+                            // Adicionar info window com nome do motorista
+                            const infoWindow = new google.maps.InfoWindow({
+                                content: `<div style="padding: 10px;">
+                                    <strong>🚗 ${driver.username || driverId}</strong><br>
+                                    <em>Motorista GoTáxi</em>
+                                </div>`
+                            });
+                            
+                            driverMarker.addListener('click', () => {
+                                infoWindow.open(map, driverMarker);
+                            });
+                            
+                            // Armazenar marcador no objeto
+                            driverMarkers[driverId] = driverMarker;
                         }
                     }
                 }
@@ -600,7 +528,7 @@
     
     <!-- Google Maps API -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,geometry">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>
