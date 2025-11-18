@@ -128,30 +128,6 @@
         .request-card h3 {
             margin-bottom: 15px;
             text-align: center;
-            position: relative;
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #f44336;
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        .close-btn:hover {
-            background-color: #d32f2f;
         }
         
         .request-details {
@@ -279,7 +255,6 @@
             margin-bottom: 15px;
             text-align: center;
             color: #2196F3;
-            position: relative;
         }
 
         .reservation-details {
@@ -361,9 +336,7 @@
     <div id="notification" class="notification"></div>
     
     <div id="requestCard" class="request-card">
-        <h3>🚕 Nova Solicitação de Táxi
-            <button class="close-btn" onclick="closeRequestCard()">×</button>
-        </h3>
+        <h3>🚕 Nova Solicitação de Táxi</h3>
         <div class="timer" id="timer">120 segundos</div>
         <div class="request-details" id="requestDetails">
             <!-- Detalhes da solicitação serão preenchidos aqui -->
@@ -375,9 +348,7 @@
 
     <!-- Card de Reserva -->
     <div id="reservationCard" class="reservation-card">
-        <h3>📅 Fazer Reserva
-            <button class="close-btn" onclick="closeReservationCard()">×</button>
-        </h3>
+        <h3>📅 Fazer Reserva</h3>
         <div class="reservation-details" id="reservationDetails">
             <!-- Detalhes da reserva serão preenchidos aqui -->
         </div>
@@ -717,15 +688,6 @@
             document.getElementById('rejectRequest').onclick = () => rejectRequest(requestId);
         }
         
-        // Fechar card de solicitação
-        function closeRequestCard() {
-            document.getElementById('requestCard').style.display = 'none';
-            if (countdown) {
-                clearInterval(countdown);
-            }
-            currentRequestId = null;
-        }
-        
         // Mostrar card de reserva
         function showReservationCard(request, requestId) {
             const reservationCard = document.getElementById('reservationCard');
@@ -766,12 +728,6 @@
                 cancelReservation();
                 reservationCard.style.display = 'none';
             };
-        }
-        
-        // Fechar card de reserva
-        function closeReservationCard() {
-            document.getElementById('reservationCard').style.display = 'none';
-            currentRequestId = null;
         }
         
         // Enviar proposta de reserva
