@@ -434,15 +434,6 @@
         let currentRequestId = null;
         let currentReservationId = null;
         
-        // Sistema de movimento suave
-        let animationInterval;
-        let currentPosition = null;
-        let targetPosition = null;
-        let currentRotation = 0;
-        let targetRotation = 0;
-        let animationSpeed = 0.05; // Velocidade da interpolação (0-1)
-        let rotationSpeed = 0.1; // Velocidade da rotação (0-1)
-        
         // Credenciais dos motoristas
         const drivers = {
             'Mega': { password: '12345', driverId: 'mega' },
@@ -487,11 +478,6 @@
         document.getElementById('logoutBtn').addEventListener('click', function() {
             if (isTracking) {
                 stopTracking();
-            }
-            
-            // Parar animação
-            if (animationInterval) {
-                clearInterval(animationInterval);
             }
             
             // Limpar dados de sessão
@@ -546,10 +532,6 @@
                         
                         marker.setPosition(pos);
                         map.setCenter(pos);
-                        
-                        // Inicializar sistema de movimento
-                        currentPosition = pos;
-                        targetPosition = pos;
                     },
                     () => {
                         handleLocationError(true, map.getCenter());
@@ -559,9 +541,6 @@
                 // Navegador não suporta Geolocation
                 handleLocationError(false, map.getCenter());
             }
-            
-            // Iniciar loop de animação
-            startAnimationLoop();
         }
         
         function handleLocationError(browserHasGeolocation, pos) {
@@ -573,62 +552,6 @@
             
             // Mostrar notificação de erro
             showNotification("Não foi possível obter sua localização.", true);
-        }
-        
-        // Iniciar loop de animação para movimento suave
-        function startAnimationLoop() {
-            animationInterval = setInterval(() => {
-                if (currentPosition && targetPosition) {
-                    // Calcular direção e distância
-                    const dx = targetPosition.lng - currentPosition.lng;
-                    const dy = targetPosition.lat - currentPosition.lat;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Se estiver muito próximo, definir como posição exata
-                    if (distance < 0.00001) {
-                        currentPosition = { ...targetPosition };
-                    } else {
-                        // Interpolação suave com aceleração/desaceleração
-                        const progress = Math.min(animationSpeed * (1 + distance * 100), 0.9);
-                        
-                        currentPosition.lng += dx * progress;
-                        currentPosition.lat += dy * progress;
-                    }
-                    
-                    // Atualizar marcador no mapa
-                    marker.setPosition(currentPosition);
-                    
-                    // Calcular e aplicar rotação
-                    if (distance > 0.0001) {
-                        const targetAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-                        targetRotation = targetAngle;
-                        
-                        // Interpolação suave da rotação
-                        let angleDiff = targetRotation - currentRotation;
-                        
-                        // Normalizar diferença de ângulo para o caminho mais curto
-                        if (angleDiff > 180) angleDiff -= 360;
-                        if (angleDiff < -180) angleDiff += 360;
-                        
-                        currentRotation += angleDiff * rotationSpeed;
-                        
-                        // Atualizar ícone com rotação
-                        updateMarkerRotation();
-                    }
-                }
-            }, 50); // 20 FPS para animação suave
-        }
-        
-        // Atualizar rotação do marcador
-        function updateMarkerRotation() {
-            const icon = {
-                url: "https://cdn-icons-png.flaticon.com/128/16062/16062688.png",
-                scaledSize: new google.maps.Size(40, 40),
-                rotation: currentRotation,
-                anchor: new google.maps.Point(20, 20)
-            };
-            
-            marker.setIcon(icon);
         }
         
         // Iniciar rastreamento
@@ -659,8 +582,9 @@
                         lng: position.coords.longitude,
                     };
                     
-                    // Atualizar posição alvo para movimento suave
-                    targetPosition = pos;
+                    // Atualizar marcador no mapa
+                    marker.setPosition(pos);
+                    map.setCenter(pos);
                     
                     // Atualizar posição no Firebase
                     database.ref(`drivers/${currentDriver.driverId}`).update({
