@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração - GoTáxi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        header {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo span {
+            color: #ffc107;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: #333;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 60px);
+            background-color: #f5f5f5;
+        }
+        
+        .login-form {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .login-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .login-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .error-message {
+            color: #f44336;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .admin-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: none;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ffc107;
+        }
+        
+        .admin-title {
+            font-size: 28px;
+            color: #333;
+        }
+        
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background-color: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .tab.active {
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .table-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .driver-row {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .driver-row:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        
+        .btn-block {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-unblock {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-edit {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .btn-delete {
+            background-color: #ff5722;
+            color: white;
+        }
+        
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background-color: #9e9e9e;
+            color: white;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-online {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .status-offline {
+            background-color: #9e9e9e;
+            color: white;
+        }
+        
+        .status-blocked {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .edit-form {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .edit-form input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .date-filter input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .filter-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .driver-info {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .driver-info h4 {
+            margin-bottom: 10px;
+            color: #1976d2;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .close-btn:hover {
+            color: #000;
+        }
+        
+        .driver-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .confirmation-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .confirmation-content {
+            background-color: white;
+            margin: 20% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-confirm {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-cancel-confirm {
+            background-color: #9e9e9e;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Go<span>Táxi</span> Admin</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Voltar ao Site</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <!-- Tela de Login -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <h2>Área de Administração</h2>
+            <div class="form-group">
+                <label for="adminUsername">Usuário</label>
+                <input type="text" id="adminUsername" placeholder="Digite seu usuário">
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">Senha</label>
+                <input type="password" id="adminPassword" placeholder="Digite sua senha">
+            </div>
+            <button class="login-btn" onclick="adminLogin()">Entrar</button>
+            <div class="error-message" id="loginError">
+                Usuário ou senha incorretos!
+            </div>
+        </div>
+    </div>
+    
+    <!-- Área Administrativa -->
+    <div class="admin-container" id="adminContainer">
+        <div class="admin-header">
+            <h1 class="admin-title">Painel de Administração</h1>
+            <button class="logout-btn" onclick="adminLogout()">Sair</button>
+        </div>
+        
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDrivers">0</div>
+                <div class="stat-label">Motoristas Cadastrados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeDrivers">0</div>
+                <div class="stat-label">Motoristas Ativos</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayRides">0</div>
+                <div class="stat-label">Corridas Hoje</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="blockedDrivers">0</div>
+                <div class="stat-label">Motoristas Bloqueados</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="openTab('drivers')">Motoristas</button>
+            <button class="tab" onclick="openTab('rides')">Relatório de Corridas</button>
+        </div>
+        
+        <!-- Aba de Motoristas -->
+        <div class="tab-content active" id="driversTab">
+            <div class="search-box">
+                <input type="text" id="driverSearch" placeholder="Buscar motorista por nome ou usuário..." onkeyup="searchDrivers()">
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Usuário</th>
+                            <th>Status</th>
+                            <th>Data de Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversTable">
+                        <!-- Dados dos motoristas serão preenchidos aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Aba de Relatório de Corridas -->
+        <div class="tab-content" id="ridesTab">
+            <div class="date-filter">
+                <label for="dateFilter">Filtrar por data:</label>
+                <input type="date" id="dateFilter">
+                <button class="filter-btn" onclick="filterRides()">Filtrar</button>
+                <button class="filter-btn" onclick="resetFilter()">Hoje</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Motorista</th>
+                            <th>Origem</th>
+                            <th>Destino</th>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ridesTable">
+                        <!-- Dados das corridas serão preenchidos aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Motorista -->
+    <div class="modal" id="driverModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalDriverName">Detalhes do Motorista</h3>
+                <button class="close-btn" onclick="closeDriverModal()">&times;</button>
+            </div>
+            <div class="driver-details" id="modalDriverDetails">
+                <!-- Detalhes do motorista serão preenchidos aqui -->
+            </div>
+            <h4>Histórico de Corridas</h4>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Origem</th>
+                            <th>Destino</th>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driverRidesTable">
+                        <!-- Corridas do motorista serão preenchidas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="confirmation-modal" id="deleteConfirmationModal">
+        <div class="confirmation-content">
+            <h3>Confirmar Exclusão</h3>
+            <p id="deleteConfirmationMessage">Tem certeza que deseja excluir este motorista?</p>
+            <div class="confirmation-buttons">
+                <button class="btn-confirm" id="confirmDeleteBtn">Sim, Excluir</button>
+                <button class="btn-cancel-confirm" onclick="closeDeleteConfirmation()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Credenciais do administrador
+        const ADMIN_CREDENTIALS = {
+            username: 'Megaadm',
+            password: '12345'
+        };
+        
+        // Variáveis globais
+        let isAdminLoggedIn = false;
+        let allDrivers = [];
+        let allRides = [];
+        let editingDriverId = null;
+        let selectedDriverId = null;
+        let driverToDelete = null;
+
+        // Verificar se o admin está logado
+        function checkAdminLogin() {
+            const savedLogin = localStorage.getItem('adminLoggedIn');
+            if (savedLogin === 'true') {
+                isAdminLoggedIn = true;
+                showAdminPanel();
+            }
+        }
+
+        // Login do administrador
+        function adminLogin() {
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const loginError = document.getElementById('loginError');
+            
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                isAdminLoggedIn = true;
+                localStorage.setItem('adminLoggedIn', 'true');
+                showAdminPanel();
+                loginError.style.display = 'none';
+            } else {
+                loginError.style.display = 'block';
+            }
+        }
+
+        // Logout do administrador
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            localStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('adminContainer').style.display = 'none';
+            document.getElementById('adminUsername').value = '';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // Mostrar painel administrativo
+        function showAdminPanel() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContainer').style.display = 'block';
+            loadDriversData();
+            loadRidesData();
+        }
+
+        // Alternar entre abas
+        function openTab(tabName) {
+            // Esconder todas as abas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remover classe active de todas as tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar aba selecionada
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Adicionar classe active na tab clicada
+            event.target.classList.add('active');
+        }
+
+        // Carregar dados dos motoristas
+        function loadDriversData() {
+            // Carregar motoristas do localStorage
+            const driversStorage = localStorage.getItem('gotaxi_drivers');
+            allDrivers = driversStorage ? JSON.parse(driversStorage) : {};
+            
+            // Carregar status online do Firebase
+            database.ref('drivers').on('value', (snapshot) => {
+                const onlineDrivers = snapshot.val() || {};
+                
+                // Atualizar estatísticas
+                updateStats();
+                
+                // Atualizar tabela de motoristas
+                updateDriversTable(onlineDrivers);
+            });
+        }
+
+        // Carregar dados das corridas
+        function loadRidesData() {
+            database.ref('ride_requests').on('value', (snapshot) => {
+                const rides = snapshot.val() || {};
+                
+                // Filtrar apenas corridas que foram aceitas ou são reservas aceitas
+                // Não incluir corridas rejeitadas ou com status pending
+                allRides = Object.entries(rides)
+                    .map(([id, ride]) => ({
+                        id,
+                        ...ride
+                    }))
+                    .filter(ride => 
+                        ride.status === 'accepted' || 
+                        ride.status === 'reservation_accepted' ||
+                        ride.status === 'completed'
+                    );
+                
+                // Filtrar corridas aceitas do dia atual
+                filterRides();
+            });
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            const totalDrivers = Object.keys(allDrivers).length;
+            const blockedDrivers = Object.values(allDrivers).filter(driver => driver.status === 'blocked').length;
+            
+            database.ref('drivers').once('value').then(snapshot => {
+                const onlineDrivers = snapshot.val() || {};
+                const activeDrivers = Object.values(onlineDrivers).filter(driver => driver.status === 'online').length;
+                
+                document.getElementById('totalDrivers').textContent = totalDrivers;
+                document.getElementById('activeDrivers').textContent = activeDrivers;
+                document.getElementById('blockedDrivers').textContent = blockedDrivers;
+            });
+        }
+
+        // Atualizar tabela de motoristas
+        function updateDriversTable(onlineDrivers) {
+            const tableBody = document.getElementById('driversTable');
+            tableBody.innerHTML = '';
+            
+            if (Object.keys(allDrivers).length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="no-data">Nenhum motorista cadastrado</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            Object.entries(allDrivers).forEach(([driverId, driver]) => {
+                const isOnline = onlineDrivers[driverId] && onlineDrivers[driverId].status === 'online';
+                const isBlocked = driver.status === 'blocked';
+                
+                const row = document.createElement('tr');
+                row.className = 'driver-row';
+                row.onclick = () => showDriverDetails(driverId, driver);
+                row.innerHTML = `
+                    <td>${driver.name}</td>
+                    <td>${driver.username}</td>
+                    <td>
+                        <span class="status-badge ${isBlocked ? 'status-blocked' : (isOnline ? 'status-online' : 'status-offline')}">
+                            ${isBlocked ? 'Bloqueado' : (isOnline ? 'Online' : 'Offline')}
+                        </span>
+                    </td>
+                    <td>${new Date(driver.createdAt).toLocaleDateString('pt-PT')}</td>
+                    <td onclick="event.stopPropagation()">
+                        ${editingDriverId === driverId ? getEditForm(driver) : getActionButtons(driverId, driver, isBlocked)}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Obter botões de ação
+        function getActionButtons(driverId, driver, isBlocked) {
+            return `
+                ${!isBlocked ? 
+                    `<button class="btn btn-block" onclick="blockDriver('${driverId}')">Bloquear</button>` :
+                    `<button class="btn btn-unblock" onclick="unblockDriver('${driverId}')">Desbloquear</button>`
+                }
+                <button class="btn btn-edit" onclick="editDriver('${driverId}')">Editar Login</button>
+                <button class="btn btn-delete" onclick="confirmDeleteDriver('${driverId}', '${driver.name}')">Excluir</button>
+            `;
+        }
+
+        // Obter formulário de edição
+        function getEditForm(driver) {
+            return `
+                <div class="edit-form">
+                    <input type="text" id="editUsername_${driver.driverId}" value="${driver.username}" placeholder="Novo usuário">
+                    <input type="password" id="editPassword_${driver.driverId}" placeholder="Nova senha (deixe em branco para manter)">
+                    <div>
+                        <button class="btn btn-save" onclick="saveDriverEdit('${driver.driverId}')">Salvar</button>
+                        <button class="btn btn-cancel" onclick="cancelEdit()">Cancelar</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Bloquear motorista
+        function blockDriver(driverId) {
+            if (confirm('Tem certeza que deseja bloquear este motorista?')) {
+                const drivers = getAllDrivers();
+                if (drivers[driverId]) {
+                    drivers[driverId].status = 'blocked';
+                    localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                    allDrivers = drivers;
+                    updateDriversTable({});
+                    
+                    // Remover motorista do Firebase (online)
+                    database.ref(`drivers/${driverId}`).remove();
+                    
+                    showNotification('Motorista bloqueado com sucesso!');
+                }
+            }
+        }
+
+        // Desbloquear motorista
+        function unblockDriver(driverId) {
+            if (confirm('Tem certeza que deseja desbloquear este motorista?')) {
+                const drivers = getAllDrivers();
+                if (drivers[driverId]) {
+                    drivers[driverId].status = 'active';
+                    localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                    allDrivers = drivers;
+                    updateDriversTable({});
+                    showNotification('Motorista desbloqueado com sucesso!');
+                }
+            }
+        }
+
+        // Editar motorista
+        function editDriver(driverId) {
+            editingDriverId = driverId;
+            updateDriversTable({});
+        }
+
+        // Salvar edição do motorista
+        function saveDriverEdit(driverId) {
+            const newUsername = document.getElementById(`editUsername_${driverId}`).value;
+            const newPassword = document.getElementById(`editPassword_${driverId}`).value;
+            
+            if (!newUsername.trim()) {
+                alert('O nome de usuário não pode estar vazio!');
+                return;
+            }
+            
+            const drivers = getAllDrivers();
+            if (drivers[driverId]) {
+                drivers[driverId].username = newUsername;
+                if (newPassword.trim()) {
+                    drivers[driverId].password = newPassword;
+                }
+                localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                allDrivers = drivers;
+                editingDriverId = null;
+                updateDriversTable({});
+                showNotification('Dados do motorista atualizados com sucesso!');
+            }
+        }
+
+        // Cancelar edição
+        function cancelEdit() {
+            editingDriverId = null;
+            updateDriversTable({});
+        }
+
+        // Confirmar exclusão do motorista
+        function confirmDeleteDriver(driverId, driverName) {
+            driverToDelete = driverId;
+            document.getElementById('deleteConfirmationMessage').textContent = 
+                `Tem certeza que deseja excluir o motorista "${driverName}"? Esta ação não pode ser desfeita.`;
+            document.getElementById('deleteConfirmationModal').style.display = 'block';
+            
+            // Configurar botão de confirmação
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteDriver(driverId);
+        }
+
+        // Excluir motorista
+        function deleteDriver(driverId) {
+            const drivers = getAllDrivers();
+            if (drivers[driverId]) {
+                delete drivers[driverId];
+                localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                allDrivers = drivers;
+                
+                // Remover motorista do Firebase
+                database.ref(`drivers/${driverId}`).remove();
+                
+                closeDeleteConfirmation();
+                updateDriversTable({});
+                showNotification('Motorista excluído com sucesso!');
+            }
+        }
+
+        // Fechar modal de confirmação de exclusão
+        function closeDeleteConfirmation() {
+            document.getElementById('deleteConfirmationModal').style.display = 'none';
+            driverToDelete = null;
+        }
+
+        // Mostrar detalhes do motorista
+        function showDriverDetails(driverId, driver) {
+            selectedDriverId = driverId;
+            document.getElementById('modalDriverName').textContent = `Detalhes: ${driver.name}`;
+            
+            // Preencher detalhes do motorista
+            const driverDetails = document.getElementById('modalDriverDetails');
+            driverDetails.innerHTML = `
+                <p><strong>Nome:</strong> ${driver.name}</p>
+                <p><strong>Usuário:</strong> ${driver.username}</p>
+                <p><strong>Data de Cadastro:</strong> ${new Date(driver.createdAt).toLocaleString('pt-PT')}</p>
+                <p><strong>Status:</strong> ${driver.status === 'blocked' ? 'Bloqueado' : 'Ativo'}</p>
+            `;
+            
+            // Carregar corridas do motorista
+            loadDriverRides(driverId);
+            
+            // Mostrar modal
+            document.getElementById('driverModal').style.display = 'block';
+        }
+
+        // Carregar corridas do motorista
+        function loadDriverRides(driverId) {
+            const driverRides = allRides.filter(ride => ride.driverId === driverId);
+            const tableBody = document.getElementById('driverRidesTable');
+            tableBody.innerHTML = '';
+            
+            if (driverRides.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="no-data">Nenhuma corrida encontrada para este motorista</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            driverRides.sort((a, b) => new Date(b.acceptedAt || b.createdAt) - new Date(a.acceptedAt || a.createdAt));
+            
+            driverRides.forEach(ride => {
+                const rideDate = new Date(ride.acceptedAt || ride.createdAt);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${ride.name || 'Não informado'}</td>
+                    <td>${ride.origin}</td>
+                    <td>${ride.destination}</td>
+                    <td>${rideDate.toLocaleString('pt-PT')}</td>
+                    <td>
+                        <span class="status-badge ${ride.status === 'accepted' ? 'status-online' : 'status-offline'}">
+                            ${ride.status === 'accepted' ? 'Aceita' : 'Reserva'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Fechar modal do motorista
+        function closeDriverModal() {
+            document.getElementById('driverModal').style.display = 'none';
+            selectedDriverId = null;
+        }
+
+        // Filtrar corridas
+        function filterRides() {
+            const dateFilter = document.getElementById('dateFilter').value;
+            let targetDate;
+            
+            if (dateFilter) {
+                targetDate = new Date(dateFilter);
+            } else {
+                targetDate = new Date();
+            }
+            
+            const filteredRides = allRides.filter(ride => {
+                const rideDate = new Date(ride.acceptedAt || ride.createdAt);
+                return rideDate.toDateString() === targetDate.toDateString();
+            });
+            
+            updateRidesTable(filteredRides);
+            
+            // Atualizar estatística de corridas do dia
+            document.getElementById('todayRides').textContent = filteredRides.length;
+        }
+
+        // Resetar filtro
+        function resetFilter() {
+            document.getElementById('dateFilter').value = '';
+            filterRides();
+        }
+
+        // Atualizar tabela de corridas
+        function updateRidesTable(rides) {
+            const tableBody = document.getElementById('ridesTable');
+            tableBody.innerHTML = '';
+            
+            if (rides.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="no-data">Nenhuma corrida encontrada para a data selecionada</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            rides.sort((a, b) => new Date(b.acceptedAt || b.createdAt) - new Date(a.acceptedAt || a.createdAt));
+            
+            rides.forEach(ride => {
+                const rideDate = new Date(ride.acceptedAt || ride.createdAt);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${ride.name || 'Não informado'}</td>
+                    <td>${ride.driverName || 'Não atribuído'}</td>
+                    <td>${ride.origin}</td>
+                    <td>${ride.destination}</td>
+                    <td>${rideDate.toLocaleString('pt-PT')}</td>
+                    <td>
+                        <span class="status-badge ${ride.status === 'accepted' ? 'status-online' : 'status-offline'}">
+                            ${ride.status === 'accepted' ? 'Aceita' : 'Reserva'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Buscar motoristas
+        function searchDrivers() {
+            const searchTerm = document.getElementById('driverSearch').value.toLowerCase();
+            const filteredDrivers = {};
+            
+            Object.entries(allDrivers).forEach(([driverId, driver]) => {
+                if (driver.name.toLowerCase().includes(searchTerm) || 
+                    driver.username.toLowerCase().includes(searchTerm)) {
+                    filteredDrivers[driverId] = driver;
+                }
+            });
+            
+            updateDriversTableWithFilter(filteredDrivers);
+        }
+
+        // Atualizar tabela com motoristas filtrados
+        function updateDriversTableWithFilter(filteredDrivers) {
+            const tableBody = document.getElementById('driversTable');
+            tableBody.innerHTML = '';
+            
+            if (Object.keys(filteredDrivers).length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="no-data">Nenhum motorista encontrado</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            Object.entries(filteredDrivers).forEach(([driverId, driver]) => {
+                const isBlocked = driver.status === 'blocked';
+                
+                const row = document.createElement('tr');
+                row.className = 'driver-row';
+                row.onclick = () => showDriverDetails(driverId, driver);
+                row.innerHTML = `
+                    <td>${driver.name}</td>
+                    <td>${driver.username}</td>
+                    <td>
+                        <span class="status-badge ${isBlocked ? 'status-blocked' : 'status-offline'}">
+                            ${isBlocked ? 'Bloqueado' : 'Offline'}
+                        </span>
+                    </td>
+                    <td>${new Date(driver.createdAt).toLocaleDateString('pt-PT')}</td>
+                    <td onclick="event.stopPropagation()">
+                        ${editingDriverId === driverId ? getEditForm(driver) : getActionButtons(driverId, driver, isBlocked)}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Obter todos os motoristas
+        function getAllDrivers() {
+            const drivers = localStorage.getItem('gotaxi_drivers');
+            return drivers ? JSON.parse(drivers) : {};
+        }
+
+        // Mostrar notificação
+        function showNotification(message) {
+            // Criar notificação temporária
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #4CAF50;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 10000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 3000);
+        }
+
+        // Permitir login com Enter
+        document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                adminLogin();
+            }
+        });
+
+        // Fechar modais ao clicar fora
+        window.addEventListener('click', function(event) {
+            const driverModal = document.getElementById('driverModal');
+            const deleteModal = document.getElementById('deleteConfirmationModal');
+            
+            if (event.target === driverModal) {
+                closeDriverModal();
+            }
+            if (event.target === deleteModal) {
+                closeDeleteConfirmation();
+            }
+        });
+
+        // Inicializar quando a página carregar
+        window.addEventListener('load', function() {
+            checkAdminLogin();
+        });
+    </script>
+</body>
+</html>

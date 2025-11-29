@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulário - GoTáxi</title>
+    <title data-i18n="request_taxi">Solicitar Táxi - GoTáxi</title>
     <style>
         * {
             margin: 0;
@@ -38,10 +38,11 @@
         nav ul {
             display: flex;
             list-style: none;
+            align-items: center;
         }
         
         nav ul li {
-            margin-left: 20px;
+            margin-left: 15px;
         }
         
         nav ul li a {
@@ -54,6 +55,20 @@
         
         nav ul li a:hover {
             background-color: #333;
+        }
+
+        .language-selector {
+            background: transparent;
+            border: 1px solid #ffc107;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .language-selector option {
+            background: #000;
+            color: white;
         }
         
         .container {
@@ -137,12 +152,6 @@
             color: white;
             font-size: 18px;
             padding: 20px;
-        }
-        
-        .btn-whatsapp {
-            background-color: #25D366;
-            color: white;
-            display: none;
         }
         
         .notification {
@@ -243,13 +252,6 @@
             margin-bottom: 10px;
             line-height: 1.5;
         }
-
-        .countdown {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2196F3;
-            margin-top: 15px;
-        }
     </style>
 </head>
 <body>
@@ -257,8 +259,15 @@
         <div class="logo">Go<span>Táxi</span></div>
         <nav>
             <ul>
-                <li><a href="index.html">Início</a></li>
-                <li><a href="motorista.html">Área do Motorista</a></li>
+                <li><a href="index.html" data-i18n="home">Início</a></li>
+                <li>
+                    <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
+                        <option value="pt">🇵🇹 Português</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="fr">🇫🇷 Français</option>
+                    </select>
+                </li>
             </ul>
         </nav>
     </header>
@@ -268,70 +277,66 @@
         <div id="statusIndicator" class="status-indicator" style="display: none;"></div>
         
         <div class="form-card">
-            <h2>🚕 Solicitar Táxi</h2>
+            <h2 data-i18n="request_taxi_title">🚕 Solicitar Táxi</h2>
             
             <form id="taxiForm">
                 <div class="form-group">
-                    <label for="name">Nome Completo</label>
-                    <input type="text" id="name" placeholder="Seu nome completo" required>
+                    <label for="name" data-i18n="full_name">Nome Completo</label>
+                    <input type="text" id="name" data-i18n-placeholder="enter_full_name" placeholder="Seu nome completo" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="origin">📍 Onde você está?</label>
-                    <input type="text" id="origin" placeholder="Endereço de partida" required>
+                    <label for="origin" data-i18n="where_are_you">📍 Onde você está?</label>
+                    <input type="text" id="origin" data-i18n-placeholder="enter_departure" placeholder="Endereço de partida" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="destination">🎯 Pra onde vai?</label>
-                    <input type="text" id="destination" placeholder="Endereço de destino" required>
+                    <label for="destination" data-i18n="where_to">🎯 Pra onde vai?</label>
+                    <input type="text" id="destination" data-i18n-placeholder="enter_destination" placeholder="Endereço de destino" required>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="passengers">👥 Passageiros</label>
+                        <label for="passengers" data-i18n="passengers">👥 Passageiros</label>
                         <select id="passengers" required>
-                            <option value="1">1 passageiro</option>
-                            <option value="2">2 passageiros</option>
-                            <option value="3">3 passageiros</option>
-                            <option value="4" selected>4 passageiros</option>
+                            <option value="1" data-i18n="passenger_1">1 passageiro</option>
+                            <option value="2" data-i18n="passenger_2">2 passageiros</option>
+                            <option value="3" data-i18n="passenger_3">3 passageiros</option>
+                            <option value="4" selected data-i18n="passenger_4">4 passageiros</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label for="contact">📞 Contato</label>
-                        <input type="tel" id="contact" placeholder="Seu telefone" required>
+                        <label for="contact" data-i18n="contact">📞 Contato</label>
+                        <input type="tel" id="contact" data-i18n-placeholder="enter_phone" placeholder="Seu telefone" required>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="arrivalTime">⏰ Tempo de chegada</label>
+                    <label for="arrivalTime" data-i18n="arrival_time">⏰ Tempo de chegada</label>
                     <select id="arrivalTime" required>
-                        <option value="5">5 minutos</option>
-                        <option value="10" selected>10 minutos</option>
-                        <option value="15">15 minutos</option>
+                        <option value="5" data-i18n="minutes_5">5 minutos</option>
+                        <option value="10" selected data-i18n="minutes_10">10 minutos</option>
+                        <option value="15" data-i18n="minutes_15">15 minutos</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="paymentMethod">💳 Forma de pagamento</label>
+                    <label for="paymentMethod" data-i18n="payment_method">💳 Forma de pagamento</label>
                     <select id="paymentMethod" required>
-                        <option value="cash">Dinheiro</option>
-                        <option value="card">Cartão</option>
-                        <option value="mbway">MBWay</option>
+                        <option value="cash" data-i18n="cash">Dinheiro</option>
+                        <option value="card" data-i18n="card">Cartão</option>
+                        <option value="mbway" data-i18n="mbway">MBWay</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="notes">📝 Observação (opcional)</label>
-                    <textarea id="notes" placeholder="Alguma observação especial..."></textarea>
+                    <label for="notes" data-i18n="notes">📝 Observação (opcional)</label>
+                    <textarea id="notes" data-i18n-placeholder="special_notes" placeholder="Alguma observação especial..."></textarea>
                 </div>
                 
-                <button type="button" id="callTaxiButton" class="btn btn-call-taxi">
+                <button type="button" id="callTaxiButton" class="btn btn-call-taxi" data-i18n="call_taxi_button">
                     🚗 Chamar Táxi
-                </button>
-                
-                <button type="button" id="whatsappButton" class="btn btn-whatsapp" disabled>
-                    📱 Enviar Via WhatsApp
                 </button>
             </form>
         </div>
@@ -341,10 +346,10 @@
     <div id="successPopup" class="success-popup">
         <div class="popup-content">
             <div class="popup-icon">✅</div>
-            <h2 class="popup-title">Táxi Confirmado!</h2>
-            <p class="popup-message" id="popupDriverMessage">Seu táxi foi aceito e está a caminho!</p>
-            <p class="popup-message">O motorista entrará em contato com você em breve.</p>
-            <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;">
+            <h2 class="popup-title" data-i18n="taxi_confirmed">Táxi Confirmado!</h2>
+            <p class="popup-message" id="popupDriverMessage" data-i18n="taxi_accepted_message">Seu táxi foi aceito e está a caminho!</p>
+            <p class="popup-message" data-i18n="driver_contact">O motorista entrará em contato com você em breve.</p>
+            <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;" data-i18n="back_home">
                 🏠 Voltar para o Início
             </button>
         </div>
@@ -355,6 +360,198 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <script>
+        // Sistema de Internacionalização
+        const translations = {
+            pt: {
+                // Interface
+                "request_taxi": "Solicitar Táxi - GoTáxi",
+                "home": "Início",
+                "request_taxi_title": "🚕 Solicitar Táxi",
+                "full_name": "Nome Completo",
+                "enter_full_name": "Seu nome completo",
+                "where_are_you": "📍 Onde você está?",
+                "enter_departure": "Endereço de partida",
+                "where_to": "🎯 Pra onde vai?",
+                "enter_destination": "Endereço de destino",
+                "passengers": "👥 Passageiros",
+                "passenger_1": "1 passageiro",
+                "passenger_2": "2 passageiros",
+                "passenger_3": "3 passageiros",
+                "passenger_4": "4 passageiros",
+                "contact": "📞 Contato",
+                "enter_phone": "Seu telefone",
+                "arrival_time": "⏰ Tempo de chegada",
+                "minutes_5": "5 minutos",
+                "minutes_10": "10 minutos",
+                "minutes_15": "15 minutos",
+                "payment_method": "💳 Forma de pagamento",
+                "cash": "Dinheiro",
+                "card": "Cartão",
+                "mbway": "MBWay",
+                "notes": "📝 Observação (opcional)",
+                "special_notes": "Alguma observação especial...",
+                "call_taxi_button": "🚗 Chamar Táxi",
+                "taxi_confirmed": "Táxi Confirmado!",
+                "taxi_accepted_message": "Seu táxi foi aceito e está a caminho!",
+                "driver_contact": "O motorista entrará em contato com você em breve.",
+                "back_home": "🏠 Voltar para o Início",
+                
+                // Notificações
+                "fill_all_fields": "❌ Por favor, preencha todos os campos obrigatórios.",
+                "sending_request": "⏳ Enviando solicitação...",
+                "request_sent": "🚕 Solicitação enviada! Aguardando motorista...",
+                "request_error": "❌ Erro ao enviar solicitação. Tente novamente.",
+                "address_error": "❌ Erro ao processar endereço. Tente novamente.",
+                "waiting_driver": "🕒 Aguardando resposta do motorista...",
+                "request_sent_confirm": "✅ Solicitação Enviada",
+                "taxi_accepted": "🎉 Seu táxi foi aceito! Motorista: ",
+                "no_drivers": "❌ Nenhum motorista disponível. Tente novamente.",
+                "reservation_confirmed": "✅ Reserva confirmada para daqui a ",
+                "reservation_rejected": "❌ Reserva rejeitada."
+            },
+            en: {
+                // Interface
+                "request_taxi": "Request Taxi - GoTáxi",
+                "home": "Home",
+                "request_taxi_title": "🚕 Request Taxi",
+                "full_name": "Full Name",
+                "enter_full_name": "Your full name",
+                "where_are_you": "📍 Where are you?",
+                "enter_departure": "Departure address",
+                "where_to": "🎯 Where to?",
+                "enter_destination": "Destination address",
+                "passengers": "👥 Passengers",
+                "passenger_1": "1 passenger",
+                "passenger_2": "2 passengers",
+                "passenger_3": "3 passengers",
+                "passenger_4": "4 passengers",
+                "contact": "📞 Contact",
+                "enter_phone": "Your phone number",
+                "arrival_time": "⏰ Arrival time",
+                "minutes_5": "5 minutes",
+                "minutes_10": "10 minutes",
+                "minutes_15": "15 minutes",
+                "payment_method": "💳 Payment Method",
+                "cash": "Cash",
+                "card": "Card",
+                "mbway": "MBWay",
+                "notes": "📝 Notes (optional)",
+                "special_notes": "Any special notes...",
+                "call_taxi_button": "🚗 Call Taxi",
+                "taxi_confirmed": "Taxi Confirmed!",
+                "taxi_accepted_message": "Your taxi has been accepted and is on the way!",
+                "driver_contact": "The driver will contact you shortly.",
+                "back_home": "🏠 Back to Home",
+                
+                // Notifications
+                "fill_all_fields": "❌ Please fill all required fields.",
+                "sending_request": "⏳ Sending request...",
+                "request_sent": "🚕 Request sent! Waiting for driver...",
+                "request_error": "❌ Error sending request. Try again.",
+                "address_error": "❌ Error processing address. Try again.",
+                "waiting_driver": "🕒 Waiting for driver response...",
+                "request_sent_confirm": "✅ Request Sent",
+                "taxi_accepted": "🎉 Your taxi was accepted! Driver: ",
+                "no_drivers": "❌ No drivers available. Try again.",
+                "reservation_confirmed": "✅ Reservation confirmed for ",
+                "reservation_rejected": "❌ Reservation rejected."
+            },
+            es: {
+                // Interface
+                "request_taxi": "Solicitar Taxi - GoTáxi",
+                "home": "Inicio",
+                "request_taxi_title": "🚕 Solicitar Taxi",
+                "full_name": "Nombre Completo",
+                "enter_full_name": "Tu nombre completo",
+                "where_are_you": "📍 ¿Dónde estás?",
+                "enter_departure": "Dirección de salida",
+                "where_to": "🎯 ¿A dónde vas?",
+                "enter_destination": "Dirección de destino",
+                "passengers": "👥 Pasajeros",
+                "passenger_1": "1 pasajero",
+                "passenger_2": "2 pasajeros",
+                "passenger_3": "3 pasajeros",
+                "passenger_4": "4 pasajeros",
+                "contact": "📞 Contacto",
+                "enter_phone": "Tu teléfono",
+                "arrival_time": "⏰ Tiempo de llegada",
+                "minutes_5": "5 minutos",
+                "minutes_10": "10 minutos",
+                "minutes_15": "15 minutos",
+                "payment_method": "💳 Método de Pago",
+                "cash": "Efectivo",
+                "card": "Tarjeta",
+                "mbway": "MBWay",
+                "notes": "📝 Observación (opcional)",
+                "special_notes": "Alguna observación especial...",
+                "call_taxi_button": "🚗 Llamar Taxi",
+                "taxi_confirmed": "¡Taxi Confirmado!",
+                "taxi_accepted_message": "¡Tu taxi ha sido aceptado y está en camino!",
+                "driver_contact": "El conductor se pondrá en contacto contigo pronto.",
+                "back_home": "🏠 Volver al Inicio",
+                
+                // Notifications
+                "fill_all_fields": "❌ Por favor, complete todos los campos obligatorios.",
+                "sending_request": "⏳ Enviando solicitud...",
+                "request_sent": "🚕 ¡Solicitud enviada! Esperando conductor...",
+                "request_error": "❌ Error al enviar solicitud. Intente nuevamente.",
+                "address_error": "❌ Error al procesar dirección. Intente nuevamente.",
+                "waiting_driver": "🕒 Esperando respuesta del conductor...",
+                "request_sent_confirm": "✅ Solicitud Enviada",
+                "taxi_accepted": "🎉 ¡Tu taxi fue aceptado! Conductor: ",
+                "no_drivers": "❌ No hay conductores disponibles. Intente nuevamente.",
+                "reservation_confirmed": "✅ Reserva confirmada para dentro de ",
+                "reservation_rejected": "❌ Reserva rechazada."
+            },
+            fr: {
+                // Interface
+                "request_taxi": "Demander un Taxi - GoTáxi",
+                "home": "Accueil",
+                "request_taxi_title": "🚕 Demander un Taxi",
+                "full_name": "Nom Complet",
+                "enter_full_name": "Votre nom complet",
+                "where_are_you": "📍 Où êtes-vous?",
+                "enter_departure": "Adresse de départ",
+                "where_to": "🎯 Où allez-vous?",
+                "enter_destination": "Adresse de destination",
+                "passengers": "👥 Passagers",
+                "passenger_1": "1 passager",
+                "passenger_2": "2 passagers",
+                "passenger_3": "3 passagers",
+                "passenger_4": "4 passagers",
+                "contact": "📞 Contact",
+                "enter_phone": "Votre numéro de téléphone",
+                "arrival_time": "⏰ Temps d'arrivée",
+                "minutes_5": "5 minutes",
+                "minutes_10": "10 minutes",
+                "minutes_15": "15 minutes",
+                "payment_method": "💳 Mode de Paiement",
+                "cash": "Espèces",
+                "card": "Carte",
+                "mbway": "MBWay",
+                "notes": "📝 Remarque (optionnelle)",
+                "special_notes": "Remarque spéciale...",
+                "call_taxi_button": "🚗 Appeler Taxi",
+                "taxi_confirmed": "Taxi Confirmé!",
+                "taxi_accepted_message": "Votre taxi a été accepté et est en route!",
+                "driver_contact": "Le chauffeur vous contactera sous peu.",
+                "back_home": "🏠 Retour à l'Accueil",
+                
+                // Notifications
+                "fill_all_fields": "❌ Veuillez remplir tous les champs obligatoires.",
+                "sending_request": "⏳ Envoi de la demande...",
+                "request_sent": "🚕 Demande envoyée! En attente du chauffeur...",
+                "request_error": "❌ Erreur lors de l'envoi. Réessayez.",
+                "address_error": "❌ Erreur de traitement de l'adresse. Réessayez.",
+                "waiting_driver": "🕒 En attente de la réponse du chauffeur...",
+                "request_sent_confirm": "✅ Demande Envoyée",
+                "taxi_accepted": "🎉 Votre taxi a été accepté! Chauffeur: ",
+                "no_drivers": "❌ Aucun chauffeur disponible. Réessayez.",
+                "reservation_confirmed": "✅ Réservation confirmée pour dans ",
+                "reservation_rejected": "❌ Réservation rejetée."
+            }
+        };
+
         // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
@@ -372,17 +569,71 @@
         
         // Elementos do DOM
         const callTaxiButton = document.getElementById('callTaxiButton');
-        const whatsappButton = document.getElementById('whatsappButton');
         const notification = document.getElementById('notification');
         const statusIndicator = document.getElementById('statusIndicator');
         const successPopup = document.getElementById('successPopup');
         const popupDriverMessage = document.getElementById('popupDriverMessage');
-        const countdownElement = document.getElementById('countdown');
         
         let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         let currentRequestId = null;
-        let redirectCountdown = null;
-        
+        let currentLanguage = 'pt';
+
+        // Função para mudar idioma
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            updateTexts();
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Função para atualizar textos
+        function updateTexts() {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+
+            const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
+            placeholders.forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.setAttribute('placeholder', translations[currentLanguage][key]);
+                }
+            });
+
+            // Atualizar opções do select
+            const selects = document.querySelectorAll('select option');
+            selects.forEach(option => {
+                const key = option.getAttribute('data-i18n');
+                if (key && translations[currentLanguage][key]) {
+                    option.textContent = translations[currentLanguage][key];
+                }
+            });
+        }
+
+        // Função para obter tradução
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        // Carregar idioma salvo
+        function loadSavedLanguage() {
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlLang = urlParams.get('lang');
+            
+            if (urlLang && translations[urlLang]) {
+                currentLanguage = urlLang;
+            } else if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+            }
+            
+            document.getElementById('languageSelector').value = currentLanguage;
+            updateTexts();
+        }
+
         // Verificar se há parâmetros na URL e preencher os campos
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -411,6 +662,7 @@
         
         // Inicializar quando a página carregar
         document.addEventListener('DOMContentLoaded', function() {
+            loadSavedLanguage();
             checkUrlParams();
             initAutocomplete();
             
@@ -422,13 +674,13 @@
         callTaxiButton.addEventListener('click', function() {
             // Validar formulário
             if (!validateForm()) {
-                showNotification("❌ Por favor, preencha todos os campos obrigatórios.", true);
+                showNotification(t("fill_all_fields"), true);
                 return;
             }
             
             // Desabilitar botão durante o processamento
             callTaxiButton.disabled = true;
-            callTaxiButton.textContent = "⏳ Enviando solicitação...";
+            callTaxiButton.textContent = t("sending_request");
             
             // Coletar dados do formulário
             const formData = getFormData();
@@ -443,38 +695,34 @@
                     clientId: clientId,
                     status: 'pending',
                     paymentStatus: 'free',
-                    originCoords: originCoords, // Adicionar coordenadas
+                    originCoords: originCoords,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 };
                 
                 database.ref(`ride_requests/${currentRequestId}`).set(requestData)
                     .then(() => {
-                        showNotification("🚕 Solicitação enviada! Aguardando motorista...", false, 'info');
-                        updateStatusIndicator('pending', '🕒 Aguardando resposta do motorista...');
-                        
-                        // Habilitar botão do WhatsApp
-                        whatsappButton.disabled = false;
-                        whatsappButton.style.display = 'block';
+                        showNotification(t("request_sent"), false, 'info');
+                        updateStatusIndicator('pending', t("waiting_driver"));
                         
                         // Alterar texto do botão
-                        callTaxiButton.textContent = "✅ Solicitação Enviada";
+                        callTaxiButton.textContent = t("request_sent_confirm");
                         
                         // Escutar por atualizações na solicitação
                         listenForRequestUpdates();
                     })
                     .catch((error) => {
                         console.error('Erro ao enviar solicitação:', error);
-                        showNotification("❌ Erro ao enviar solicitação. Tente novamente.", true);
+                        showNotification(t("request_error"), true);
                         
                         // Reabilitar botão
                         callTaxiButton.disabled = false;
-                        callTaxiButton.textContent = "🚗 Chamar Táxi";
+                        callTaxiButton.textContent = t("call_taxi_button");
                     });
             }).catch(error => {
                 console.error('Erro ao obter coordenadas:', error);
-                showNotification("❌ Erro ao processar endereço. Tente novamente.", true);
+                showNotification(t("address_error"), true);
                 callTaxiButton.disabled = false;
-                callTaxiButton.textContent = "🚗 Chamar Táxi";
+                callTaxiButton.textContent = t("call_taxi_button");
             });
         });
         
@@ -510,15 +758,15 @@
                 
                 if (request) {
                     if (request.status === 'accepted') {
-                        updateStatusIndicator('accepted', `✅ Táxi aceito por ${request.driverName || 'motorista'}!`);
-                        showNotification(`🎉 Seu táxi foi aceito! Motorista: ${request.driverName || 'Não informado'}`, false, 'info');
+                        updateStatusIndicator('accepted', `✅ ${t("taxi_accepted")} ${request.driverName || t('driver')}!`);
+                        showNotification(`${t("taxi_accepted")} ${request.driverName || t('driver')}`, false, 'info');
                         
-                        // Mostrar popup de sucesso SEM redirecionamento automático
+                        // Mostrar popup de sucesso
                         showSuccessPopup(request.driverName);
                         
                     } else if (request.status === 'rejected') {
-                        updateStatusIndicator('rejected', '❌ Nenhum motorista disponível no momento.');
-                        showNotification("❌ Nenhum motorista disponível. Tente novamente.", true);
+                        updateStatusIndicator('rejected', t("no_drivers"));
+                        showNotification(t("no_drivers"), true);
                         
                         // Reabilitar o formulário para nova tentativa
                         resetFormForNewRequest();
@@ -546,10 +794,10 @@
         function showReservationConfirmation(notification) {
             const userResponse = confirm(
                 `📅 ${notification.message}\n\n` +
-                `Detalhes da reserva:\n` +
-                `• Motorista: ${notification.driverName}\n` +
-                `• Tempo: ${notification.reservationTime} minutos\n\n` +
-                `Clique em "OK" para aceitar ou "Cancelar" para rejeitar.`
+                `${t('reservation_details')}:\n` +
+                `• ${t('driver')}: ${notification.driverName}\n` +
+                `• ${t('wait_time')}: ${notification.reservationTime} ${t('minutes')}\n\n` +
+                `${t('click_accept_reject')}`
             );
             
             if (userResponse) {
@@ -566,13 +814,12 @@
             // Enviar notificação de aceitação para o motorista
             database.ref(`notifications/drivers/${notification.driverId}`).push({
                 type: 'reservation_accepted',
-                message: `✅ Cliente aceitou a reserva para daqui a ${notification.reservationTime} minutos!`,
+                message: `✅ ${t('client_accepted_reservation')} ${notification.reservationTime} ${t('minutes')}!`,
                 reservationTime: notification.reservationTime,
                 requestId: notification.requestId,
-                reservationId: notification.reservationId,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
-                showNotification(`✅ Reserva confirmada para daqui a ${notification.reservationTime} minutos!`, false, 'info');
+                showNotification(`${t("reservation_confirmed")} ${notification.reservationTime} ${t('minutes')}!`, false, 'info');
                 
                 // Atualizar status da solicitação
                 database.ref(`ride_requests/${notification.requestId}`).update({
@@ -582,12 +829,12 @@
                     acceptedAt: firebase.database.ServerValue.TIMESTAMP
                 });
                 
-                // Mostrar popup de sucesso SEM redirecionamento automático
+                // Mostrar popup de sucesso
                 showReservationSuccessPopup(notification.driverName, notification.reservationTime);
                 
             }).catch((error) => {
                 console.error('Erro ao aceitar reserva:', error);
-                showNotification("❌ Erro ao aceitar reserva.", true);
+                showNotification(t("request_error"), true);
             });
         }
         
@@ -596,12 +843,11 @@
             // Enviar notificação de rejeição para o motorista
             database.ref(`notifications/drivers/${notification.driverId}`).push({
                 type: 'reservation_rejected',
-                message: `❌ Cliente rejeitou a reserva para daqui a ${notification.reservationTime} minutos.`,
+                message: `❌ ${t('client_rejected_reservation')}`,
                 requestId: notification.requestId,
-                reservationId: notification.reservationId,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
-                showNotification("❌ Reserva rejeitada.", true);
+                showNotification(t("reservation_rejected"), true);
                 
                 // Atualizar status da solicitação
                 database.ref(`ride_requests/${notification.requestId}`).update({
@@ -610,29 +856,29 @@
                 
             }).catch((error) => {
                 console.error('Erro ao rejeitar reserva:', error);
-                showNotification("❌ Erro ao rejeitar reserva.", true);
+                showNotification(t("request_error"), true);
             });
         }
         
-        // Mostrar popup de sucesso SEM redirecionamento automático
+        // Mostrar popup de sucesso
         function showSuccessPopup(driverName) {
             // Atualizar mensagem do popup
-            popupDriverMessage.textContent = `Seu táxi foi aceito por ${driverName || 'um motorista'} e está a caminho!`;
+            popupDriverMessage.textContent = `${t("taxi_accepted_message")} ${driverName || t('driver')}!`;
             
             // Mostrar popup
             successPopup.classList.add('active');
         }
         
-        // Mostrar popup de sucesso para reserva SEM redirecionamento automático
+        // Mostrar popup de sucesso para reserva
         function showReservationSuccessPopup(driverName, reservationTime) {
             const popupContent = document.querySelector('.popup-content');
             popupContent.innerHTML = `
                 <div class="popup-icon">📅</div>
-                <h2 class="popup-title">Reserva Confirmada!</h2>
-                <p class="popup-message">Sua reserva com ${driverName} foi confirmada para daqui a ${reservationTime} minutos!</p>
-                <p class="popup-message">O motorista entrará em contato com você em breve.</p>
+                <h2 class="popup-title">${t('reservation_confirmed_title')}</h2>
+                <p class="popup-message">${t('reservation_with')} ${driverName} ${t('confirmed_for')} ${reservationTime} ${t('minutes')}!</p>
+                <p class="popup-message">${t('driver_contact')}</p>
                 <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;">
-                    🏠 Voltar para o Início
+                    ${t('back_home')}
                 </button>
             `;
             
@@ -640,10 +886,10 @@
             successPopup.classList.add('active');
         }
         
-        // Fechar popup e redirecionar manualmente
+        // Fechar popup e redirecionar
         function closePopupAndRedirect() {
             successPopup.classList.remove('active');
-            // Redirecionar para a página inicial apenas quando o usuário clicar
+            // Redirecionar para a página inicial
             window.location.href = 'index.html';
         }
         
@@ -651,36 +897,11 @@
         function resetFormForNewRequest() {
             // Reabilitar botão de chamar táxi
             callTaxiButton.disabled = false;
-            callTaxiButton.textContent = "🚗 Chamar Táxi Novamente";
-            
-            // Desabilitar botão do WhatsApp
-            whatsappButton.disabled = true;
-            whatsappButton.style.display = 'none';
+            callTaxiButton.textContent = t("call_taxi_button");
             
             // Limpar request ID atual
             currentRequestId = null;
         }
-        
-        // Enviar via WhatsApp
-        whatsappButton.addEventListener('click', function() {
-            // Coletar dados do formulário
-            const formData = getFormData();
-            
-            // Formatar mensagem para WhatsApp
-            const message = formatWhatsAppMessage(formData);
-            
-            // Codificar mensagem para URL
-            const encodedMessage = encodeURIComponent(message);
-            
-            // Número do motorista
-            const phoneNumber = "351939354112";
-            
-            // Criar URL do WhatsApp
-            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-            
-            // Abrir WhatsApp em nova aba
-            window.open(whatsappUrl, '_blank');
-        });
         
         // Validar formulário
         function validateForm() {
@@ -712,34 +933,6 @@
             };
         }
         
-        // Formatar mensagem para WhatsApp
-        function formatWhatsAppMessage(data) {
-            return `🚕 *SOLICITAÇÃO DE TÁXI - GoTáxi* 🚕
-
-*Nome:* ${data.name}
-*De:* ${data.origin}
-*Para:* ${data.destination}
-*Passageiros:* ${data.passengers}
-*Contato:* ${data.contact}
-*Tempo de Chegada:* ${data.arrivalTime} minutos
-*Pagamento:* ${getPaymentMethodText(data.paymentMethod)}
-${data.notes ? `*Observações:* ${data.notes}` : ''}
-
-*Solicitado em:* ${data.timestamp}
-
-_Por favor, confirme esta solicitação._`;
-        }
-        
-        // Obter texto do método de pagamento
-        function getPaymentMethodText(method) {
-            switch(method) {
-                case 'cash': return 'Dinheiro';
-                case 'card': return 'Cartão';
-                case 'mbway': return 'MBWay';
-                default: return method;
-            }
-        }
-        
         // Atualizar indicador de status
         function updateStatusIndicator(status, message) {
             statusIndicator.textContent = message;
@@ -763,6 +956,55 @@ _Por favor, confirme esta solicitação._`;
                 notification.style.display = 'none';
             }, 5000);
         }
+
+        // Adicionar traduções faltantes
+        Object.assign(translations.pt, {
+            'reservation_details': 'Detalhes da reserva',
+            'wait_time': 'Tempo de espera',
+            'minutes': 'minutos',
+            'click_accept_reject': 'Clique em "OK" para aceitar ou "Cancelar" para rejeitar.',
+            'client_accepted_reservation': 'Cliente aceitou sua proposta de reserva de',
+            'client_rejected_reservation': 'Cliente rejeitou sua proposta de reserva.',
+            'reservation_confirmed_title': 'Reserva Confirmada!',
+            'reservation_with': 'Sua reserva com',
+            'confirmed_for': 'foi confirmada para daqui a'
+        });
+
+        Object.assign(translations.en, {
+            'reservation_details': 'Reservation details',
+            'wait_time': 'Wait time',
+            'minutes': 'minutes',
+            'click_accept_reject': 'Click "OK" to accept or "Cancel" to reject.',
+            'client_accepted_reservation': 'Client accepted your reservation proposal of',
+            'client_rejected_reservation': 'Client rejected your reservation proposal.',
+            'reservation_confirmed_title': 'Reservation Confirmed!',
+            'reservation_with': 'Your reservation with',
+            'confirmed_for': 'was confirmed for'
+        });
+
+        Object.assign(translations.es, {
+            'reservation_details': 'Detalles de la reserva',
+            'wait_time': 'Tiempo de espera',
+            'minutes': 'minutos',
+            'click_accept_reject': 'Haga clic en "Aceptar" para aceptar o "Cancelar" para rechazar.',
+            'client_accepted_reservation': 'Cliente aceptó su propuesta de reserva de',
+            'client_rejected_reservation': 'Cliente rechazó su propuesta de reserva.',
+            'reservation_confirmed_title': '¡Reserva Confirmada!',
+            'reservation_with': 'Su reserva con',
+            'confirmed_for': 'fue confirmada para dentro de'
+        });
+
+        Object.assign(translations.fr, {
+            'reservation_details': 'Détails de la réservation',
+            'wait_time': 'Temps d\'attente',
+            'minutes': 'minutes',
+            'click_accept_reject': 'Cliquez sur "OK" pour accepter ou "Annuler" pour rejeter.',
+            'client_accepted_reservation': 'Le client a accepté votre proposition de réservation de',
+            'client_rejected_reservation': 'Le client a rejeté votre proposition de réservation.',
+            'reservation_confirmed_title': 'Réservation Confirmée!',
+            'reservation_with': 'Votre réservation avec',
+            'confirmed_for': 'a été confirmée pour dans'
+        });
     </script>
     
     <!-- Google Maps API com biblioteca de geometria -->
