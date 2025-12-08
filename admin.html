@@ -218,6 +218,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
+            max-height: 600px;
+            overflow-y: auto;
         }
         
         table {
@@ -235,6 +237,9 @@
             background-color: #f8f9fa;
             font-weight: bold;
             color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         tr:hover {
@@ -257,6 +262,11 @@
             cursor: pointer;
             font-size: 14px;
             margin-right: 5px;
+            transition: opacity 0.3s;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
         }
         
         .btn-block {
@@ -338,12 +348,14 @@
             gap: 10px;
             margin-bottom: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .date-filter input {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            min-width: 200px;
         }
         
         .filter-btn {
@@ -474,6 +486,87 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        
+        .edit-login-form {
+            background-color: #fff9e6;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .edit-login-form h5 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .driver-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .scroll-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .driver-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .refresh-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #1976d2;
+        }
+        
+        .sync-btn {
+            background-color: #9c27b0;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .sync-btn:hover {
+            background-color: #7b1fa2;
+        }
     </style>
 </head>
 <body>
@@ -509,7 +602,11 @@
     <div class="admin-container" id="adminContainer">
         <div class="admin-header">
             <h1 class="admin-title">Painel de Administração</h1>
-            <button class="logout-btn" onclick="adminLogout()">Sair</button>
+            <div>
+                <button class="sync-btn" onclick="forceSynchronize()">🔄 Sincronizar Contas</button>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Atualizar Dados</button>
+                <button class="logout-btn" onclick="adminLogout()">Sair</button>
+            </div>
         </div>
         
         <div class="stats-cards">
@@ -539,14 +636,15 @@
         <!-- Aba de Motoristas -->
         <div class="tab-content active" id="driversTab">
             <div class="search-box">
-                <input type="text" id="driverSearch" placeholder="Buscar motorista por nome ou usuário..." onkeyup="searchDrivers()">
+                <input type="text" id="driverSearch" placeholder="Buscar motorista por nome, usuário ou matrícula..." onkeyup="searchDrivers()">
             </div>
-            <div class="table-container">
+            <div class="scroll-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Nome</th>
                             <th>Usuário</th>
+                            <th>Matrícula</th>
                             <th>Status</th>
                             <th>Data de Cadastro</th>
                             <th>Ações</th>
@@ -567,7 +665,7 @@
                 <button class="filter-btn" onclick="filterRides()">Filtrar</button>
                 <button class="filter-btn" onclick="resetFilter()">Hoje</button>
             </div>
-            <div class="table-container">
+            <div class="scroll-container">
                 <table>
                     <thead>
                         <tr>
@@ -587,32 +685,37 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes do Motorista -->
-    <div class="modal" id="driverModal">
+    <!-- Modal de Edição de Login -->
+    <div class="modal" id="editLoginModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modalDriverName">Detalhes do Motorista</h3>
-                <button class="close-btn" onclick="closeDriverModal()">&times;</button>
+                <h3 id="editLoginTitle">Editar Login do Motorista</h3>
+                <button class="close-btn" onclick="closeEditLoginModal()">&times;</button>
             </div>
-            <div class="driver-details" id="modalDriverDetails">
-                <!-- Detalhes do motorista serão preenchidos aqui -->
-            </div>
-            <h4>Histórico de Corridas</h4>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Origem</th>
-                            <th>Destino</th>
-                            <th>Data/Hora</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="driverRidesTable">
-                        <!-- Corridas do motorista serão preenchidas aqui -->
-                    </tbody>
-                </table>
+            <div class="driver-details">
+                <div class="edit-login-form" id="editLoginForm">
+                    <div id="editLoginDetails">
+                        <!-- Detalhes do login serão preenchidos aqui -->
+                    </div>
+                    <div id="editLoginFields" style="margin-top: 15px;">
+                        <div style="margin-bottom: 15px;">
+                            <label for="editUsername">Nome de Usuário:</label>
+                            <input type="text" id="editUsername" placeholder="Novo nome de usuário" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label for="editPassword">Nova Senha:</label>
+                            <input type="password" id="editPassword" placeholder="Nova senha (deixe em branco para manter a atual)" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label for="editConfirmPassword">Confirmar Senha:</label>
+                            <input type="password" id="editConfirmPassword" placeholder="Confirmar nova senha" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-save" onclick="saveLoginChanges()">Salvar Alterações</button>
+                        <button class="btn btn-cancel" onclick="closeEditLoginModal()">Cancelar</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -655,13 +758,18 @@
             password: '12345'
         };
         
+        // Chaves de armazenamento
+        const DRIVERS_STORAGE_KEY = 'gotaxi_drivers';
+        const ADMIN_STORAGE_KEY = 'gotaxi_admin_drivers';
+        const SYNC_TIMESTAMP_KEY = 'gotaxi_sync_timestamp';
+        
         // Variáveis globais
         let isAdminLoggedIn = false;
-        let allDrivers = [];
+        let allDrivers = {};
         let allRides = [];
         let editingDriverId = null;
-        let selectedDriverId = null;
         let driverToDelete = null;
+        let currentEditingDriverId = null;
 
         // Verificar se o admin está logado
         function checkAdminLogin() {
@@ -698,6 +806,13 @@
             document.getElementById('adminPassword').value = '';
         }
 
+        // Atualizar dados
+        function refreshData() {
+            loadDriversData();
+            loadRidesData();
+            showNotification('Dados atualizados com sucesso!');
+        }
+
         // Mostrar painel administrativo
         function showAdminPanel() {
             document.getElementById('loginContainer').style.display = 'none';
@@ -727,9 +842,17 @@
 
         // Carregar dados dos motoristas
         function loadDriversData() {
-            // Carregar motoristas do localStorage
-            const driversStorage = localStorage.getItem('gotaxi_drivers');
-            allDrivers = driversStorage ? JSON.parse(driversStorage) : {};
+            // Sincronizar dados primeiro
+            synchronizeDriverData();
+            
+            // Carregar motoristas do armazenamento administrativo
+            const adminDriversStorage = localStorage.getItem(ADMIN_STORAGE_KEY);
+            
+            if (adminDriversStorage) {
+                allDrivers = JSON.parse(adminDriversStorage);
+            } else {
+                allDrivers = {};
+            }
             
             // Carregar status online do Firebase
             database.ref('drivers').on('value', (snapshot) => {
@@ -743,13 +866,135 @@
             });
         }
 
+        // Sincronizar dados do sistema de motoristas com o sistema administrativo
+        function synchronizeDriverData() {
+            // Carregar dados do sistema de motoristas
+            const driversStorage = localStorage.getItem(DRIVERS_STORAGE_KEY);
+            if (!driversStorage) return;
+            
+            const driversData = JSON.parse(driversStorage);
+            
+            // Carregar dados do sistema administrativo
+            const adminDriversStorage = localStorage.getItem(ADMIN_STORAGE_KEY);
+            const adminDrivers = adminDriversStorage ? JSON.parse(adminDriversStorage) : {};
+            
+            // Verificar por novos motoristas ou atualizações
+            let hasChanges = false;
+            
+            Object.entries(driversData).forEach(([driverId, driver]) => {
+                // Se o motorista não existe no sistema administrativo ou está desatualizado
+                if (!adminDrivers[driverId]) {
+                    // Adicionar novo motorista
+                    adminDrivers[driverId] = {
+                        name: driver.name || 'Não informado',
+                        username: driver.username,
+                        password: driver.password,
+                        licensePlate: driver.licensePlate || 'Não informada',
+                        nif: driver.nif || 'Não informado',
+                        phone: driver.phone || 'Não informado',
+                        driverId: driver.driverId || driverId,
+                        status: driver.status || 'active',
+                        createdAt: driver.createdAt || new Date().toISOString(),
+                        lastUpdated: new Date().toISOString(),
+                        syncedFrom: 'local_storage'
+                    };
+                    
+                    hasChanges = true;
+                } else {
+                    // Atualizar dados existentes se necessário
+                    const adminDriver = adminDrivers[driverId];
+                    let driverUpdated = false;
+                    
+                    // Verificar se há mudanças nos dados básicos
+                    if (adminDriver.name !== (driver.name || 'Não informado')) {
+                        adminDriver.name = driver.name || 'Não informado';
+                        driverUpdated = true;
+                    }
+                    
+                    if (adminDriver.username !== driver.username) {
+                        adminDriver.username = driver.username;
+                        driverUpdated = true;
+                    }
+                    
+                    if (adminDriver.licensePlate !== (driver.licensePlate || 'Não informada')) {
+                        adminDriver.licensePlate = driver.licensePlate || 'Não informada';
+                        driverUpdated = true;
+                    }
+                    
+                    if (adminDriver.phone !== (driver.phone || 'Não informado')) {
+                        adminDriver.phone = driver.phone || 'Não informado';
+                        driverUpdated = true;
+                    }
+                    
+                    // Atualizar timestamp se houve mudanças
+                    if (driverUpdated) {
+                        adminDriver.lastUpdated = new Date().toISOString();
+                        hasChanges = true;
+                    }
+                }
+            });
+            
+            // Salvar se houver mudanças
+            if (hasChanges) {
+                localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(adminDrivers));
+                console.log('Dados dos motoristas sincronizados com sucesso!');
+                localStorage.setItem(SYNC_TIMESTAMP_KEY, new Date().toISOString());
+            }
+            
+            return hasChanges;
+        }
+
+        // Forçar sincronização completa
+        function forceSynchronize() {
+            // Carregar dados do sistema de motoristas
+            const driversStorage = localStorage.getItem(DRIVERS_STORAGE_KEY);
+            
+            if (!driversStorage) {
+                showNotification('Não há dados de motoristas para sincronizar!');
+                return;
+            }
+            
+            const driversData = JSON.parse(driversStorage);
+            const adminDrivers = {};
+            
+            // Converter todos os motoristas para o formato administrativo
+            Object.entries(driversData).forEach(([driverId, driver]) => {
+                adminDrivers[driverId] = {
+                    name: driver.name || 'Não informado',
+                    username: driver.username,
+                    password: driver.password,
+                    licensePlate: driver.licensePlate || 'Não informada',
+                    nif: driver.nif || 'Não informado',
+                    phone: driver.phone || 'Não informado',
+                    driverId: driver.driverId || driverId,
+                    status: driver.status || 'active',
+                    createdAt: driver.createdAt || new Date().toISOString(),
+                    lastUpdated: new Date().toISOString(),
+                    syncedFrom: 'force_sync'
+                };
+            });
+            
+            // Salvar no armazenamento administrativo
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(adminDrivers));
+            localStorage.setItem(SYNC_TIMESTAMP_KEY, new Date().toISOString());
+            
+            // Atualizar variável global
+            allDrivers = adminDrivers;
+            
+            // Recarregar tabela
+            database.ref('drivers').once('value').then(snapshot => {
+                updateDriversTable(snapshot.val() || {});
+            });
+            
+            showNotification(`Sincronização completa! ${Object.keys(adminDrivers).length} motoristas sincronizados.`);
+        }
+
         // Carregar dados das corridas
         function loadRidesData() {
             database.ref('ride_requests').on('value', (snapshot) => {
                 const rides = snapshot.val() || {};
                 
                 // Filtrar apenas corridas que foram aceitas ou são reservas aceitas
-                // Não incluir corridas rejeitadas ou com status pending
                 allRides = Object.entries(rides)
                     .map(([id, ride]) => ({
                         id,
@@ -789,60 +1034,63 @@
             if (Object.keys(allDrivers).length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="no-data">Nenhum motorista cadastrado</td>
+                        <td colspan="6" class="no-data">Nenhum motorista cadastrado</td>
                     </tr>
                 `;
                 return;
             }
             
-            Object.entries(allDrivers).forEach(([driverId, driver]) => {
+            // Ordenar motoristas por nome
+            const sortedDrivers = Object.entries(allDrivers).sort((a, b) => 
+                a[1].name.localeCompare(b[1].name)
+            );
+            
+            sortedDrivers.forEach(([driverId, driver]) => {
                 const isOnline = onlineDrivers[driverId] && onlineDrivers[driverId].status === 'online';
                 const isBlocked = driver.status === 'blocked';
                 
                 const row = document.createElement('tr');
                 row.className = 'driver-row';
-                row.onclick = () => showDriverDetails(driverId, driver);
+                row.onclick = (e) => {
+                    // Não abrir modal se clicar nos botões
+                    if (!e.target.closest('.btn')) {
+                        editDriverLogin(driverId);
+                    }
+                };
                 row.innerHTML = `
-                    <td>${driver.name}</td>
+                    <td><strong>${driver.name}</strong></td>
                     <td>${driver.username}</td>
+                    <td>${driver.licensePlate || 'Não informada'}</td>
                     <td>
                         <span class="status-badge ${isBlocked ? 'status-blocked' : (isOnline ? 'status-online' : 'status-offline')}">
                             ${isBlocked ? 'Bloqueado' : (isOnline ? 'Online' : 'Offline')}
                         </span>
                     </td>
-                    <td>${new Date(driver.createdAt).toLocaleDateString('pt-PT')}</td>
-                    <td onclick="event.stopPropagation()">
-                        ${editingDriverId === driverId ? getEditForm(driver) : getActionButtons(driverId, driver, isBlocked)}
+                    <td>${formatDate(driver.createdAt)}</td>
+                    <td>
+                        <div class="driver-actions">
+                            ${!isBlocked ? 
+                                `<button class="btn btn-block" onclick="event.stopPropagation(); blockDriver('${driverId}')">🚫 Bloquear</button>` :
+                                `<button class="btn btn-unblock" onclick="event.stopPropagation(); unblockDriver('${driverId}')">✅ Desbloquear</button>`
+                            }
+                            <button class="btn btn-edit" onclick="event.stopPropagation(); editDriverLogin('${driverId}')">✏️ Editar Login</button>
+                            <button class="btn btn-delete" onclick="event.stopPropagation(); confirmDeleteDriver('${driverId}', '${driver.name}')">🗑️ Excluir</button>
+                        </div>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
-        // Obter botões de ação
-        function getActionButtons(driverId, driver, isBlocked) {
-            return `
-                ${!isBlocked ? 
-                    `<button class="btn btn-block" onclick="blockDriver('${driverId}')">Bloquear</button>` :
-                    `<button class="btn btn-unblock" onclick="unblockDriver('${driverId}')">Desbloquear</button>`
-                }
-                <button class="btn btn-edit" onclick="editDriver('${driverId}')">Editar Login</button>
-                <button class="btn btn-delete" onclick="confirmDeleteDriver('${driverId}', '${driver.name}')">Excluir</button>
-            `;
-        }
-
-        // Obter formulário de edição
-        function getEditForm(driver) {
-            return `
-                <div class="edit-form">
-                    <input type="text" id="editUsername_${driver.driverId}" value="${driver.username}" placeholder="Novo usuário">
-                    <input type="password" id="editPassword_${driver.driverId}" placeholder="Nova senha (deixe em branco para manter)">
-                    <div>
-                        <button class="btn btn-save" onclick="saveDriverEdit('${driver.driverId}')">Salvar</button>
-                        <button class="btn btn-cancel" onclick="cancelEdit()">Cancelar</button>
-                    </div>
-                </div>
-            `;
+        // Formatar data
+        function formatDate(dateString) {
+            if (!dateString) return 'Não informada';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-PT');
+            } catch (e) {
+                return 'Data inválida';
+            }
         }
 
         // Bloquear motorista
@@ -851,12 +1099,19 @@
                 const drivers = getAllDrivers();
                 if (drivers[driverId]) {
                     drivers[driverId].status = 'blocked';
-                    localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(drivers));
                     allDrivers = drivers;
-                    updateDriversTable({});
                     
                     // Remover motorista do Firebase (online)
                     database.ref(`drivers/${driverId}`).remove();
+                    
+                    // Atualizar no sistema de motoristas também
+                    updateDriverInMotoristaSystem(driverId, { status: 'blocked' });
+                    
+                    // Recarregar tabela
+                    database.ref('drivers').once('value').then(snapshot => {
+                        updateDriversTable(snapshot.val() || {});
+                    });
                     
                     showNotification('Motorista bloqueado com sucesso!');
                 }
@@ -869,48 +1124,145 @@
                 const drivers = getAllDrivers();
                 if (drivers[driverId]) {
                     drivers[driverId].status = 'active';
-                    localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(drivers));
                     allDrivers = drivers;
-                    updateDriversTable({});
+                    
+                    // Atualizar no sistema de motoristas também
+                    updateDriverInMotoristaSystem(driverId, { status: 'active' });
+                    
+                    // Recarregar tabela
+                    database.ref('drivers').once('value').then(snapshot => {
+                        updateDriversTable(snapshot.val() || {});
+                    });
+                    
                     showNotification('Motorista desbloqueado com sucesso!');
                 }
             }
         }
 
-        // Editar motorista
-        function editDriver(driverId) {
-            editingDriverId = driverId;
-            updateDriversTable({});
+        // Atualizar motorista no sistema de motoristas
+        function updateDriverInMotoristaSystem(driverId, updates) {
+            const driversStorage = localStorage.getItem(DRIVERS_STORAGE_KEY);
+            if (driversStorage) {
+                const drivers = JSON.parse(driversStorage);
+                if (drivers[driverId]) {
+                    drivers[driverId] = { ...drivers[driverId], ...updates };
+                    localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+                }
+            }
         }
 
-        // Salvar edição do motorista
-        function saveDriverEdit(driverId) {
-            const newUsername = document.getElementById(`editUsername_${driverId}`).value;
-            const newPassword = document.getElementById(`editPassword_${driverId}`).value;
+        // Editar login do motorista
+        function editDriverLogin(driverId) {
+            currentEditingDriverId = driverId;
+            const driver = allDrivers[driverId];
             
-            if (!newUsername.trim()) {
-                alert('O nome de usuário não pode estar vazio!');
+            if (!driver) {
+                alert('Motorista não encontrado!');
+                return;
+            }
+            
+            // Preencher modal com dados atuais
+            document.getElementById('editLoginTitle').textContent = `Editar Login: ${driver.name}`;
+            
+            const editLoginDetails = document.getElementById('editLoginDetails');
+            editLoginDetails.innerHTML = `
+                <div class="driver-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Nome Completo</div>
+                        <div class="info-value">${driver.name}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Usuário Atual</div>
+                        <div class="info-value">${driver.username}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Matrícula</div>
+                        <div class="info-value">${driver.licensePlate || 'Não informada'}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Data de Cadastro</div>
+                        <div class="info-value">${formatDate(driver.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+            
+            // Preencher campos de edição
+            document.getElementById('editUsername').value = driver.username;
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editConfirmPassword').value = '';
+            
+            // Mostrar modal
+            document.getElementById('editLoginModal').style.display = 'block';
+        }
+
+        // Salvar alterações do login
+        function saveLoginChanges() {
+            if (!currentEditingDriverId) {
+                alert('Erro: ID do motorista não encontrado!');
+                return;
+            }
+            
+            const newUsername = document.getElementById('editUsername').value.trim();
+            const newPassword = document.getElementById('editPassword').value;
+            const confirmPassword = document.getElementById('editConfirmPassword').value;
+            
+            if (!newUsername) {
+                alert('Por favor, insira um nome de usuário!');
+                return;
+            }
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                alert('As senhas não coincidem!');
+                return;
+            }
+            
+            if (newPassword && newPassword.length < 4) {
+                alert('A senha deve ter pelo menos 4 caracteres!');
                 return;
             }
             
             const drivers = getAllDrivers();
-            if (drivers[driverId]) {
-                drivers[driverId].username = newUsername;
-                if (newPassword.trim()) {
-                    drivers[driverId].password = newPassword;
+            if (drivers[currentEditingDriverId]) {
+                const oldUsername = drivers[currentEditingDriverId].username;
+                
+                // Atualizar username
+                drivers[currentEditingDriverId].username = newUsername;
+                
+                // Atualizar password se fornecido
+                if (newPassword) {
+                    drivers[currentEditingDriverId].password = newPassword;
                 }
-                localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                
+                drivers[currentEditingDriverId].lastUpdated = new Date().toISOString();
+                
+                // Salvar alterações
+                localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(drivers));
                 allDrivers = drivers;
-                editingDriverId = null;
-                updateDriversTable({});
-                showNotification('Dados do motorista atualizados com sucesso!');
+                
+                // Atualizar no sistema de motoristas também
+                const updates = { username: newUsername };
+                if (newPassword) {
+                    updates.password = newPassword;
+                }
+                updateDriverInMotoristaSystem(currentEditingDriverId, updates);
+                
+                // Recarregar tabela
+                database.ref('drivers').once('value').then(snapshot => {
+                    updateDriversTable(snapshot.val() || {});
+                });
+                
+                closeEditLoginModal();
+                showNotification('Login do motorista atualizado com sucesso!');
+            } else {
+                alert('Erro: Motorista não encontrado!');
             }
         }
 
-        // Cancelar edição
-        function cancelEdit() {
-            editingDriverId = null;
-            updateDriversTable({});
+        // Fechar modal de edição de login
+        function closeEditLoginModal() {
+            document.getElementById('editLoginModal').style.display = 'none';
+            currentEditingDriverId = null;
         }
 
         // Confirmar exclusão do motorista
@@ -929,15 +1281,35 @@
             const drivers = getAllDrivers();
             if (drivers[driverId]) {
                 delete drivers[driverId];
-                localStorage.setItem('gotaxi_drivers', JSON.stringify(drivers));
+                localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(drivers));
                 allDrivers = drivers;
                 
                 // Remover motorista do Firebase
                 database.ref(`drivers/${driverId}`).remove();
                 
+                // Remover do sistema de motoristas também
+                removeDriverFromMotoristaSystem(driverId);
+                
                 closeDeleteConfirmation();
-                updateDriversTable({});
+                
+                // Recarregar tabela
+                database.ref('drivers').once('value').then(snapshot => {
+                    updateDriversTable(snapshot.val() || {});
+                });
+                
                 showNotification('Motorista excluído com sucesso!');
+            }
+        }
+
+        // Remover motorista do sistema de motoristas
+        function removeDriverFromMotoristaSystem(driverId) {
+            const driversStorage = localStorage.getItem(DRIVERS_STORAGE_KEY);
+            if (driversStorage) {
+                const drivers = JSON.parse(driversStorage);
+                if (drivers[driverId]) {
+                    delete drivers[driverId];
+                    localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+                }
             }
         }
 
@@ -945,69 +1317,6 @@
         function closeDeleteConfirmation() {
             document.getElementById('deleteConfirmationModal').style.display = 'none';
             driverToDelete = null;
-        }
-
-        // Mostrar detalhes do motorista
-        function showDriverDetails(driverId, driver) {
-            selectedDriverId = driverId;
-            document.getElementById('modalDriverName').textContent = `Detalhes: ${driver.name}`;
-            
-            // Preencher detalhes do motorista
-            const driverDetails = document.getElementById('modalDriverDetails');
-            driverDetails.innerHTML = `
-                <p><strong>Nome:</strong> ${driver.name}</p>
-                <p><strong>Usuário:</strong> ${driver.username}</p>
-                <p><strong>Data de Cadastro:</strong> ${new Date(driver.createdAt).toLocaleString('pt-PT')}</p>
-                <p><strong>Status:</strong> ${driver.status === 'blocked' ? 'Bloqueado' : 'Ativo'}</p>
-            `;
-            
-            // Carregar corridas do motorista
-            loadDriverRides(driverId);
-            
-            // Mostrar modal
-            document.getElementById('driverModal').style.display = 'block';
-        }
-
-        // Carregar corridas do motorista
-        function loadDriverRides(driverId) {
-            const driverRides = allRides.filter(ride => ride.driverId === driverId);
-            const tableBody = document.getElementById('driverRidesTable');
-            tableBody.innerHTML = '';
-            
-            if (driverRides.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="no-data">Nenhuma corrida encontrada para este motorista</td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            // Ordenar por data (mais recente primeiro)
-            driverRides.sort((a, b) => new Date(b.acceptedAt || b.createdAt) - new Date(a.acceptedAt || a.createdAt));
-            
-            driverRides.forEach(ride => {
-                const rideDate = new Date(ride.acceptedAt || ride.createdAt);
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${ride.name || 'Não informado'}</td>
-                    <td>${ride.origin}</td>
-                    <td>${ride.destination}</td>
-                    <td>${rideDate.toLocaleString('pt-PT')}</td>
-                    <td>
-                        <span class="status-badge ${ride.status === 'accepted' ? 'status-online' : 'status-offline'}">
-                            ${ride.status === 'accepted' ? 'Aceita' : 'Reserva'}
-                        </span>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // Fechar modal do motorista
-        function closeDriverModal() {
-            document.getElementById('driverModal').style.display = 'none';
-            selectedDriverId = null;
         }
 
         // Filtrar corridas
@@ -1081,7 +1390,8 @@
             
             Object.entries(allDrivers).forEach(([driverId, driver]) => {
                 if (driver.name.toLowerCase().includes(searchTerm) || 
-                    driver.username.toLowerCase().includes(searchTerm)) {
+                    driver.username.toLowerCase().includes(searchTerm) ||
+                    (driver.licensePlate && driver.licensePlate.toLowerCase().includes(searchTerm))) {
                     filteredDrivers[driverId] = driver;
                 }
             });
@@ -1097,38 +1407,55 @@
             if (Object.keys(filteredDrivers).length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="no-data">Nenhum motorista encontrado</td>
+                        <td colspan="6" class="no-data">Nenhum motorista encontrado</td>
                     </tr>
                 `;
                 return;
             }
             
-            Object.entries(filteredDrivers).forEach(([driverId, driver]) => {
+            // Ordenar motoristas por nome
+            const sortedDrivers = Object.entries(filteredDrivers).sort((a, b) => 
+                a[1].name.localeCompare(b[1].name)
+            );
+            
+            sortedDrivers.forEach(([driverId, driver]) => {
                 const isBlocked = driver.status === 'blocked';
                 
                 const row = document.createElement('tr');
                 row.className = 'driver-row';
-                row.onclick = () => showDriverDetails(driverId, driver);
+                row.onclick = (e) => {
+                    if (!e.target.closest('.btn')) {
+                        editDriverLogin(driverId);
+                    }
+                };
                 row.innerHTML = `
-                    <td>${driver.name}</td>
+                    <td><strong>${driver.name}</strong></td>
                     <td>${driver.username}</td>
+                    <td>${driver.licensePlate || 'Não informada'}</td>
                     <td>
                         <span class="status-badge ${isBlocked ? 'status-blocked' : 'status-offline'}">
                             ${isBlocked ? 'Bloqueado' : 'Offline'}
                         </span>
                     </td>
-                    <td>${new Date(driver.createdAt).toLocaleDateString('pt-PT')}</td>
-                    <td onclick="event.stopPropagation()">
-                        ${editingDriverId === driverId ? getEditForm(driver) : getActionButtons(driverId, driver, isBlocked)}
+                    <td>${formatDate(driver.createdAt)}</td>
+                    <td>
+                        <div class="driver-actions">
+                            ${!isBlocked ? 
+                                `<button class="btn btn-block" onclick="event.stopPropagation(); blockDriver('${driverId}')">🚫 Bloquear</button>` :
+                                `<button class="btn btn-unblock" onclick="event.stopPropagation(); unblockDriver('${driverId}')">✅ Desbloquear</button>`
+                            }
+                            <button class="btn btn-edit" onclick="event.stopPropagation(); editDriverLogin('${driverId}')">✏️ Editar Login</button>
+                            <button class="btn btn-delete" onclick="event.stopPropagation(); confirmDeleteDriver('${driverId}', '${driver.name}')">🗑️ Excluir</button>
+                        </div>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
-        // Obter todos os motoristas
+        // Obter todos os motoristas do sistema administrativo
         function getAllDrivers() {
-            const drivers = localStorage.getItem('gotaxi_drivers');
+            const drivers = localStorage.getItem(ADMIN_STORAGE_KEY);
             return drivers ? JSON.parse(drivers) : {};
         }
 
@@ -1146,14 +1473,44 @@
                 border-radius: 5px;
                 box-shadow: 0 4px 8px rgba(0,0,0,0.2);
                 z-index: 10000;
+                animation: slideIn 0.3s ease;
             `;
             notification.textContent = message;
             document.body.appendChild(notification);
             
             setTimeout(() => {
-                document.body.removeChild(notification);
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
             }, 3000);
         }
+
+        // Adicionar estilos de animação
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
 
         // Permitir login com Enter
         document.getElementById('adminPassword').addEventListener('keypress', function(e) {
@@ -1164,11 +1521,11 @@
 
         // Fechar modais ao clicar fora
         window.addEventListener('click', function(event) {
-            const driverModal = document.getElementById('driverModal');
+            const editLoginModal = document.getElementById('editLoginModal');
             const deleteModal = document.getElementById('deleteConfirmationModal');
             
-            if (event.target === driverModal) {
-                closeDriverModal();
+            if (event.target === editLoginModal) {
+                closeEditLoginModal();
             }
             if (event.target === deleteModal) {
                 closeDeleteConfirmation();
@@ -1177,6 +1534,28 @@
 
         // Inicializar quando a página carregar
         window.addEventListener('load', function() {
+            // Inicializar armazenamento administrativo se não existir
+            if (!localStorage.getItem(ADMIN_STORAGE_KEY)) {
+                localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify({}));
+            }
+            
+            // Verificar última sincronização
+            const lastSync = localStorage.getItem(SYNC_TIMESTAMP_KEY);
+            if (!lastSync) {
+                console.log('Primeira sincronização...');
+                synchronizeDriverData();
+            } else {
+                const lastSyncDate = new Date(lastSync);
+                const now = new Date();
+                const hoursSinceSync = (now - lastSyncDate) / (1000 * 60 * 60);
+                
+                // Sincronizar se passou mais de 1 hora desde a última sincronização
+                if (hoursSinceSync > 1) {
+                    console.log('Sincronização automática (passou mais de 1 hora)...');
+                    synchronizeDriverData();
+                }
+            }
+            
             checkAdminLogin();
         });
     </script>

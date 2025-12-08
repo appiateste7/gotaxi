@@ -2,8 +2,8 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="request_taxi">Solicitar Táxi - GoTáxi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="app_title">GoTáxi - Solicitar Táxi</title>
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
         
         body {
             background-color: #f5f5f5;
-            color: #333;
+            min-height: 100vh;
         }
         
         header {
@@ -73,21 +73,22 @@
         
         .container {
             max-width: 600px;
-            margin: 40px auto;
+            margin: 30px auto;
             padding: 0 20px;
         }
         
         .form-card {
             background-color: white;
-            border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .form-card h2 {
+        .form-title {
             text-align: center;
             margin-bottom: 30px;
             color: #333;
+            font-size: 24px;
         }
         
         .form-group {
@@ -98,6 +99,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: bold;
+            color: #333;
         }
         
         .form-group input,
@@ -108,29 +110,28 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffc107;
         }
         
         .form-group textarea {
-            height: 100px;
+            min-height: 100px;
             resize: vertical;
         }
         
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-        
-        .btn {
+        .submit-btn {
             background-color: #ffc107;
             color: #000;
             border: none;
             padding: 15px 30px;
-            border-radius: 4px;
-            font-size: 16px;
+            border-radius: 30px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
@@ -138,29 +139,25 @@
             margin-top: 20px;
         }
         
-        .btn:hover {
+        .submit-btn:hover {
             background-color: #e0a800;
         }
         
-        .btn:disabled {
+        .submit-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
         
-        .btn-call-taxi {
-            background-color: #2196F3;
-            color: white;
-            font-size: 18px;
-            padding: 20px;
-        }
-        
         .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
             background-color: #4CAF50;
             color: white;
-            padding: 15px;
+            padding: 15px 20px;
             border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
             display: none;
         }
         
@@ -168,38 +165,7 @@
             background-color: #f44336;
         }
         
-        .notification.info {
-            background-color: #2196F3;
-        }
-        
-        .status-indicator {
-            text-align: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .status-accepted {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        
-        .status-rejected {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Popup de sucesso */
-        .success-popup {
+        .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -214,13 +180,13 @@
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
         }
-
-        .success-popup.active {
+        
+        .loading-overlay.active {
             opacity: 1;
             visibility: visible;
         }
-
-        .popup-content {
+        
+        .loading-content {
             background-color: white;
             padding: 40px;
             border-radius: 15px;
@@ -231,26 +197,364 @@
             transform: scale(0.7);
             transition: transform 0.3s;
         }
-
-        .success-popup.active .popup-content {
+        
+        .loading-overlay.active .loading-content {
             transform: scale(1);
         }
-
-        .popup-icon {
+        
+        .loading-icon {
             font-size: 60px;
             margin-bottom: 20px;
+            color: #ffc107;
         }
-
-        .popup-title {
+        
+        .loading-message {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .loading-details {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+        
+        .loading-details.error {
+            color: #f44336;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ffc107;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background-color: #f5f5f5;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .back-btn:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .payment-methods {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .payment-method {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .payment-method:hover {
+            border-color: #ffc107;
+            background-color: #fff9e6;
+        }
+        
+        .payment-method.selected {
+            border-color: #ffc107;
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .payment-method i {
+            font-size: 24px;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .info-card {
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .info-card h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .info-card p {
+            color: #666;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .driver-distance {
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
+        .success-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .success-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .success-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s;
+        }
+        
+        .success-popup.active .success-content {
+            transform: scale(1);
+        }
+        
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        
+        .success-title {
             font-size: 24px;
             margin-bottom: 15px;
             color: #4CAF50;
         }
-
-        .popup-message {
+        
+        .success-message {
             font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             line-height: 1.5;
+        }
+        
+        .driver-details {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .driver-details h4 {
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+        
+        .driver-details p {
+            margin: 5px 0;
+        }
+        
+        .license-plate {
+            display: inline-block;
+            background-color: #ffc107;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+        
+        .reservation-proposal {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .reservation-proposal h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .reservation-driver-info {
+            background-color: #e8f5e9;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .reservation-driver-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .reservation-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-accept {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .nearest-driver-info {
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .nearest-driver-info h3 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .driver-distance {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading-message {
+            font-size: 16px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading-message.error {
+            color: #f44336;
+        }
+
+        .loading-message.success {
+            color: #4CAF50;
+        }
+
+        .driver-distance-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .distance-value {
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .reservation-response-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10002;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .reservation-response-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .reservation-response-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .reservation-response-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .reservation-response-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .reservation-response-message {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .reservation-response-success {
+            color: #4CAF50;
+        }
+        
+        .reservation-response-error {
+            color: #f44336;
         }
     </style>
 </head>
@@ -273,286 +577,316 @@
     </header>
     
     <div class="container">
-        <div id="notification" class="notification"></div>
-        <div id="statusIndicator" class="status-indicator" style="display: none;"></div>
+        <a href="index.html" class="back-btn" data-i18n="back">← Voltar</a>
+        
+        <div id="nearestDriverInfo" class="nearest-driver-info">
+            <h3>🚗 Motorista Mais Próximo Encontrado!</h3>
+            <p>Seu pedido será enviado diretamente para o motorista mais próximo da sua localização.</p>
+            <p class="driver-distance" id="driverDistance">Distância: calculando...</p>
+        </div>
         
         <div class="form-card">
-            <h2 data-i18n="request_taxi_title">🚕 Solicitar Táxi</h2>
+            <h1 class="form-title" data-i18n="request_taxi">Solicitar Táxi</h1>
             
-            <form id="taxiForm">
+            <form id="taxiForm" onsubmit="event.preventDefault(); submitRequest();">
                 <div class="form-group">
                     <label for="name" data-i18n="full_name">Nome Completo</label>
-                    <input type="text" id="name" data-i18n-placeholder="enter_full_name" placeholder="Seu nome completo" required>
+                    <input type="text" id="name" data-i18n-placeholder="enter_full_name" placeholder="Digite seu nome completo" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="origin" data-i18n="where_are_you">📍 Onde você está?</label>
-                    <input type="text" id="origin" data-i18n-placeholder="enter_departure" placeholder="Endereço de partida" required>
+                    <label for="origin" data-i18n="where_are_you">Onde está?</label>
+                    <input type="text" id="origin" data-i18n-placeholder="enter_current_location" placeholder="Digite sua localização atual" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="destination" data-i18n="where_to">🎯 Pra onde vai?</label>
-                    <input type="text" id="destination" data-i18n-placeholder="enter_destination" placeholder="Endereço de destino" required>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="passengers" data-i18n="passengers">👥 Passageiros</label>
-                        <select id="passengers" required>
-                            <option value="1" data-i18n="passenger_1">1 passageiro</option>
-                            <option value="2" data-i18n="passenger_2">2 passageiros</option>
-                            <option value="3" data-i18n="passenger_3">3 passageiros</option>
-                            <option value="4" selected data-i18n="passenger_4">4 passageiros</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="contact" data-i18n="contact">📞 Contato</label>
-                        <input type="tel" id="contact" data-i18n-placeholder="enter_phone" placeholder="Seu telefone" required>
-                    </div>
+                    <label for="destination" data-i18n="where_to">Pra onde vai?</label>
+                    <input type="text" id="destination" data-i18n-placeholder="enter_destination" placeholder="Digite seu destino" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="arrivalTime" data-i18n="arrival_time">⏰ Tempo de chegada</label>
+                    <label for="passengers" data-i18n="passengers">Passageiros</label>
+                    <select id="passengers" required>
+                        <option value="1" data-i18n="passenger_1">1 passageiro</option>
+                        <option value="2">2 passageiros</option>
+                        <option value="3">3 passageiros</option>
+                        <option value="4">4 passageiros</option>
+                        <option value="5">5 passageiros</option>
+                        <option value="6">6 passageiros</option>
+                        <option value="7">7 passageiros</option>
+                        <option value="8">8 passageiros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact" data-i18n="contact">Contato</label>
+                    <input type="tel" id="contact" data-i18n-placeholder="enter_phone" placeholder="Digite seu telefone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="arrivalTime" data-i18n="arrival_time">Tempo de Chegada</label>
                     <select id="arrivalTime" required>
-                        <option value="5" data-i18n="minutes_5">5 minutos</option>
-                        <option value="10" selected data-i18n="minutes_10">10 minutos</option>
-                        <option value="15" data-i18n="minutes_15">15 minutos</option>
+                        <option value="10">10 minutos</option>
+                        <option value="15" selected>15 minutos</option>
+                        <option value="20">20 minutos</option>
+                        <option value="30">30 minutos</option>
+                        <option value="40">40 minutos</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="paymentMethod" data-i18n="payment_method">💳 Forma de pagamento</label>
-                    <select id="paymentMethod" required>
-                        <option value="cash" data-i18n="cash">Dinheiro</option>
-                        <option value="card" data-i18n="card">Cartão</option>
-                        <option value="mbway" data-i18n="mbway">MBWay</option>
-                    </select>
+                    <label data-i18n="payment_method">Método de Pagamento</label>
+                    <div class="payment-methods">
+                        <div class="payment-method" data-value="cash" onclick="selectPaymentMethod('cash')">
+                            <div>💵</div>
+                            <span data-i18n="cash">Dinheiro</span>
+                        </div>
+                        <div class="payment-method" data-value="card" onclick="selectPaymentMethod('card')">
+                            <div>💳</div>
+                            <span data-i18n="card">Cartão</span>
+                        </div>
+                        <div class="payment-method" data-value="mbway" onclick="selectPaymentMethod('mbway')">
+                            <div>📱</div>
+                            <span data-i18n="mbway">MBWay</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="paymentMethod" value="cash" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="notes" data-i18n="notes">📝 Observação (opcional)</label>
-                    <textarea id="notes" data-i18n-placeholder="special_notes" placeholder="Alguma observação especial..."></textarea>
+                    <label for="notes" data-i18n="notes">Observações</label>
+                    <textarea id="notes" data-i18n-placeholder="additional_notes" placeholder="Observações adicionais (opcional)"></textarea>
                 </div>
                 
-                <button type="button" id="callTaxiButton" class="btn btn-call-taxi" data-i18n="call_taxi_button">
-                    🚗 Chamar Táxi
-                </button>
+                <button type="submit" class="submit-btn" data-i18n="submit_request">Enviar Solicitação</button>
             </form>
         </div>
     </div>
-
-    <!-- Popup de sucesso -->
+    
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-message" id="loadingMessage" data-i18n="searching_drivers">Buscando motoristas...</div>
+            <div class="loading-details" id="loadingDetails"></div>
+        </div>
+    </div>
+    
     <div id="successPopup" class="success-popup">
-        <div class="popup-content">
-            <div class="popup-icon">✅</div>
-            <h2 class="popup-title" data-i18n="taxi_confirmed">Táxi Confirmado!</h2>
-            <p class="popup-message" id="popupDriverMessage" data-i18n="taxi_accepted_message">Seu táxi foi aceito e está a caminho!</p>
-            <p class="popup-message" data-i18n="driver_contact">O motorista entrará em contato com você em breve.</p>
-            <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;" data-i18n="back_home">
+        <div class="success-content">
+            <div class="success-icon">✅</div>
+            <h2 class="success-title" data-i18n="taxi_confirmed">Táxi Confirmado!</h2>
+            <div class="driver-details" id="driverDetailsPopup">
+            </div>
+            <p class="success-message" data-i18n="driver_contact">O motorista entrará em contato com você em breve.</p>
+            <button onclick="goToHome()" class="submit-btn" data-i18n="back_home">
                 🏠 Voltar para o Início
             </button>
         </div>
     </div>
+    
+    <div id="reservationPopup" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-icon">⏰</div>
+            <h2 class="loading-message" data-i18n="reservation_proposal">Proposta de Reserva</h2>
+            <div class="reservation-proposal" id="reservationDetails">
+            </div>
+            <div class="reservation-actions">
+                <button id="acceptReservation" class="btn-accept" data-i18n="accept_reservation">Aceitar</button>
+                <button id="rejectReservation" class="btn-reject" data-i18n="reject_reservation">Rejeitar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reservationResponsePopup" class="reservation-response-popup">
+        <div class="reservation-response-content">
+            <div class="reservation-response-icon" id="reservationResponseIcon">⏰</div>
+            <h3 class="reservation-response-title" id="reservationResponseTitle">Resposta da Reserva</h3>
+            <p class="reservation-response-message" id="reservationResponseMessage">
+                Aguardando resposta do cliente...
+            </p>
+            <button class="btn-accept" onclick="goToHomeAfterReservation()" style="margin-top: 20px; width: 100%;">
+                🏠 Voltar para o Início
+            </button>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <script>
-        // Sistema de Internacionalização
         const translations = {
             pt: {
-                // Interface
-                "request_taxi": "Solicitar Táxi - GoTáxi",
+                "app_title": "GoTáxi - Solicitar Táxi",
                 "home": "Início",
-                "request_taxi_title": "🚕 Solicitar Táxi",
+                "back": "← Voltar",
+                "request_taxi": "Solicitar Táxi",
                 "full_name": "Nome Completo",
-                "enter_full_name": "Seu nome completo",
-                "where_are_you": "📍 Onde você está?",
-                "enter_departure": "Endereço de partida",
-                "where_to": "🎯 Pra onde vai?",
-                "enter_destination": "Endereço de destino",
-                "passengers": "👥 Passageiros",
+                "enter_full_name": "Digite seu nome completo",
+                "where_are_you": "Onde está?",
+                "enter_current_location": "Digite sua localização atual",
+                "where_to": "Pra onde vai?",
+                "enter_destination": "Digite seu destino",
+                "passengers": "Passageiros",
                 "passenger_1": "1 passageiro",
-                "passenger_2": "2 passageiros",
-                "passenger_3": "3 passageiros",
-                "passenger_4": "4 passageiros",
-                "contact": "📞 Contato",
-                "enter_phone": "Seu telefone",
-                "arrival_time": "⏰ Tempo de chegada",
-                "minutes_5": "5 minutos",
-                "minutes_10": "10 minutos",
-                "minutes_15": "15 minutos",
-                "payment_method": "💳 Forma de pagamento",
+                "contact": "Contato",
+                "enter_phone": "Digite seu telefone",
+                "arrival_time": "Tempo de Chegada",
+                "payment_method": "Método de Pagamento",
                 "cash": "Dinheiro",
                 "card": "Cartão",
                 "mbway": "MBWay",
-                "notes": "📝 Observação (opcional)",
-                "special_notes": "Alguma observação especial...",
-                "call_taxi_button": "🚗 Chamar Táxi",
+                "notes": "Observações",
+                "additional_notes": "Observações adicionais (opcional)",
+                "submit_request": "Enviar Solicitação",
+                "searching_drivers": "Buscando motoristas...",
                 "taxi_confirmed": "Táxi Confirmado!",
-                "taxi_accepted_message": "Seu táxi foi aceito e está a caminho!",
                 "driver_contact": "O motorista entrará em contato com você em breve.",
                 "back_home": "🏠 Voltar para o Início",
-                
-                // Notificações
-                "fill_all_fields": "❌ Por favor, preencha todos os campos obrigatórios.",
-                "sending_request": "⏳ Enviando solicitação...",
-                "request_sent": "🚕 Solicitação enviada! Aguardando motorista...",
-                "request_error": "❌ Erro ao enviar solicitação. Tente novamente.",
-                "address_error": "❌ Erro ao processar endereço. Tente novamente.",
-                "waiting_driver": "🕒 Aguardando resposta do motorista...",
-                "request_sent_confirm": "✅ Solicitação Enviada",
-                "taxi_accepted": "🎉 Seu táxi foi aceito! Motorista: ",
-                "no_drivers": "❌ Nenhum motorista disponível. Tente novamente.",
-                "reservation_confirmed": "✅ Reserva confirmada para daqui a ",
-                "reservation_rejected": "❌ Reserva rejeitada."
+                "reservation_proposal": "Proposta de Reserva",
+                "accept_reservation": "Aceitar",
+                "reject_reservation": "Rejeitar",
+                "location_updated": "Localização atualizada!",
+                "location_error": "Não foi possível obter sua localização.",
+                "fill_all_fields": "Por favor, preencha todos os campos obrigatórios.",
+                "select_payment": "Por favor, selecione um método de pagamento.",
+                "request_sent": "Solicitação enviada com sucesso!",
+                "request_error": "Erro ao enviar solicitação. Tente novamente.",
+                "driver_accepted": "Motorista aceitou sua corrida!",
+                "driver_rejected": "Motorista não disponível.",
+                "searching_another_driver": "Buscando outro motorista...",
+                "no_drivers": "Nenhum motorista disponível no momento.",
+                "nearest_driver_found": "Motorista encontrado a {distance} km!"
             },
             en: {
-                // Interface
-                "request_taxi": "Request Taxi - GoTáxi",
+                "app_title": "GoTáxi - Request Taxi",
                 "home": "Home",
-                "request_taxi_title": "🚕 Request Taxi",
+                "back": "← Back",
+                "request_taxi": "Request Taxi",
                 "full_name": "Full Name",
-                "enter_full_name": "Your full name",
-                "where_are_you": "📍 Where are you?",
-                "enter_departure": "Departure address",
-                "where_to": "🎯 Where to?",
-                "enter_destination": "Destination address",
-                "passengers": "👥 Passengers",
+                "enter_full_name": "Enter your full name",
+                "where_are_you": "Where are you?",
+                "enter_current_location": "Enter your current location",
+                "where_to": "Where to?",
+                "enter_destination": "Enter your destination",
+                "passengers": "Passengers",
                 "passenger_1": "1 passenger",
-                "passenger_2": "2 passengers",
-                "passenger_3": "3 passengers",
-                "passenger_4": "4 passengers",
-                "contact": "📞 Contact",
-                "enter_phone": "Your phone number",
-                "arrival_time": "⏰ Arrival time",
-                "minutes_5": "5 minutes",
-                "minutes_10": "10 minutes",
-                "minutes_15": "15 minutes",
-                "payment_method": "💳 Payment Method",
+                "contact": "Contact",
+                "enter_phone": "Enter your phone number",
+                "arrival_time": "Arrival Time",
+                "payment_method": "Payment Method",
                 "cash": "Cash",
                 "card": "Card",
                 "mbway": "MBWay",
-                "notes": "📝 Notes (optional)",
-                "special_notes": "Any special notes...",
-                "call_taxi_button": "🚗 Call Taxi",
+                "notes": "Notes",
+                "additional_notes": "Additional notes (optional)",
+                "submit_request": "Submit Request",
+                "searching_drivers": "Searching for drivers...",
                 "taxi_confirmed": "Taxi Confirmed!",
-                "taxi_accepted_message": "Your taxi has been accepted and is on the way!",
                 "driver_contact": "The driver will contact you shortly.",
                 "back_home": "🏠 Back to Home",
-                
-                // Notifications
-                "fill_all_fields": "❌ Please fill all required fields.",
-                "sending_request": "⏳ Sending request...",
-                "request_sent": "🚕 Request sent! Waiting for driver...",
-                "request_error": "❌ Error sending request. Try again.",
-                "address_error": "❌ Error processing address. Try again.",
-                "waiting_driver": "🕒 Waiting for driver response...",
-                "request_sent_confirm": "✅ Request Sent",
-                "taxi_accepted": "🎉 Your taxi was accepted! Driver: ",
-                "no_drivers": "❌ No drivers available. Try again.",
-                "reservation_confirmed": "✅ Reservation confirmed for ",
-                "reservation_rejected": "❌ Reservation rejected."
+                "reservation_proposal": "Reservation Proposal",
+                "accept_reservation": "Accept",
+                "reject_reservation": "Reject",
+                "location_updated": "Location updated!",
+                "location_error": "Could not get your location.",
+                "fill_all_fields": "Please fill all required fields.",
+                "select_payment": "Please select a payment method.",
+                "request_sent": "Request sent successfully!",
+                "request_error": "Error sending request. Please try again.",
+                "driver_accepted": "Driver accepted your ride!",
+                "driver_rejected": "Driver not available.",
+                "searching_another_driver": "Searching for another driver...",
+                "no_drivers": "No drivers available at the moment.",
+                "nearest_driver_found": "Driver found {distance} km away!"
             },
             es: {
-                // Interface
-                "request_taxi": "Solicitar Taxi - GoTáxi",
+                "app_title": "GoTáxi - Solicitar Taxi",
                 "home": "Inicio",
-                "request_taxi_title": "🚕 Solicitar Taxi",
+                "back": "← Volver",
+                "request_taxi": "Solicitar Taxi",
                 "full_name": "Nombre Completo",
-                "enter_full_name": "Tu nombre completo",
-                "where_are_you": "📍 ¿Dónde estás?",
-                "enter_departure": "Dirección de salida",
-                "where_to": "🎯 ¿A dónde vas?",
-                "enter_destination": "Dirección de destino",
-                "passengers": "👥 Pasajeros",
+                "enter_full_name": "Ingrese su nombre completo",
+                "where_are_you": "¿Dónde estás?",
+                "enter_current_location": "Ingrese su ubicación actual",
+                "where_to": "¿A dónde vas?",
+                "enter_destination": "Ingrese su destino",
+                "passengers": "Pasajeros",
                 "passenger_1": "1 pasajero",
-                "passenger_2": "2 pasajeros",
-                "passenger_3": "3 pasajeros",
-                "passenger_4": "4 pasajeros",
-                "contact": "📞 Contacto",
-                "enter_phone": "Tu teléfono",
-                "arrival_time": "⏰ Tiempo de llegada",
-                "minutes_5": "5 minutos",
-                "minutes_10": "10 minutos",
-                "minutes_15": "15 minutos",
-                "payment_method": "💳 Método de Pago",
+                "contact": "Contacto",
+                "enter_phone": "Ingrese su número de teléfono",
+                "arrival_time": "Tiempo de Llegada",
+                "payment_method": "Método de Pago",
                 "cash": "Efectivo",
                 "card": "Tarjeta",
                 "mbway": "MBWay",
-                "notes": "📝 Observación (opcional)",
-                "special_notes": "Alguna observación especial...",
-                "call_taxi_button": "🚗 Llamar Taxi",
+                "notes": "Observaciones",
+                "additional_notes": "Observaciones adicionales (opcional)",
+                "submit_request": "Enviar Solicitud",
+                "searching_drivers": "Buscando conductores...",
                 "taxi_confirmed": "¡Taxi Confirmado!",
-                "taxi_accepted_message": "¡Tu taxi ha sido aceptado y está en camino!",
                 "driver_contact": "El conductor se pondrá en contacto contigo pronto.",
                 "back_home": "🏠 Volver al Inicio",
-                
-                // Notifications
-                "fill_all_fields": "❌ Por favor, complete todos los campos obligatorios.",
-                "sending_request": "⏳ Enviando solicitud...",
-                "request_sent": "🚕 ¡Solicitud enviada! Esperando conductor...",
-                "request_error": "❌ Error al enviar solicitud. Intente nuevamente.",
-                "address_error": "❌ Error al procesar dirección. Intente nuevamente.",
-                "waiting_driver": "🕒 Esperando respuesta del conductor...",
-                "request_sent_confirm": "✅ Solicitud Enviada",
-                "taxi_accepted": "🎉 ¡Tu taxi fue aceptado! Conductor: ",
-                "no_drivers": "❌ No hay conductores disponibles. Intente nuevamente.",
-                "reservation_confirmed": "✅ Reserva confirmada para dentro de ",
-                "reservation_rejected": "❌ Reserva rechazada."
+                "reservation_proposal": "Propuesta de Reserva",
+                "accept_reservation": "Aceptar",
+                "reject_reservation": "Rechazar",
+                "location_updated": "¡Ubicación actualizada!",
+                "location_error": "No se pudo obtener su ubicación.",
+                "fill_all_fields": "Por favor, complete todos los campos obligatorios.",
+                "select_payment": "Por favor, seleccione un método de pago.",
+                "request_sent": "¡Solicitud enviada con éxito!",
+                "request_error": "Error al enviar la solicitud. Intente nuevamente.",
+                "driver_accepted": "¡Conductor aceptó tu viaje!",
+                "driver_rejected": "Conductor no disponible.",
+                "searching_another_driver": "Buscando otro conductor...",
+                "no_drivers": "No hay conductores disponibles en este momento.",
+                "nearest_driver_found": "¡Conductor encontrado a {distance} km!"
             },
             fr: {
-                // Interface
-                "request_taxi": "Demander un Taxi - GoTáxi",
+                "app_title": "GoTáxi - Demander un Taxi",
                 "home": "Accueil",
-                "request_taxi_title": "🚕 Demander un Taxi",
+                "back": "← Retour",
+                "request_taxi": "Demander un Taxi",
                 "full_name": "Nom Complet",
-                "enter_full_name": "Votre nom complet",
-                "where_are_you": "📍 Où êtes-vous?",
-                "enter_departure": "Adresse de départ",
-                "where_to": "🎯 Où allez-vous?",
-                "enter_destination": "Adresse de destination",
-                "passengers": "👥 Passagers",
+                "enter_full_name": "Entrez votre nom complet",
+                "where_are_you": "Où êtes-vous?",
+                "enter_current_location": "Entrez votre position actuelle",
+                "where_to": "Où allez-vous?",
+                "enter_destination": "Entrez votre destination",
+                "passengers": "Passagers",
                 "passenger_1": "1 passager",
-                "passenger_2": "2 passagers",
-                "passenger_3": "3 passagers",
-                "passenger_4": "4 passagers",
-                "contact": "📞 Contact",
-                "enter_phone": "Votre numéro de téléphone",
-                "arrival_time": "⏰ Temps d'arrivée",
-                "minutes_5": "5 minutes",
-                "minutes_10": "10 minutes",
-                "minutes_15": "15 minutes",
-                "payment_method": "💳 Mode de Paiement",
+                "contact": "Contact",
+                "enter_phone": "Entrez votre numéro de téléphone",
+                "arrival_time": "Temps d'Arrivée",
+                "payment_method": "Méthode de Paiement",
                 "cash": "Espèces",
                 "card": "Carte",
                 "mbway": "MBWay",
-                "notes": "📝 Remarque (optionnelle)",
-                "special_notes": "Remarque spéciale...",
-                "call_taxi_button": "🚗 Appeler Taxi",
+                "notes": "Remarques",
+                "additional_notes": "Remarques supplémentaires (facultatif)",
+                "submit_request": "Envoyer la Demande",
+                "searching_drivers": "Recherche de chauffeurs...",
                 "taxi_confirmed": "Taxi Confirmé!",
-                "taxi_accepted_message": "Votre taxi a été accepté et est en route!",
                 "driver_contact": "Le chauffeur vous contactera sous peu.",
                 "back_home": "🏠 Retour à l'Accueil",
-                
-                // Notifications
-                "fill_all_fields": "❌ Veuillez remplir tous les champs obligatoires.",
-                "sending_request": "⏳ Envoi de la demande...",
-                "request_sent": "🚕 Demande envoyée! En attente du chauffeur...",
-                "request_error": "❌ Erreur lors de l'envoi. Réessayez.",
-                "address_error": "❌ Erreur de traitement de l'adresse. Réessayez.",
-                "waiting_driver": "🕒 En attente de la réponse du chauffeur...",
-                "request_sent_confirm": "✅ Demande Envoyée",
-                "taxi_accepted": "🎉 Votre taxi a été accepté! Chauffeur: ",
-                "no_drivers": "❌ Aucun chauffeur disponible. Réessayez.",
-                "reservation_confirmed": "✅ Réservation confirmée pour dans ",
-                "reservation_rejected": "❌ Réservation rejetée."
+                "reservation_proposal": "Proposition de Réservation",
+                "accept_reservation": "Accepter",
+                "reject_reservation": "Rejeter",
+                "location_updated": "Position mise à jour!",
+                "location_error": "Impossible d'obtenir votre position.",
+                "fill_all_fields": "Veuillez remplir tous les champs obligatoires.",
+                "select_payment": "Veuillez sélectionner un méthode de paiement.",
+                "request_sent": "Demande envoyée avec succès!",
+                "request_error": "Erreur lors de l'envoi de la demande. Veuillez réessayer.",
+                "driver_accepted": "Chauffeur a accepté votre course!",
+                "driver_rejected": "Chauffeur non disponible.",
+                "searching_another_driver": "Recherche d'un autre chauffeur...",
+                "no_drivers": "Aucun chauffeur disponible pour le moment.",
+                "nearest_driver_found": "Chauffeur trouvé à {distance} km!"
             }
         };
 
-        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
             authDomain: "gotaxi-4e391.firebaseapp.com",
@@ -563,29 +897,33 @@
             appId: "1:597857194128:web:9b550abd9b5e98bb374815"
         };
         
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
-        // Elementos do DOM
-        const callTaxiButton = document.getElementById('callTaxiButton');
-        const notification = document.getElementById('notification');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const successPopup = document.getElementById('successPopup');
-        const popupDriverMessage = document.getElementById('popupDriverMessage');
-        
-        let clientId = 'client_' + Math.random().toString(36).substr(2, 9);
-        let currentRequestId = null;
+        let clientId;
+        let userLocation;
         let currentLanguage = 'pt';
+        let nearestDriverId = null;
+        let currentRequestId = null;
 
-        // Função para mudar idioma
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
         function changeLanguage(lang) {
             currentLanguage = lang;
             updateTexts();
             localStorage.setItem('preferredLanguage', lang);
         }
 
-        // Função para atualizar textos
         function updateTexts() {
             const elements = document.querySelectorAll('[data-i18n]');
             elements.forEach(element => {
@@ -602,40 +940,463 @@
                     element.setAttribute('placeholder', translations[currentLanguage][key]);
                 }
             });
-
-            // Atualizar opções do select
-            const selects = document.querySelectorAll('select option');
-            selects.forEach(option => {
-                const key = option.getAttribute('data-i18n');
-                if (key && translations[currentLanguage][key]) {
-                    option.textContent = translations[currentLanguage][key];
-                }
-            });
         }
 
-        // Função para obter tradução
         function t(key) {
             return translations[currentLanguage][key] || key;
         }
 
-        // Carregar idioma salvo
         function loadSavedLanguage() {
             const savedLanguage = localStorage.getItem('preferredLanguage');
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlLang = urlParams.get('lang');
-            
-            if (urlLang && translations[urlLang]) {
-                currentLanguage = urlLang;
-            } else if (savedLanguage && translations[savedLanguage]) {
+            if (savedLanguage && translations[savedLanguage]) {
                 currentLanguage = savedLanguage;
+                document.getElementById('languageSelector').value = savedLanguage;
             }
-            
-            document.getElementById('languageSelector').value = currentLanguage;
             updateTexts();
         }
 
-        // Verificar se há parâmetros na URL e preencher os campos
-        function checkUrlParams() {
+        function selectPaymentMethod(method) {
+            document.querySelectorAll('.payment-method').forEach(el => {
+                el.classList.remove('selected');
+            });
+            document.querySelector(`.payment-method[data-value="${method}"]`).classList.add('selected');
+            document.getElementById('paymentMethod').value = method;
+        }
+
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(message = '') {
+            const overlay = document.getElementById('loadingOverlay');
+            const messageEl = document.getElementById('loadingMessage');
+            
+            if (message) {
+                messageEl.textContent = message;
+            }
+            
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('active');
+        }
+
+        function showSuccessPopup(driverName, licensePlate) {
+            const popup = document.getElementById('successPopup');
+            const driverDetails = document.getElementById('driverDetailsPopup');
+            
+            let driverDetailsHTML = `
+                <h4 data-i18n="driver_details">Detalhes do Motorista</h4>
+                <p><strong data-i18n="driver_name">Nome do Motorista:</strong> ${driverName}</p>
+            `;
+            
+            if (licensePlate && licensePlate !== 'Não informada') {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> <span class="license-plate">${licensePlate}</span></p>`;
+            } else {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> Não informada</p>`;
+            }
+            
+            driverDetails.innerHTML = driverDetailsHTML;
+            updateTexts();
+            
+            hideLoading();
+            popup.classList.add('active');
+        }
+
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        function goToHomeAfterReservation() {
+            document.getElementById('reservationResponsePopup').classList.remove('active');
+            window.location.href = 'index.html';
+        }
+
+        function showReservationProposal(request) {
+            const popup = document.getElementById('reservationPopup');
+            const details = document.getElementById('reservationDetails');
+            
+            details.innerHTML = `
+                <h4>⏰ Proposta de Reserva</h4>
+                <p>O motorista <strong>${request.driverName}</strong> propõe uma reserva de <strong>${request.reservationTime} minutos</strong>.</p>
+                
+                <div class="reservation-driver-info">
+                    <h5>Detalhes do Motorista</h5>
+                    <p><strong>Nome do Motorista:</strong> ${request.driverName}</p>
+                    <p><strong>Matrícula:</strong> <span class="license-plate">${request.licensePlate || 'Não informada'}</span></p>
+                    ${request.reservationLocationName ? `<p><strong>Local de Encontro:</strong> ${request.reservationLocationName}</p>` : ''}
+                </div>
+                
+                <p>Você aceita esta proposta?</p>
+            `;
+            
+            document.getElementById('acceptReservation').onclick = () => acceptReservation(request.requestId);
+            document.getElementById('rejectReservation').onclick = () => rejectReservation(request.requestId);
+            
+            popup.classList.add('active');
+        }
+
+        function showReservationResponse(message, isSuccess = true) {
+            const popup = document.getElementById('reservationResponsePopup');
+            const icon = document.getElementById('reservationResponseIcon');
+            const title = document.getElementById('reservationResponseTitle');
+            const msg = document.getElementById('reservationResponseMessage');
+            
+            if (isSuccess) {
+                icon.textContent = '✅';
+                icon.style.color = '#4CAF50';
+                title.textContent = 'Reserva Aceita!';
+                title.className = 'reservation-response-title reservation-response-success';
+            } else {
+                icon.textContent = '❌';
+                icon.style.color = '#f44336';
+                title.textContent = 'Reserva Rejeitada';
+                title.className = 'reservation-response-title reservation-response-error';
+            }
+            
+            msg.textContent = message;
+            popup.classList.add('active');
+        }
+
+        function submitRequest() {
+            const name = document.getElementById('name').value.trim();
+            const origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            const contact = document.getElementById('contact').value.trim();
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            if (!name || !origin || !destination || !contact) {
+                showNotification(t("fill_all_fields"), true);
+                return;
+            }
+            
+            if (!paymentMethod) {
+                showNotification(t("select_payment"), true);
+                return;
+            }
+            
+            const requestData = {
+                name: name,
+                origin: origin,
+                destination: destination,
+                passengers: document.getElementById('passengers').value,
+                contact: contact,
+                arrivalTime: document.getElementById('arrivalTime').value,
+                paymentMethod: paymentMethod,
+                paymentStatus: 'free',
+                notes: document.getElementById('notes').value,
+                clientId: clientId,
+                status: 'pending',
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                clientLocation: userLocation
+            };
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            nearestDriverId = urlParams.get('nearestDriverId');
+            
+            showLoading(t("searching_drivers"));
+            
+            if (nearestDriverId) {
+                sendRequestToDriver(requestData, nearestDriverId);
+            } else {
+                sendRequestToAllDrivers(requestData);
+            }
+        }
+
+        function sendRequestToDriver(requestData, driverId) {
+            const newRequestRef = database.ref('ride_requests').push();
+            const requestId = newRequestRef.key;
+            
+            requestData.requestId = requestId;
+            requestData.assignedDriverId = driverId;
+            
+            newRequestRef.set(requestData)
+                .then(() => {
+                    database.ref(`notifications/drivers/${driverId}`).push({
+                        type: 'new_request',
+                        requestId: requestId,
+                        clientName: requestData.name,
+                        clientLocation: requestData.clientLocation,
+                        origin: requestData.origin,
+                        destination: requestData.destination,
+                        passengers: requestData.passengers,
+                        contact: requestData.contact,
+                        arrivalTime: requestData.arrivalTime,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    document.getElementById('loadingMessage').textContent = 
+                        "✅ Solicitação enviada para o motorista mais próximo! Aguardando resposta...";
+                    
+                    listenForDriverResponse(requestId, driverId);
+                    
+                })
+                .catch((error) => {
+                    console.error('Erro ao enviar solicitação:', error);
+                    document.getElementById('loadingMessage').textContent = 
+                        "❌ Erro ao enviar solicitação. Por favor, tente novamente.";
+                    document.getElementById('loadingMessage').classList.add('error');
+                    
+                    setTimeout(() => {
+                        hideLoading();
+                    }, 3000);
+                });
+        }
+
+        function listenForDriverResponse(requestId, driverId) {
+            currentRequestId = requestId;
+            
+            database.ref(`ride_requests/${requestId}`).on('value', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (!request) return;
+                
+                if (request.status === 'accepted') {
+                    showSuccessPopup(request.driverName, request.licensePlate);
+                    
+                    database.ref(`notifications/clients/${clientId}`).push({
+                        type: 'request_accepted',
+                        message: `🎉 Motorista ${request.driverName} aceitou sua corrida!`,
+                        driverName: request.driverName,
+                        driverId: request.driverId,
+                        licensePlate: request.licensePlate,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    database.ref(`ride_requests/${requestId}`).off();
+                    
+                } else if (request.status === 'rejected') {
+                    handleRequestRejected(requestId, driverId);
+                    
+                    database.ref(`ride_requests/${requestId}`).off();
+                } else if (request.status === 'reservation_proposed') {
+                    showReservationProposal(request);
+                }
+            });
+            
+            setTimeout(() => {
+                database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
+                    const request = snapshot.val();
+                    if (request && request.status === 'pending') {
+                        handleRequestRejected(requestId, driverId);
+                    }
+                });
+            }, 120000);
+        }
+
+        function handleRequestRejected(requestId, driverId) {
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'rejected_by_driver',
+                rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            document.getElementById('loadingMessage').textContent = 
+                "❌ Motorista não disponível. Buscando outro motorista...";
+            
+            findAnotherDriver(requestId);
+        }
+
+        async function findAnotherDriver(requestId) {
+            try {
+                const requestSnapshot = await database.ref(`ride_requests/${requestId}`).once('value');
+                const request = requestSnapshot.val();
+                
+                if (!request || !request.clientLocation) {
+                    fallbackToAllDrivers(requestId, request);
+                    return;
+                }
+                
+                const driversSnapshot = await database.ref('drivers').once('value');
+                const drivers = driversSnapshot.val();
+                let nearestDriver = null;
+                let minDistance = Infinity;
+                
+                for (const driverId in drivers) {
+                    const driver = drivers[driverId];
+                    
+                    if (driver.status === 'online' && driver.location && 
+                        driverId !== request.assignedDriverId) {
+                        
+                        const distance = calculateDistance(
+                            request.clientLocation.lat, request.clientLocation.lng,
+                            driver.location.lat, driver.location.lng
+                        );
+                        
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestDriver = {
+                                id: driverId,
+                                name: driver.name,
+                                licensePlate: driver.licensePlate,
+                                location: driver.location,
+                                distance: distance
+                            };
+                        }
+                    }
+                }
+                
+                if (nearestDriver) {
+                    await database.ref(`ride_requests/${requestId}`).update({
+                        status: 'pending',
+                        assignedDriverId: nearestDriver.id,
+                        previousDriverId: request.assignedDriverId
+                    });
+                    
+                    database.ref(`notifications/drivers/${nearestDriver.id}`).push({
+                        type: 'new_request',
+                        requestId: requestId,
+                        clientName: request.name,
+                        clientLocation: request.clientLocation,
+                        origin: request.origin,
+                        destination: request.destination,
+                        passengers: request.passengers,
+                        contact: request.contact,
+                        arrivalTime: request.arrivalTime,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        note: 'Corrida recusada por outro motorista, você é o mais próximo agora!'
+                    });
+                    
+                    document.getElementById('loadingMessage').textContent = 
+                        "🔄 Enviando para outro motorista próximo...";
+                    
+                    listenForDriverResponse(requestId, nearestDriver.id);
+                    
+                } else {
+                    fallbackToAllDrivers(requestId, request);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao buscar outro motorista:', error);
+                fallbackToAllDrivers(requestId, null);
+            }
+        }
+
+        function fallbackToAllDrivers(requestId, requestData) {
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'pending',
+                assignedDriverId: null
+            });
+            
+            database.ref('notifications/drivers').push({
+                type: 'new_request_all',
+                requestId: requestId,
+                clientName: requestData?.name,
+                origin: requestData?.origin,
+                destination: requestData?.destination,
+                passengers: requestData?.passengers,
+                contact: requestData?.contact,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                note: 'Nenhum motorista próximo disponível, enviando para todos.'
+            });
+            
+            document.getElementById('loadingMessage').textContent = 
+                "🔍 Buscando motoristas disponíveis...";
+        }
+
+        function sendRequestToAllDrivers(requestData) {
+            const newRequestRef = database.ref('ride_requests').push();
+            const requestId = newRequestRef.key;
+            
+            requestData.requestId = requestId;
+            
+            newRequestRef.set(requestData)
+                .then(() => {
+                    database.ref('notifications/drivers').push({
+                        type: 'new_request_all',
+                        requestId: requestId,
+                        clientName: requestData.name,
+                        origin: requestData.origin,
+                        destination: requestData.destination,
+                        passengers: requestData.passengers,
+                        contact: requestData.contact,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    document.getElementById('loadingMessage').textContent = 
+                        "🔍 Buscando motoristas disponíveis...";
+                    
+                    listenForAnyDriverResponse(requestId);
+                    
+                })
+                .catch((error) => {
+                    console.error('Erro ao enviar solicitação:', error);
+                    document.getElementById('loadingMessage').textContent = 
+                        "❌ Erro ao enviar solicitação. Por favor, tente novamente.";
+                    document.getElementById('loadingMessage').classList.add('error');
+                    
+                    setTimeout(() => {
+                        hideLoading();
+                    }, 3000);
+                });
+        }
+
+        function listenForAnyDriverResponse(requestId) {
+            database.ref(`ride_requests/${requestId}`).on('value', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (!request) return;
+                
+                if (request.status === 'accepted') {
+                    showSuccessPopup(request.driverName, request.licensePlate);
+                    database.ref(`ride_requests/${requestId}`).off();
+                } else if (request.status === 'reservation_proposed') {
+                    showReservationProposal(request);
+                }
+            });
+        }
+
+        function acceptReservation(requestId) {
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'reservation_accepted',
+                acceptedAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                document.getElementById('reservationPopup').classList.remove('active');
+                showReservationResponse('✅ Reserva aceita! O motorista será notificado.', true);
+            });
+        }
+
+        function rejectReservation(requestId) {
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'reservation_rejected',
+                rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                document.getElementById('reservationPopup').classList.remove('active');
+                showReservationResponse('❌ Reserva rejeitada. Buscando outro motorista...', false);
+                findAnotherDriver(requestId);
+            });
+        }
+
+        function showNearestDriverInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nearestDriverId = urlParams.get('nearestDriverId');
+            const distance = urlParams.get('distance');
+            
+            if (nearestDriverId) {
+                document.getElementById('nearestDriverInfo').style.display = 'block';
+                
+                if (distance) {
+                    document.getElementById('driverDistance').textContent = 
+                        `Distância aproximada: ${distance} km`;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+            
+            loadSavedLanguage();
+            
+            selectPaymentMethod('cash');
+            
             const urlParams = new URLSearchParams(window.location.search);
             const origin = urlParams.get('origin');
             const destination = urlParams.get('destination');
@@ -647,369 +1408,53 @@
             if (destination) {
                 document.getElementById('destination').value = destination;
             }
-        }
-        
-        // Inicializar autocomplete para os campos de endereço
-        function initAutocomplete() {
-            if (typeof google !== 'undefined') {
-                const originInput = document.getElementById('origin');
-                const destinationInput = document.getElementById('destination');
-                
-                const originAutocomplete = new google.maps.places.Autocomplete(originInput);
-                const destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput);
-            }
-        }
-        
-        // Inicializar quando a página carregar
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSavedLanguage();
-            checkUrlParams();
-            initAutocomplete();
             
-            // Escutar por notificações de reserva
-            listenForReservationProposals();
-        });
-        
-        // Chamar táxi
-        callTaxiButton.addEventListener('click', function() {
-            // Validar formulário
-            if (!validateForm()) {
-                showNotification(t("fill_all_fields"), true);
-                return;
+            showNearestDriverInfo();
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                    },
+                    (error) => {
+                        console.log('Não foi possível obter localização:', error);
+                    }
+                );
             }
             
-            // Desabilitar botão durante o processamento
-            callTaxiButton.disabled = true;
-            callTaxiButton.textContent = t("sending_request");
-            
-            // Coletar dados do formulário
-            const formData = getFormData();
-            
-            // Obter coordenadas do endereço de origem
-            getCoordinates(formData.origin).then(originCoords => {
-                // Criar solicitação no Firebase
-                currentRequestId = database.ref('ride_requests').push().key;
-                
-                const requestData = {
-                    ...formData,
-                    clientId: clientId,
-                    status: 'pending',
-                    paymentStatus: 'free',
-                    originCoords: originCoords,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                };
-                
-                database.ref(`ride_requests/${currentRequestId}`).set(requestData)
-                    .then(() => {
-                        showNotification(t("request_sent"), false, 'info');
-                        updateStatusIndicator('pending', t("waiting_driver"));
-                        
-                        // Alterar texto do botão
-                        callTaxiButton.textContent = t("request_sent_confirm");
-                        
-                        // Escutar por atualizações na solicitação
-                        listenForRequestUpdates();
-                    })
-                    .catch((error) => {
-                        console.error('Erro ao enviar solicitação:', error);
-                        showNotification(t("request_error"), true);
-                        
-                        // Reabilitar botão
-                        callTaxiButton.disabled = false;
-                        callTaxiButton.textContent = t("call_taxi_button");
-                    });
-            }).catch(error => {
-                console.error('Erro ao obter coordenadas:', error);
-                showNotification(t("address_error"), true);
-                callTaxiButton.disabled = false;
-                callTaxiButton.textContent = t("call_taxi_button");
-            });
+            listenForNotifications();
         });
-        
-        // Função para obter coordenadas do endereço
-        function getCoordinates(address) {
-            return new Promise((resolve, reject) => {
-                if (typeof google === 'undefined') {
-                    reject('Google Maps não carregado');
-                    return;
-                }
-                
-                const geocoder = new google.maps.Geocoder();
-                geocoder.geocode({ address: address }, (results, status) => {
-                    if (status === 'OK' && results[0]) {
-                        const location = results[0].geometry.location;
-                        resolve({
-                            lat: location.lat(),
-                            lng: location.lng()
-                        });
-                    } else {
-                        reject('Endereço não encontrado: ' + status);
-                    }
-                });
-            });
-        }
-        
-        // Escutar por atualizações na solicitação
-        function listenForRequestUpdates() {
-            if (!currentRequestId) return;
-            
-            database.ref(`ride_requests/${currentRequestId}`).on('value', (snapshot) => {
-                const request = snapshot.val();
-                
-                if (request) {
-                    if (request.status === 'accepted') {
-                        updateStatusIndicator('accepted', `✅ ${t("taxi_accepted")} ${request.driverName || t('driver')}!`);
-                        showNotification(`${t("taxi_accepted")} ${request.driverName || t('driver')}`, false, 'info');
-                        
-                        // Mostrar popup de sucesso
-                        showSuccessPopup(request.driverName);
-                        
-                    } else if (request.status === 'rejected') {
-                        updateStatusIndicator('rejected', t("no_drivers"));
-                        showNotification(t("no_drivers"), true);
-                        
-                        // Reabilitar o formulário para nova tentativa
-                        resetFormForNewRequest();
-                    }
-                }
-            });
-        }
-        
-        // Escutar por propostas de reserva
-        function listenForReservationProposals() {
+
+        function listenForNotifications() {
             database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
                 const notification = snapshot.val();
                 
-                if (notification.type === 'reservation_proposal') {
-                    // Mostrar confirmação de reserva
-                    showReservationConfirmation(notification);
+                if (notification.type === 'request_accepted' && currentRequestId) {
+                    database.ref(`ride_requests/${currentRequestId}`).once('value').then((snapshot) => {
+                        const request = snapshot.val();
+                        if (request && request.status === 'accepted') {
+                            showSuccessPopup(request.driverName, request.licensePlate);
+                        }
+                    });
                     
-                    // Remover a notificação após processar
+                    snapshot.ref.remove();
+                }
+                
+                if (notification.type === 'reservation_proposal') {
+                    database.ref(`ride_requests/${notification.requestId}`).once('value').then((snapshot) => {
+                        const request = snapshot.val();
+                        if (request) {
+                            showReservationProposal(request);
+                        }
+                    });
+                    
                     snapshot.ref.remove();
                 }
             });
         }
-        
-        // Mostrar confirmação de reserva
-        function showReservationConfirmation(notification) {
-            const userResponse = confirm(
-                `📅 ${notification.message}\n\n` +
-                `${t('reservation_details')}:\n` +
-                `• ${t('driver')}: ${notification.driverName}\n` +
-                `• ${t('wait_time')}: ${notification.reservationTime} ${t('minutes')}\n\n` +
-                `${t('click_accept_reject')}`
-            );
-            
-            if (userResponse) {
-                // Cliente aceitou a reserva
-                acceptReservation(notification);
-            } else {
-                // Cliente rejeitou a reserva
-                rejectReservation(notification);
-            }
-        }
-        
-        // Aceitar reserva
-        function acceptReservation(notification) {
-            // Enviar notificação de aceitação para o motorista
-            database.ref(`notifications/drivers/${notification.driverId}`).push({
-                type: 'reservation_accepted',
-                message: `✅ ${t('client_accepted_reservation')} ${notification.reservationTime} ${t('minutes')}!`,
-                reservationTime: notification.reservationTime,
-                requestId: notification.requestId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                showNotification(`${t("reservation_confirmed")} ${notification.reservationTime} ${t('minutes')}!`, false, 'info');
-                
-                // Atualizar status da solicitação
-                database.ref(`ride_requests/${notification.requestId}`).update({
-                    status: 'reservation_accepted',
-                    driverId: notification.driverId,
-                    driverName: notification.driverName,
-                    acceptedAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Mostrar popup de sucesso
-                showReservationSuccessPopup(notification.driverName, notification.reservationTime);
-                
-            }).catch((error) => {
-                console.error('Erro ao aceitar reserva:', error);
-                showNotification(t("request_error"), true);
-            });
-        }
-        
-        // Rejeitar reserva
-        function rejectReservation(notification) {
-            // Enviar notificação de rejeição para o motorista
-            database.ref(`notifications/drivers/${notification.driverId}`).push({
-                type: 'reservation_rejected',
-                message: `❌ ${t('client_rejected_reservation')}`,
-                requestId: notification.requestId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                showNotification(t("reservation_rejected"), true);
-                
-                // Atualizar status da solicitação
-                database.ref(`ride_requests/${notification.requestId}`).update({
-                    status: 'reservation_rejected'
-                });
-                
-            }).catch((error) => {
-                console.error('Erro ao rejeitar reserva:', error);
-                showNotification(t("request_error"), true);
-            });
-        }
-        
-        // Mostrar popup de sucesso
-        function showSuccessPopup(driverName) {
-            // Atualizar mensagem do popup
-            popupDriverMessage.textContent = `${t("taxi_accepted_message")} ${driverName || t('driver')}!`;
-            
-            // Mostrar popup
-            successPopup.classList.add('active');
-        }
-        
-        // Mostrar popup de sucesso para reserva
-        function showReservationSuccessPopup(driverName, reservationTime) {
-            const popupContent = document.querySelector('.popup-content');
-            popupContent.innerHTML = `
-                <div class="popup-icon">📅</div>
-                <h2 class="popup-title">${t('reservation_confirmed_title')}</h2>
-                <p class="popup-message">${t('reservation_with')} ${driverName} ${t('confirmed_for')} ${reservationTime} ${t('minutes')}!</p>
-                <p class="popup-message">${t('driver_contact')}</p>
-                <button onclick="closePopupAndRedirect()" class="btn" style="margin-top: 20px;">
-                    ${t('back_home')}
-                </button>
-            `;
-            
-            // Mostrar popup
-            successPopup.classList.add('active');
-        }
-        
-        // Fechar popup e redirecionar
-        function closePopupAndRedirect() {
-            successPopup.classList.remove('active');
-            // Redirecionar para a página inicial
-            window.location.href = 'index.html';
-        }
-        
-        // Reconfigurar formulário para nova tentativa
-        function resetFormForNewRequest() {
-            // Reabilitar botão de chamar táxi
-            callTaxiButton.disabled = false;
-            callTaxiButton.textContent = t("call_taxi_button");
-            
-            // Limpar request ID atual
-            currentRequestId = null;
-        }
-        
-        // Validar formulário
-        function validateForm() {
-            const requiredFields = ['name', 'origin', 'destination', 'contact'];
-            
-            for (const fieldId of requiredFields) {
-                const field = document.getElementById(fieldId);
-                if (!field.value.trim()) {
-                    field.focus();
-                    return false;
-                }
-            }
-            
-            return true;
-        }
-        
-        // Coletar dados do formulário
-        function getFormData() {
-            return {
-                name: document.getElementById('name').value,
-                origin: document.getElementById('origin').value,
-                destination: document.getElementById('destination').value,
-                passengers: document.getElementById('passengers').value,
-                contact: document.getElementById('contact').value,
-                arrivalTime: document.getElementById('arrivalTime').value,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                notes: document.getElementById('notes').value,
-                timestamp: new Date().toLocaleString('pt-PT', { timeZone: 'Europe/Lisbon' })
-            };
-        }
-        
-        // Atualizar indicador de status
-        function updateStatusIndicator(status, message) {
-            statusIndicator.textContent = message;
-            statusIndicator.className = `status-indicator status-${status}`;
-            statusIndicator.style.display = 'block';
-        }
-        
-        // Mostrar notificação
-        function showNotification(message, isError = false, type = '') {
-            notification.textContent = message;
-            
-            if (type === 'info') {
-                notification.className = 'notification info';
-            } else {
-                notification.className = isError ? 'notification error' : 'notification';
-            }
-            
-            notification.style.display = 'block';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 5000);
-        }
-
-        // Adicionar traduções faltantes
-        Object.assign(translations.pt, {
-            'reservation_details': 'Detalhes da reserva',
-            'wait_time': 'Tempo de espera',
-            'minutes': 'minutos',
-            'click_accept_reject': 'Clique em "OK" para aceitar ou "Cancelar" para rejeitar.',
-            'client_accepted_reservation': 'Cliente aceitou sua proposta de reserva de',
-            'client_rejected_reservation': 'Cliente rejeitou sua proposta de reserva.',
-            'reservation_confirmed_title': 'Reserva Confirmada!',
-            'reservation_with': 'Sua reserva com',
-            'confirmed_for': 'foi confirmada para daqui a'
-        });
-
-        Object.assign(translations.en, {
-            'reservation_details': 'Reservation details',
-            'wait_time': 'Wait time',
-            'minutes': 'minutes',
-            'click_accept_reject': 'Click "OK" to accept or "Cancel" to reject.',
-            'client_accepted_reservation': 'Client accepted your reservation proposal of',
-            'client_rejected_reservation': 'Client rejected your reservation proposal.',
-            'reservation_confirmed_title': 'Reservation Confirmed!',
-            'reservation_with': 'Your reservation with',
-            'confirmed_for': 'was confirmed for'
-        });
-
-        Object.assign(translations.es, {
-            'reservation_details': 'Detalles de la reserva',
-            'wait_time': 'Tiempo de espera',
-            'minutes': 'minutos',
-            'click_accept_reject': 'Haga clic en "Aceptar" para aceptar o "Cancelar" para rechazar.',
-            'client_accepted_reservation': 'Cliente aceptó su propuesta de reserva de',
-            'client_rejected_reservation': 'Cliente rechazó su propuesta de reserva.',
-            'reservation_confirmed_title': '¡Reserva Confirmada!',
-            'reservation_with': 'Su reserva con',
-            'confirmed_for': 'fue confirmada para dentro de'
-        });
-
-        Object.assign(translations.fr, {
-            'reservation_details': 'Détails de la réservation',
-            'wait_time': 'Temps d\'attente',
-            'minutes': 'minutes',
-            'click_accept_reject': 'Cliquez sur "OK" pour accepter ou "Annuler" pour rejeter.',
-            'client_accepted_reservation': 'Le client a accepté votre proposition de réservation de',
-            'client_rejected_reservation': 'Le client a rejeté votre proposition de réservation.',
-            'reservation_confirmed_title': 'Réservation Confirmée!',
-            'reservation_with': 'Votre réservation avec',
-            'confirmed_for': 'a été confirmée pour dans'
-        });
-    </script>
-    
-    <!-- Google Maps API com biblioteca de geometria -->
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&libraries=places,geometry&callback=initAutocomplete">
     </script>
 </body>
 </html>

@@ -2,17 +2,8 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoTáxi - Seu Táxi Em Lisboa</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#ffc107">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="GoTáxi">
-    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-    <link rel="manifest" href="manifest.json">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="app_title">GoTáxi - Seu Táxi Em Lisboa</title>
     <style>
         * {
             margin: 0;
@@ -23,12 +14,6 @@
         
         body {
             background-color: #f5f5f5;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
         
         header {
@@ -70,7 +55,7 @@
         nav ul li a:hover {
             background-color: #333;
         }
-        
+
         .language-selector {
             background: transparent;
             border: 1px solid #ffc107;
@@ -88,18 +73,6 @@
         #map {
             height: calc(100vh - 60px);
             width: 100%;
-            background-color: #e0e0e0;
-        }
-        
-        .map-error {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: #666;
-            text-align: center;
-            padding: 20px;
         }
         
         .location-card {
@@ -130,7 +103,7 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 16px; /* Previne zoom no iOS */
         }
         
         .call-taxi-btn {
@@ -223,30 +196,99 @@
         .floating-btn:hover {
             background-color: #e0a800;
         }
+
+        /* Popup de sucesso */
+        .success-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .success-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s;
+        }
+
+        .success-popup.active .popup-content {
+            transform: scale(1);
+        }
+
+        .popup-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .popup-message {
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
         
-        .center-map-btn {
+        .driver-details {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .driver-details h4 {
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+        
+        .driver-details p {
+            margin: 5px 0;
+        }
+        
+        .license-plate {
+            display: inline-block;
             background-color: #ffc107;
             color: #000;
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: monospace;
+            margin-top: 5px;
         }
-        
-        .center-map-btn:hover {
-            background-color: #e0a800;
-        }
-        
-        .center-map-btn.active {
-            background-color: #4CAF50;
-            color: white;
+
+        .taxi-on-way {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            text-align: center;
         }
 
         .online-drivers-counter {
@@ -261,100 +303,62 @@
             font-weight: bold;
             z-index: 1000;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
         }
 
-        .reservation-card {
+        /* Estilos para a busca do motorista mais próximo */
+        .nearest-driver-search {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            z-index: 1002;
-            display: none;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        .reservation-card h3 {
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .reservation-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        .reservation-option {
-            padding: 10px 15px;
-            background-color: #f0f0f0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .reservation-option:hover {
-            background-color: #e0e0e0;
-        }
-
-        .reservation-option.selected {
-            background-color: #ffc107;
-            color: #000;
-            font-weight: bold;
-        }
-
-        .reservation-actions {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .btn-confirm {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-cancel {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             z-index: 10000;
-            display: none;
-            max-width: 90%;
             text-align: center;
+            display: none;
+            max-width: 350px;
+            width: 90%;
         }
 
-        .install-prompt button {
-            background: #ffc107;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin: 0 5px;
-            cursor: pointer;
+        .nearest-driver-search.active {
+            display: block;
+        }
+
+        .search-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+
+        .search-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .search-distance {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .search-loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ffc107;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -363,6 +367,7 @@
         <div class="logo">Go<span>Táxi</span></div>
         <nav>
             <ul>
+                <li><a href="index.html" data-i18n="home">Início</a></li>
                 <li>
                     <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
                         <option value="pt">🇵🇹 Português</option>
@@ -375,13 +380,7 @@
         </nav>
     </header>
     
-    <div id="map">
-        <div class="map-error">
-            <h2>🚗 GoTáxi</h2>
-            <p data-i18n="loading_map">Carregando mapa...</p>
-            <p data-i18n="check_connection">Se o mapa não carregar, verifique sua conexão com a internet</p>
-        </div>
-    </div>
+    <div id="map"></div>
 
     <div id="onlineDriversCounter" class="online-drivers-counter" style="display: none;">
         🚗 <span id="driversCount">0</span> <span data-i18n="drivers_online">motoristas online</span>
@@ -398,43 +397,47 @@
         </div>
     </div>
 
+    <!-- Popup de busca do motorista mais próximo -->
+    <div id="nearestDriverSearch" class="nearest-driver-search">
+        <div class="search-icon">🚗</div>
+        <div class="search-text" id="searchText">Buscando motorista mais próximo...</div>
+        <div class="search-distance" id="searchDistance"></div>
+        <div class="search-loading"></div>
+    </div>
+
     <div class="floating-buttons">
-        <button class="floating-btn" onclick="goToForm()" data-i18n-title="call_taxi" title="Chamar Táxi">
-            🚗
-        </button>
+        <!-- Botão da minha localização apenas -->
         <button class="floating-btn" onclick="getCurrentLocation()" data-i18n-title="my_location" title="Minha Localização">
             📍
         </button>
-        <button id="centerMapBtn" class="center-map-btn" onclick="centerMap()" data-i18n-title="center_map" title="Centralizar Mapa">
-            🧭
-        </button>
     </div>
     
-    <button id="callTaxi" class="call-taxi-btn" onclick="goToForm()" data-i18n="call_gotaxi">Chame GoTáxi</button>
+    <button id="callTaxi" class="call-taxi-btn" data-i18n="call_gotaxi">Chame GoTáxi</button>
     
     <div id="notification" class="notification"></div>
     
     <div id="driverInfo" class="driver-info">
         <h3 data-i18n="driver_on_way">Motorista a caminho</h3>
         <p id="driverDetails"></p>
-        <p id="estimatedTime"></p>
+        <p id="estimatedTime" data-i18n="estimated_time">Tempo estimado: 5-10 minutos</p>
     </div>
 
-    <div id="reservationCard" class="reservation-card">
-        <h3>⏰ <span data-i18n="reservation_proposal">Proposta de Reserva</span></h3>
-        <div id="reservationDetails" class="request-details">
-            <!-- Detalhes da reserva serão preenchidos aqui -->
+    <!-- Popup de sucesso -->
+    <div id="successPopup" class="success-popup">
+        <div class="popup-content">
+            <div class="popup-icon">✅</div>
+            <h2 class="popup-title" data-i18n="taxi_confirmed">Táxi Confirmado!</h2>
+            <div class="taxi-on-way" id="taxiOnWayMessage" data-i18n="taxi_on_the_way">
+                Seu táxi foi aceito e está a caminho!
+            </div>
+            <div class="driver-details" id="driverDetailsPopup">
+                <!-- Detalhes do motorista serão preenchidos aqui -->
+            </div>
+            <p class="popup-message" id="popupMessage" data-i18n="driver_contact">O motorista entrará em contato com você em breve.</p>
+            <button onclick="closePopup()" class="call-taxi-btn" style="margin-top: 20px;" data-i18n="back_home">
+                🏠 Fechar
+            </button>
         </div>
-        <div class="reservation-actions">
-            <button id="acceptReservation" class="btn-confirm" data-i18n="accept_reservation">✅ Aceitar Reserva</button>
-            <button id="rejectReservation" class="btn-cancel" data-i18n="reject_reservation">❌ Rejeitar Reserva</button>
-        </div>
-    </div>
-
-    <div id="installPrompt" class="install-prompt">
-        <p>📲 <span data-i18n="install_app">Instalar o GoTáxi no seu celular?</span></p>
-        <button id="installBtn" data-i18n="install_now">Instalar Agora</button>
-        <button id="cancelInstall" data-i18n="not_now">Agora Não</button>
     </div>
 
     <!-- Firebase SDK -->
@@ -446,139 +449,127 @@
         const translations = {
             pt: {
                 // Interface
-                "loading_map": "Carregando mapa...",
-                "check_connection": "Se o mapa não carregar, verifique sua conexão com a internet",
-                "drivers_online": "motoristas online",
+                "app_title": "GoTáxi - Seu Táxi Em Lisboa",
+                "home": "Início",
                 "where_are_you": "Onde está?",
                 "where_to": "Pra onde vai?",
                 "enter_current_location": "Digite sua localização atual",
                 "enter_destination": "Digite seu destino",
                 "call_taxi": "Chamar Táxi",
                 "my_location": "Minha Localização",
-                "center_map": "Centralizar Mapa",
                 "call_gotaxi": "Chame GoTáxi",
                 "driver_on_way": "Motorista a caminho",
-                "reservation_proposal": "Proposta de Reserva",
-                "accept_reservation": "✅ Aceitar Reserva",
-                "reject_reservation": "❌ Rejeitar Reserva",
-                "install_app": "Instalar o GoTáxi no seu celular?",
-                "install_now": "Instalar Agora",
-                "not_now": "Agora Não",
+                "taxi_confirmed": "Táxi Confirmado!",
+                "driver_contact": "O motorista entrará em contato com você em breve.",
+                "back_home": "🏠 Fechar",
+                "drivers_online": "motoristas online",
+                "estimated_time": "Tempo estimado: 5-10 minutos",
+                "taxi_on_the_way": "Seu táxi foi aceito e está a caminho!",
                 
                 // Notificações
                 "location_updated": "Localização atualizada!",
-                "map_centered": "Mapa centralizado!",
                 "location_unavailable": "Localização não disponível. Ative a localização.",
                 "location_error": "Não foi possível obter sua localização. Digite manualmente.",
-                "reservation_accepted": "✅ Você aceitou a reserva! Aguarde a chegada do motorista.",
-                "reservation_rejected": "❌ Você rejeitou a reserva.",
                 "driver_accepted": "Motorista aceitou sua corrida!",
                 "driver_rejected": "Nenhum motorista disponível no momento.",
-                "estimated_time": "Tempo estimado: 5-10 minutos",
-                "map_error": "Erro ao carregar o mapa. Verifique sua conexão.",
-                "auth_error": "Erro de autenticação do Google Maps. Verifique a chave da API."
+                "fill_origin_destination": "Por favor, preencha origem e destino.",
+                "taxi_confirmed_message": "Táxi confirmado! Motorista está a caminho.",
+                "searching_nearest_driver": "Buscando motorista mais próximo...",
+                "nearest_driver_found": "Motorista encontrado a {distance} km!",
+                "no_drivers_available": "Nenhum motorista disponível no momento."
             },
             en: {
                 // Interface
-                "loading_map": "Loading map...",
-                "check_connection": "If the map doesn't load, check your internet connection",
-                "drivers_online": "drivers online",
+                "app_title": "GoTáxi - Your Taxi in Lisbon",
+                "home": "Home",
                 "where_are_you": "Where are you?",
                 "where_to": "Where to?",
                 "enter_current_location": "Enter your current location",
                 "enter_destination": "Enter your destination",
                 "call_taxi": "Call Taxi",
                 "my_location": "My Location",
-                "center_map": "Center Map",
                 "call_gotaxi": "Call GoTáxi",
                 "driver_on_way": "Driver on the way",
-                "reservation_proposal": "Reservation Proposal",
-                "accept_reservation": "✅ Accept Reservation",
-                "reject_reservation": "❌ Reject Reservation",
-                "install_app": "Install GoTáxi on your phone?",
-                "install_now": "Install Now",
-                "not_now": "Not Now",
+                "taxi_confirmed": "Taxi Confirmed!",
+                "driver_contact": "The driver will contact you shortly.",
+                "back_home": "🏠 Close",
+                "drivers_online": "drivers online",
+                "estimated_time": "Estimated time: 5-10 minutes",
+                "taxi_on_the_way": "Your taxi has been accepted and is on the way!",
                 
                 // Notifications
                 "location_updated": "Location updated!",
-                "map_centered": "Map centered!",
                 "location_unavailable": "Location unavailable. Please enable location services.",
                 "location_error": "Could not get your location. Please enter manually.",
-                "reservation_accepted": "✅ You accepted the reservation! Wait for the driver's arrival.",
-                "reservation_rejected": "❌ You rejected the reservation.",
                 "driver_accepted": "Driver accepted your ride!",
                 "driver_rejected": "No drivers available at the moment.",
-                "estimated_time": "Estimated time: 5-10 minutes",
-                "map_error": "Error loading map. Check your connection.",
-                "auth_error": "Google Maps authentication error. Check the API key."
+                "fill_origin_destination": "Please fill origin and destination.",
+                "taxi_confirmed_message": "Taxi confirmed! Driver is on the way.",
+                "searching_nearest_driver": "Searching for nearest driver...",
+                "nearest_driver_found": "Driver found {distance} km away!",
+                "no_drivers_available": "No drivers available at the moment."
             },
             es: {
                 // Interface
-                "loading_map": "Cargando mapa...",
-                "check_connection": "Si el mapa no carga, verifica tu conexión a internet",
-                "drivers_online": "conductores en línea",
+                "app_title": "GoTáxi - Tu Taxi en Lisboa",
+                "home": "Inicio",
                 "where_are_you": "¿Dónde estás?",
                 "where_to": "¿A dónde vas?",
                 "enter_current_location": "Ingresa tu ubicación actual",
                 "enter_destination": "Ingresa tu destino",
                 "call_taxi": "Llamar Taxi",
                 "my_location": "Mi Ubicación",
-                "center_map": "Centrar Mapa",
                 "call_gotaxi": "Llamar GoTáxi",
                 "driver_on_way": "Conductor en camino",
-                "reservation_proposal": "Propuesta de Reserva",
-                "accept_reservation": "✅ Aceptar Reserva",
-                "reject_reservation": "❌ Rechazar Reserva",
-                "install_app": "¿Instalar GoTáxi en tu teléfono?",
-                "install_now": "Instalar Ahora",
-                "not_now": "Ahora No",
+                "taxi_confirmed": "¡Taxi Confirmado!",
+                "driver_contact": "El conductor se pondrá en contacto contigo pronto.",
+                "back_home": "🏠 Cerrar",
+                "drivers_online": "conductores en línea",
+                "estimated_time": "Tiempo estimado: 5-10 minutos",
+                "taxi_on_the_way": "¡Tu taxi ha sido aceptado e está en camino!",
                 
                 // Notifications
-                "location_updated": "¡Ubicación actualizada!",
-                "map_centered": "¡Mapa centrado!",
+                "location_updated": "¡Ubicación atualizada!",
                 "location_unavailable": "Ubicación no disponible. Active los servicios de ubicación.",
                 "location_error": "No se pudo obtener su ubicación. Ingrese manualmente.",
-                "reservation_accepted": "✅ ¡Aceptaste la reserva! Espera la llegada del conductor.",
-                "reservation_rejected": "❌ Rechazaste la reserva.",
                 "driver_accepted": "¡Conductor aceptó tu viaje!",
                 "driver_rejected": "No hay conductores disponibles en este momento.",
-                "estimated_time": "Tiempo estimado: 5-10 minutos",
-                "map_error": "Error al cargar el mapa. Verifica tu conexión.",
-                "auth_error": "Error de autenticación de Google Maps. Verifique la clave API."
+                "fill_origin_destination": "Por favor, complete origen y destino.",
+                "taxi_confirmed_message": "¡Taxi confirmado! Conductor está en camino.",
+                "searching_nearest_driver": "Buscando conductor más cercano...",
+                "nearest_driver_found": "¡Conductor encontrado a {distance} km!",
+                "no_drivers_available": "No hay conductores disponibles en este momento."
             },
             fr: {
                 // Interface
-                "loading_map": "Chargement de la carte...",
-                "check_connection": "Si la carte ne se charge pas, vérifiez votre connexion Internet",
-                "drivers_online": "conducteurs en ligne",
+                "app_title": "GoTáxi - Votre Taxi à Lisbonne",
+                "home": "Accueil",
                 "where_are_you": "Où êtes-vous?",
                 "where_to": "Où allez-vous?",
                 "enter_current_location": "Entrez votre position actuelle",
                 "enter_destination": "Entrez votre destination",
                 "call_taxi": "Appeler un Taxi",
                 "my_location": "Ma Position",
-                "center_map": "Centrer la Carte",
                 "call_gotaxi": "Appeler GoTáxi",
                 "driver_on_way": "Chauffeur en route",
-                "reservation_proposal": "Proposition de Réservation",
-                "accept_reservation": "✅ Accepter la Réservation",
-                "reject_reservation": "❌ Rejeter la Réservation",
-                "install_app": "Installer GoTáxi sur votre téléphone?",
-                "install_now": "Installer Maintenant",
-                "not_now": "Pas Maintenant",
+                "taxi_confirmed": "Taxi Confirmé!",
+                "driver_contact": "Le chauffeur vous contactera sous peu.",
+                "back_home": "🏠 Fermer",
+                "drivers_online": "conducteurs en ligne",
+                "estimated_time": "Temps estimé: 5-10 minutos",
+                "taxi_on_the_way": "Votre taxi a été accepté et est en route!",
                 
                 // Notifications
                 "location_updated": "Position mise à jour!",
-                "map_centered": "Carte centrée!",
-                "location_unavailable": "Position non disponible. Activez les services de localisation.",
+                "location_unavailable": "Position non disponible. Activez les servicios de localisation.",
                 "location_error": "Impossible d'obtenir votre position. Veuillez saisir manuellement.",
-                "reservation_accepted": "✅ Vous avez accepté la réservation! Attendez l'arrivée du chauffeur.",
-                "reservation_rejected": "❌ Vous avez rejeté la réservation.",
                 "driver_accepted": "Chauffeur a accepté votre course!",
-                "driver_rejected": "Aucun chauffeur disponible pour le moment.",
-                "estimated_time": "Temps estimé: 5-10 minutes",
-                "map_error": "Erreur de chargement de la carte. Vérifiez votre connexion.",
-                "auth_error": "Erreur d'authentification Google Maps. Vérifiez la clé API."
+                "driver_rejected": "Aucun chauffeur disponible para el momento.",
+                "fill_origin_destination": "Veuillez remplir l'origine et la destination.",
+                "taxi_confirmed_message": "Taxi confirmé! Le chauffeur est en route.",
+                "searching_nearest_driver": "Recherche du chauffeur le plus proche...",
+                "nearest_driver_found": "Chauffeur trouvé à {distance} km!",
+                "no_drivers_available": "Aucun chauffeur disponible pour le moment."
             }
         };
 
@@ -604,52 +595,8 @@
         let destinationAutocomplete;
         let userLocation;
         let clientId;
-        let reservationMarker;
-        let deferredPrompt;
-        let mapInitialized = false;
+        let currentDriverData = null;
         let currentLanguage = 'pt';
-
-        // Função para mudar idioma
-        function changeLanguage(lang) {
-            currentLanguage = lang;
-            updateTexts();
-            // Salvar preferência no localStorage
-            localStorage.setItem('preferredLanguage', lang);
-        }
-
-        // Função para atualizar todos os textos
-        function updateTexts() {
-            const elements = document.querySelectorAll('[data-i18n]');
-            elements.forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (translations[currentLanguage][key]) {
-                    element.textContent = translations[currentLanguage][key];
-                }
-            });
-
-            // Atualizar placeholders
-            const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
-            placeholders.forEach(element => {
-                const key = element.getAttribute('data-i18n-placeholder');
-                if (translations[currentLanguage][key]) {
-                    element.setAttribute('placeholder', translations[currentLanguage][key]);
-                }
-            });
-
-            // Atualizar titles
-            const titles = document.querySelectorAll('[data-i18n-title]');
-            titles.forEach(element => {
-                const key = element.getAttribute('data-i18n-title');
-                if (translations[currentLanguage][key]) {
-                    element.setAttribute('title', translations[currentLanguage][key]);
-                }
-            });
-        }
-
-        // Função para obter tradução
-        function t(key) {
-            return translations[currentLanguage][key] || key;
-        }
 
         // Sistema de movimento suave
         class SmoothMovementSystem {
@@ -836,110 +783,285 @@
         }
 
         const smoothMovement = new SmoothMovementSystem();
+
+        // Função para encontrar o motorista mais próximo
+        async function findNearestDriver(clientLocation) {
+            try {
+                showSearchPopup(true, t('searching_nearest_driver'));
+                
+                const driversSnapshot = await database.ref('drivers').once('value');
+                const drivers = driversSnapshot.val();
+                let nearestDriver = null;
+                let minDistance = Infinity;
+                
+                if (!drivers) {
+                    console.log('Nenhum motorista online');
+                    showSearchPopup(false);
+                    return null;
+                }
+                
+                for (const driverId in drivers) {
+                    const driver = drivers[driverId];
+                    
+                    if (driver.status === 'online' && driver.location) {
+                        const distance = calculateDistance(
+                            clientLocation.lat, clientLocation.lng,
+                            driver.location.lat, driver.location.lng
+                        );
+                        
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestDriver = {
+                                id: driverId,
+                                name: driver.name,
+                                licensePlate: driver.licensePlate,
+                                location: driver.location,
+                                distance: distance
+                            };
+                            
+                            // Atualizar texto de busca com a distância
+                            document.getElementById('searchDistance').textContent = 
+                                t('nearest_driver_found').replace('{distance}', distance.toFixed(1));
+                        }
+                    }
+                }
+                
+                showSearchPopup(false);
+                
+                return nearestDriver;
+            } catch (error) {
+                console.error('Erro ao buscar motoristas:', error);
+                showSearchPopup(false);
+                return null;
+            }
+        }
+
+        // Calcular distância usando fórmula de Haversine
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Raio da Terra em km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Mostrar/ocultar popup de busca
+        function showSearchPopup(show, message = '') {
+            const searchPopup = document.getElementById('nearestDriverSearch');
+            const searchText = document.getElementById('searchText');
+            const searchDistance = document.getElementById('searchDistance');
+            
+            if (show) {
+                searchText.textContent = message || t('searching_nearest_driver');
+                searchDistance.textContent = '';
+                searchPopup.classList.add('active');
+            } else {
+                searchPopup.classList.remove('active');
+            }
+        }
+
+        // Modificar a função callTaxi para usar o motorista mais próximo
+        async function callTaxi() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!origin || !destination) {
+                showNotification(t("fill_origin_destination"), true);
+                return;
+            }
+            
+            // Obter localização atual do cliente
+            let clientLocation = userLocation;
+            if (!clientLocation) {
+                // Tentar obter localização atual
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(resolve, reject);
+                        } else {
+                            reject(new Error('Geolocation não suportado'));
+                        }
+                    });
+                    
+                    clientLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                } catch (error) {
+                    console.error('Erro ao obter localização:', error);
+                    // Redirecionar sem informação de localização
+                    redirectToForm(origin, destination, null);
+                    return;
+                }
+            }
+            
+            // Encontrar motorista mais próximo
+            showNotification(t("searching_nearest_driver"));
+            const nearestDriver = await findNearestDriver(clientLocation);
+            
+            if (!nearestDriver) {
+                showNotification(t("no_drivers_available"), true);
+                return;
+            }
+            
+            // Redirecionar para a página de formulário com informações do motorista
+            redirectToForm(origin, destination, nearestDriver.id, nearestDriver.distance);
+        }
+
+        // Função de redirecionamento atualizada
+        function redirectToForm(origin, destination, nearestDriverId = null, distance = null) {
+            const params = new URLSearchParams({
+                origin: origin,
+                destination: destination,
+                lang: currentLanguage
+            });
+            
+            if (nearestDriverId) {
+                params.append('nearestDriverId', nearestDriverId);
+                params.append('distance', distance ? distance.toFixed(1) : '');
+            }
+            
+            window.location.href = `formulario.html?${params.toString()}`;
+        }
+
+        // Função para mudar idioma
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            updateTexts();
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Função para atualizar textos
+        function updateTexts() {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+
+            const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
+            placeholders.forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.setAttribute('placeholder', translations[currentLanguage][key]);
+                }
+            });
+
+            const titles = document.querySelectorAll('[data-i18n-title]');
+            titles.forEach(element => {
+                const key = element.getAttribute('data-i18n-title');
+                if (translations[currentLanguage][key]) {
+                    element.setAttribute('title', translations[currentLanguage][key]);
+                }
+            });
+        }
+
+        // Função para obter tradução
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        // Carregar idioma salvo
+        function loadSavedLanguage() {
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+                document.getElementById('languageSelector').value = savedLanguage;
+            }
+            updateTexts();
+        }
         
         // Gerar ID único para o cliente
         clientId = 'client_' + Math.random().toString(36).substr(2, 9);
         
-        // Função para ir para o formulário
-        function goToForm() {
-            const origin = document.getElementById('origin').value;
-            const destination = document.getElementById('destination').value;
-            
-            const params = new URLSearchParams();
-            if (origin) params.append('origin', origin);
-            if (destination) params.append('destination', destination);
-            params.append('lang', currentLanguage);
-            
-            window.location.href = `formulario.html?${params.toString()}`;
-        }
-        
         // Inicializar mapa
         function initMap() {
-            try {
-                const lisbon = { lat: 38.7223, lng: -9.1393 };
-                
-                map = new google.maps.Map(document.getElementById("map"), {
-                    zoom: 12,
-                    center: lisbon,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: true,
-                    tilt: 0,
-                    heading: 0,
-                    gestureHandling: "greedy",
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
-                });
-                
-                userMarker = new google.maps.Marker({
-                    position: lisbon,
-                    map: map,
-                    title: "Sua Localização",
-                    icon: {
-                        url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-                    }
-                });
-                
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            userLocation = {
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude,
-                            };
-                            
-                            userMarker.setPosition(userLocation);
-                            map.setCenter(userLocation);
-                            
-                            const geocoder = new google.maps.Geocoder();
-                            geocoder.geocode({ location: userLocation }, (results, status) => {
-                                if (status === "OK" && results[0]) {
-                                    document.getElementById('origin').value = results[0].formatted_address;
-                                }
-                            });
-                        },
-                        () => {
-                            handleLocationError(true, map.getCenter());
-                        }
-                    );
-                } else {
-                    handleLocationError(false, map.getCenter());
+            // Posição inicial (Lisboa)
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
+            
+            // Criar mapa
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+            
+            // Criar marcador do usuário
+            userMarker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: "Sua Localização",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
                 }
-                
-                originAutocomplete = new google.maps.places.Autocomplete(
-                    document.getElementById('origin'),
-                    { types: ['geocode'] }
+            });
+            
+            // Tentar obter localização atual do usuário
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        // Preencher automaticamente o campo de origem
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
                 );
-                
-                destinationAutocomplete = new google.maps.places.Autocomplete(
-                    document.getElementById('destination'),
-                    { types: ['geocode'] }
-                );
-                
-                listenForDrivers();
-                listenForNotifications();
-                
-                document.getElementById('acceptReservation').onclick = acceptReservation;
-                document.getElementById('rejectReservation').onclick = rejectReservation;
-                
-                mapInitialized = true;
-                
-            } catch (error) {
-                console.error("Erro ao inicializar o mapa:", error);
-                showNotification(t("map_error"), true);
-            }
-        }
-        
-        // Função para centralizar o mapa
-        function centerMap() {
-            if (userLocation && map) {
-                map.setCenter(userLocation);
-                showNotification(t("map_centered"));
             } else {
-                showNotification(t("location_unavailable"), true);
+                // Navegador não suporta Geolocation
+                handleLocationError(false, map.getCenter());
             }
+            
+            // Inicializar autocomplete para os campos de endereço
+            originAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('origin'),
+                { types: ['geocode'] }
+            );
+            
+            destinationAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('destination'),
+                { types: ['geocode'] }
+            );
+            
+            // Escutar por motoristas online
+            listenForDrivers();
+            
+            // Escutar por notificações
+            listenForNotifications();
+            
+            // Escutar por atualizações nas corridas
+            listenForRideUpdates();
         }
         
         function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            // Mostrar notificação de erro
             showNotification(t("location_error"), true);
         }
 
@@ -953,26 +1075,21 @@
                             lng: position.coords.longitude,
                         };
                         
-                        if (userMarker) {
-                            userMarker.setPosition(userLocation);
-                        }
-                        if (map) {
-                            map.setCenter(userLocation);
-                        }
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
                         
+                        // Preencher automaticamente o campo de origem
                         const geocoder = new google.maps.Geocoder();
-                        if (geocoder) {
-                            geocoder.geocode({ location: userLocation }, (results, status) => {
-                                if (status === "OK" && results[0]) {
-                                    document.getElementById('origin').value = results[0].formatted_address;
-                                }
-                            });
-                        }
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
                         
                         showNotification(t("location_updated"));
                     },
                     () => {
-                        handleLocationError(true, map ? map.getCenter() : { lat: 38.7223, lng: -9.1393 });
+                        handleLocationError(true, map.getCenter());
                     }
                 );
             }
@@ -1043,134 +1160,134 @@
                 const notification = snapshot.val();
                 
                 if (notification.type === 'request_accepted') {
-                    showNotification(notification.message);
-                    showDriverInfo(notification.driverName);
+                    // Buscar dados completos do motorista
+                    getDriverDetails(notification.driverId, notification.driverName, notification.licensePlate);
+                    
+                    // Remover a notificação após processá-la
                     snapshot.ref.remove();
                 } else if (notification.type === 'request_rejected') {
-                    showNotification(notification.message, true);
-                    snapshot.ref.remove();
-                } else if (notification.type === 'reservation_proposal') {
-                    showReservationCard(notification);
-                    snapshot.ref.remove();
-                } else if (notification.type === 'reservation_accepted') {
-                    showNotification(notification.message);
-                    showDriverInfo(notification.driverName);
-                    if (notification.reservationLocation) {
-                        addReservationMarker(notification.reservationLocation);
-                    }
-                    snapshot.ref.remove();
-                } else if (notification.type === 'reservation_rejected') {
-                    showNotification(notification.message, true);
+                    showNotification(t("driver_rejected"), true);
+                    
+                    // Remover a notificação após processá-la
                     snapshot.ref.remove();
                 }
             });
         }
         
-        // Mostrar card de reserva
-        function showReservationCard(notification) {
-            const reservationCard = document.getElementById('reservationCard');
-            const reservationDetails = document.getElementById('reservationDetails');
+        // Escutar por atualizações nas corridas
+        function listenForRideUpdates() {
+            database.ref('ride_requests').orderByChild('clientId').equalTo(clientId).on('child_changed', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (request.status === 'accepted') {
+                    // Buscar dados completos do motorista
+                    getDriverDetails(request.driverId, request.driverName, request.licensePlate);
+                }
+            });
+        }
+        
+        // Buscar dados completos do motorista
+        function getDriverDetails(driverId, driverName, licensePlate) {
+            if (driverId) {
+                database.ref(`drivers/${driverId}`).once('value').then((snapshot) => {
+                    const driverData = snapshot.val();
+                    
+                    if (driverData) {
+                        // Usar dados do motorista do Firebase
+                        showSuccessPopup(
+                            driverData.name || driverName || 'Motorista',
+                            driverData.licensePlate || licensePlate || 'Não informada'
+                        );
+                        
+                        showDriverInfo(
+                            driverData.name || driverName || 'Motorista',
+                            driverData.licensePlate || licensePlate || 'Não informada'
+                        );
+                    } else {
+                        // Usar dados da notificação
+                        showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                        showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+                    }
+                }).catch((error) => {
+                    console.error('Erro ao buscar dados do motorista:', error);
+                    // Usar dados da notificação em caso de erro
+                    showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                    showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+                });
+            } else {
+                // Usar dados da notificação se não tiver driverId
+                showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+            }
+        }
+        
+        // Mostrar popup de sucesso
+        function showSuccessPopup(driverName, licensePlate) {
+            const driverDetailsPopup = document.getElementById('driverDetailsPopup');
+            const taxiOnWayMessage = document.getElementById('taxiOnWayMessage');
             
-            window.currentReservation = notification;
+            // Atualizar mensagem "Megahair"
+            taxiOnWayMessage.textContent = t('taxi_on_the_way');
             
-            reservationDetails.innerHTML = `
-                <p><strong>🚗 ${t('driver')}:</strong> ${notification.driverName}</p>
-                <p><strong>⏰ ${t('wait_time')}:</strong> ${notification.reservationTime} ${t('minutes')}</p>
-                <p><strong>📍 ${t('meeting_point')}:</strong> ${notification.reservationLocationName}</p>
-                <p><em>${t('driver_will_arrive')} ${notification.reservationTime} ${t('minutes')}.</em></p>
+            // Atualizar detalhes do motorista no popup
+            let driverDetailsHTML = `
+                <h4 data-i18n="driver_details">Detalhes do Motorista</h4>
+                <p><strong data-i18n="driver_name">Nome do Motorista:</strong> ${driverName}</p>
             `;
             
-            reservationCard.style.display = 'block';
-        }
-        
-        // Aceitar reserva
-        function acceptReservation() {
-            const reservationCard = document.getElementById('reservationCard');
-            const reservation = window.currentReservation;
-            
-            if (!reservation) return;
-            
-            reservationCard.style.display = 'none';
-            
-            database.ref(`notifications/drivers/${reservation.driverId}`).push({
-                type: 'reservation_accepted',
-                message: `✅ ${t('client_accepted_reservation')} ${reservation.reservationTime} ${t('minutes')}.`,
-                clientId: clientId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            database.ref(`ride_requests/${reservation.requestId}`).update({
-                status: 'reservation_accepted',
-                reservationTime: reservation.reservationTime,
-                acceptedAt: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            showNotification(t("reservation_accepted"));
-            
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 2000);
-            
-            window.currentReservation = null;
-        }
-        
-        // Rejeitar reserva
-        function rejectReservation() {
-            const reservationCard = document.getElementById('reservationCard');
-            const reservation = window.currentReservation;
-            
-            if (!reservation) return;
-            
-            reservationCard.style.display = 'none';
-            
-            database.ref(`notifications/drivers/${reservation.driverId}`).push({
-                type: 'reservation_rejected',
-                message: `❌ ${t('client_rejected_reservation')}`,
-                clientId: clientId,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            database.ref(`ride_requests/${reservation.requestId}`).update({
-                status: 'reservation_rejected',
-                rejectedAt: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            showNotification(t("reservation_rejected"), true);
-            
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 2000);
-            
-            window.currentReservation = null;
-        }
-        
-        // Adicionar marcador de reserva no mapa
-        function addReservationMarker(location) {
-            if (reservationMarker) {
-                reservationMarker.setMap(null);
+            if (licensePlate && licensePlate !== 'Não informada') {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> <span class="license-plate">${licensePlate}</span></p>`;
+            } else {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> Não informada</p>`;
             }
             
-            if (map) {
-                reservationMarker = new google.maps.Marker({
-                    position: location,
-                    map: map,
-                    title: "Local de Encontro",
-                    icon: {
-                        url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                    }
-                });
-                
-                map.setCenter(location);
+            driverDetailsPopup.innerHTML = driverDetailsHTML;
+            
+            // Atualizar textos do popup
+            updateTexts();
+            
+            // Mostrar popup
+            document.getElementById('successPopup').classList.add('active');
+            
+            showNotification(t("taxi_confirmed_message"));
+        }
+        
+        // Fechar popup
+        function closePopup() {
+            document.getElementById('successPopup').classList.remove('active');
+        }
+        
+        // Chamar táxi (função alternativa)
+        function callTaxiLegacy() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!origin || !destination) {
+                showNotification(t("fill_origin_destination"), true);
+                return;
             }
+            
+            // Redirecionar para a página de formulário com os dados preenchidos
+            const params = new URLSearchParams({
+                origin: origin,
+                destination: destination,
+                lang: currentLanguage
+            });
+            
+            window.location.href = `formulario.html?${params.toString()}`;
         }
         
         // Mostrar informações do motorista
-        function showDriverInfo(driverName) {
+        function showDriverInfo(driverName, licensePlate) {
             const driverInfo = document.getElementById('driverInfo');
             const driverDetails = document.getElementById('driverDetails');
             
-            driverDetails.textContent = `${t('driver')}: ${driverName}`;
-            document.getElementById('estimatedTime').textContent = t("estimated_time");
+            let detailsText = `${t('driver_name')}: ${driverName}`;
+            if (licensePlate && licensePlate !== 'Não informada') {
+                detailsText += ` | ${t('license_plate_display')}: ${licensePlate}`;
+            }
+            
+            driverDetails.textContent = detailsText;
             
             driverInfo.style.display = 'block';
         }
@@ -1187,64 +1304,11 @@
             }, 5000);
         }
 
-        // PWA - Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker registration successful');
-                    })
-                    .catch(function(error) {
-                        console.log('ServiceWorker registration failed: ', error);
-                    });
-            });
-        }
-
-        // PWA - Install Prompt
-        window.addEventListener('beforeinstallprompt', (e) => {
+        // Adicionar evento de clique ao botão principal
+        document.getElementById('callTaxi').addEventListener('click', function(e) {
             e.preventDefault();
-            deferredPrompt = e;
-            
-            setTimeout(() => {
-                showInstallPrompt();
-            }, 5000);
+            callTaxi();
         });
-
-        function showInstallPrompt() {
-            const installPrompt = document.getElementById('installPrompt');
-            installPrompt.style.display = 'block';
-
-            document.getElementById('installBtn').addEventListener('click', async () => {
-                installPrompt.style.display = 'none';
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        console.log('Usuário aceitou a instalação');
-                    }
-                    deferredPrompt = null;
-                }
-            });
-
-            document.getElementById('cancelInstall').addEventListener('click', () => {
-                installPrompt.style.display = 'none';
-            });
-        }
-
-        // Carregar idioma salvo
-        function loadSavedLanguage() {
-            const savedLanguage = localStorage.getItem('preferredLanguage');
-            if (savedLanguage && translations[savedLanguage]) {
-                currentLanguage = savedLanguage;
-                document.getElementById('languageSelector').value = savedLanguage;
-            }
-            updateTexts();
-        }
-
-        // Tratamento de erro do Google Maps
-        window.gm_authFailure = function() {
-            showNotification(t("auth_error"), true);
-        };
 
         // Inicializar quando a página carregar
         document.addEventListener('DOMContentLoaded', function() {
@@ -1252,24 +1316,9 @@
         });
     </script>
     
-    <!-- Google Maps API com fallback -->
-    <script>
-        function loadGoogleMaps() {
-            const script = document.createElement('script');
-            script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places';
-            script.async = true;
-            script.defer = true;
-            script.onerror = function() {
-                showNotification(t("map_error"), true);
-            };
-            document.head.appendChild(script);
-        }
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadGoogleMaps);
-        } else {
-            loadGoogleMaps();
-        }
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>
