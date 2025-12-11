@@ -1,33 +1,264 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-PT">
 <head>
-    <title>GoTáxi - Área do Motorista</title>
-    <!-- Estilos específicos para motoristas -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Motorista - GoTáxi</title>
+    <link rel="stylesheet" href="css/motorista.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="driver-auth">
-        <h2>Login Motorista</h2>
-        <input type="text" id="driverUsername" placeholder="Usuário">
-        <input type="password" id="driverPassword" placeholder="Senha">
-        <button id="driverLoginBtn">Entrar</button>
-    </div>
-    
-    <div class="driver-dashboard" style="display:none;">
-        <!-- Dashboard do motorista -->
-        <div id="driverMap"></div>
-        <div class="ride-requests">
-            <!-- Solicitações em tempo real -->
+    <!-- Header -->
+    <header class="main-header">
+        <div class="logo-container">
+            <div class="logo-icon">🚕</div>
+            <div class="logo">GoTáxi Motorista</div>
         </div>
-        <button id="goOnlineBtn">Ficar Online</button>
-        <button id="goOfflineBtn">Ficar Offline</button>
+        
+        <div class="header-controls">
+            <div class="driver-status" id="driverStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Offline</span>
+            </div>
+            
+            <button class="user-profile-btn" id="userProfileBtn">
+                <i class="fas fa-user"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mapa -->
+    <div id="map"></div>
+
+    <!-- Controles -->
+    <div class="controls-panel" id="controlsPanel">
+        <button class="control-btn btn-primary" id="startTrackingBtn">
+            <i class="fas fa-play"></i>
+            <span>Iniciar Trabalho</span>
+        </button>
+        
+        <button class="control-btn btn-secondary" id="stopTrackingBtn" disabled>
+            <i class="fas fa-stop"></i>
+            <span>Parar Trabalho</span>
+        </button>
     </div>
+
+    <!-- Painel de corrida -->
+    <div class="ride-panel hidden" id="ridePanel">
+        <div class="ride-header">
+            <h3>🚕 Nova Corrida</h3>
+            <div class="timer" id="rideTimer">120s</div>
+        </div>
+        
+        <div class="ride-details">
+            <div class="detail-item">
+                <i class="fas fa-user"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Cliente</div>
+                    <div class="detail-value" id="clientName">-</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Origem</div>
+                    <div class="detail-value" id="rideOrigin">-</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <i class="fas fa-flag-checkered"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Destino</div>
+                    <div class="detail-value" id="rideDestination">-</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <i class="fas fa-users"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Passageiros</div>
+                    <div class="detail-value" id="ridePassengers">1</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <i class="fas fa-phone"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Contato</div>
+                    <div class="detail-value" id="clientPhone">-</div>
+                </div>
+            </div>
+            
+            <div class="detail-item">
+                <i class="fas fa-money-bill-wave"></i>
+                <div class="detail-content">
+                    <div class="detail-label">Pagamento</div>
+                    <div class="detail-value" id="ridePayment">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ride-actions">
+            <button class="action-btn accept-btn" id="acceptRideBtn">
+                <i class="fas fa-check"></i> Aceitar
+            </button>
+            <button class="action-btn reject-btn" id="rejectRideBtn">
+                <i class="fas fa-times"></i> Recusar
+            </button>
+        </div>
+    </div>
+
+    <!-- Painel do motorista -->
+    <div class="driver-panel" id="driverPanel">
+        <div class="driver-header">
+            <div class="driver-avatar" id="driverAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="driver-info">
+                <div class="driver-name" id="driverNameDisplay">Motorista</div>
+                <div class="driver-plate" id="driverPlateDisplay">Matrícula</div>
+            </div>
+            <button class="close-panel" id="closeDriverPanel">&times;</button>
+        </div>
+        
+        <div class="driver-content">
+            <div class="stats-section">
+                <h3>📊 Estatísticas</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRides">0</div>
+                        <div class="stat-label">Corridas Hoje</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalEarnings">€0</div>
+                        <div class="stat-label">Ganhos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="rating">5.0</div>
+                        <div class="stat-label">Avaliação</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>👤 Informações</h3>
+                <div class="info-item">
+                    <i class="fas fa-user"></i>
+                    <div class="info-content">
+                        <div class="info-label">Nome</div>
+                        <div class="info-value" id="infoName">-</div>
+                    </div>
+                    <button class="edit-btn" data-field="name">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <div class="info-item">
+                    <i class="fas fa-car"></i>
+                    <div class="info-content">
+                        <div class="info-label">Matrícula</div>
+                        <div class="info-value" id="infoPlate">-</div>
+                    </div>
+                    <button class="edit-btn" data-field="plate">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <div class="info-item">
+                    <i class="fas fa-phone"></i>
+                    <div class="info-content">
+                        <div class="info-label">Telefone</div>
+                        <div class="info-value" id="infoPhone">-</div>
+                    </div>
+                    <button class="edit-btn" data-field="phone">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="security-section">
+                <h3>🔒 Segurança</h3>
+                <div class="info-item">
+                    <i class="fas fa-user-circle"></i>
+                    <div class="info-content">
+                        <div class="info-label">Usuário</div>
+                        <div class="info-value" id="infoUsername">-</div>
+                    </div>
+                    <button class="edit-btn" data-field="username">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                
+                <div class="info-item">
+                    <i class="fas fa-lock"></i>
+                    <div class="info-content">
+                        <div class="info-label">Senha</div>
+                        <div class="info-value">••••••••</div>
+                    </div>
+                    <button class="edit-btn" data-field="password">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de login -->
+    <div class="auth-modal active" id="authModal">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h2>Área do Motorista</h2>
+                <p>Faça login para começar</p>
+            </div>
+            
+            <div class="auth-content">
+                <div class="auth-form active" id="loginForm">
+                    <div class="auth-input-group">
+                        <label for="loginUsername">Usuário</label>
+                        <input type="text" id="loginUsername" class="auth-input" placeholder="Digite seu usuário">
+                    </div>
+                    
+                    <div class="auth-input-group">
+                        <label for="loginPassword">Senha</label>
+                        <input type="password" id="loginPassword" class="auth-input" placeholder="Digite sua senha">
+                    </div>
+                    
+                    <button class="auth-btn" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Entrar
+                    </button>
+                    
+                    <div class="auth-links">
+                        <a href="registro-motorista.html" class="auth-link">
+                            <i class="fas fa-user-plus"></i> Cadastrar como motorista
+                        </a>
+                    </div>
+                    
+                    <div class="auth-error" id="loginError"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificações -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <script>
-        // Sistema de login para motoristas
-        // Conexão com Firebase
-        // Controle de status (online/offline)
-        // Recebimento de solicitações
-        // Aceitar/recusar corridas
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/motorista.js"></script>
+    
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
     </script>
 </body>
 </html>
