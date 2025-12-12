@@ -839,14 +839,13 @@
             padding: 20px;
         }
 
-        /* Estilos para exibição da tarifa no motorista */
+        /* Estilos para exibição da tarifa no motorista - ATUALIZADO */
         .fare-display-card {
             background-color: #fff9e6;
             border: 2px solid #ffc107;
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
-            text-align: center;
         }
 
         .fare-display-title {
@@ -856,51 +855,57 @@
             color: #333;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
         }
 
-        .fare-display-total {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .fare-display-total-label {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        .fare-display-total-value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .fare-display-details {
+        .fare-display-row {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 10px 0;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .fare-display-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .fare-display-label {
             font-size: 14px;
             color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        .fare-display-detail {
+        .fare-display-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .fare-total-row {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .fare-display-detail-label {
-            font-size: 12px;
-            margin-bottom: 3px;
+        .fare-total-label {
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        .fare-display-detail-value {
+        .fare-total-value {
+            font-size: 20px;
             font-weight: bold;
-            color: #333;
         }
 
         .fare-note {
@@ -909,6 +914,47 @@
             margin-top: 8px;
             font-style: italic;
             text-align: center;
+        }
+
+        .distance-to-destination {
+            background-color: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 8px 0;
+            text-align: center;
+            font-size: 14px;
+            color: #1565c0;
+            font-weight: bold;
+        }
+
+        .distance-value {
+            color: #0d47a1;
+            font-size: 16px;
+        }
+
+        /* Estilo para o card de informação principal */
+        .main-info-card {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .info-value {
+            color: #212529;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -1098,8 +1144,30 @@
     <div id="requestCard" class="request-card">
         <h3>🚕 Nova Solicitação de Táxi</h3>
         <div class="timer" id="timer">120 segundos</div>
-        <div class="distance-info" id="distanceInfo">
-            📍 Calculando distância...
+        
+        <!-- Informação principal -->
+        <div class="main-info-card">
+            <div class="info-row">
+                <span class="info-label">👤 Cliente:</span>
+                <span class="info-value" id="clientNameDisplay">Carregando...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📍 De:</span>
+                <span class="info-value" id="originDisplay">Carregando...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">🎯 Para:</span>
+                <span class="info-value" id="destinationDisplay">Carregando...</span>
+            </div>
+        </div>
+        
+        <div class="distance-info" id="distanceToClientInfo">
+            📍 <strong>Distância até você:</strong> <span id="distanceToClient">calculando...</span>
+        </div>
+        
+        <!-- Distância até o destino (NOVO) -->
+        <div class="distance-to-destination" id="distanceToDestinationInfo" style="display: none;">
+            📏 <strong>Distância até o destino:</strong> <span class="distance-value" id="distanceToDestination">0 km</span>
         </div>
         
         <!-- Área para exibir a tarifa FINAL -->
@@ -1108,21 +1176,23 @@
                 <span>💰</span>
                 <span>Valor da Corrida</span>
             </div>
-            <div class="fare-display-total">
-                <div class="fare-display-total-label">Total</div>
-                <div class="fare-display-total-value" id="fareTotalDisplay">€ 0.00</div>
+            
+            <div class="fare-display-row">
+                <span class="fare-display-label">📍 Distância da viagem:</span>
+                <span class="fare-display-value" id="tripDistanceDisplay">0 km</span>
             </div>
-            <div class="fare-display-details">
-                <div class="fare-display-detail">
-                    <div class="fare-display-detail-label">📍 Distância</div>
-                    <div class="fare-display-detail-value" id="fareDistanceDisplay">0 km</div>
-                </div>
-                <div class="fare-display-detail">
-                    <div class="fare-display-detail-label">⏱️ Tempo</div>
-                    <div class="fare-display-detail-value" id="fareTimeDisplay">0 min</div>
-                </div>
+            
+            <div class="fare-display-row">
+                <span class="fare-display-label">⏱️ Tempo estimado:</span>
+                <span class="fare-display-value" id="tripTimeDisplay">0 min</span>
             </div>
-            <div class="fare-note">* Valor estimado. Valor final pode variar.</div>
+            
+            <div class="fare-total-row">
+                <span class="fare-total-label">💰 Valor Total:</span>
+                <span class="fare-total-value" id="fareTotalDisplay">€ 0.00</span>
+            </div>
+            
+            <div class="fare-note">* Valor estimado. Valor final pode variar conforme o tráfego.</div>
         </div>
         
         <div class="request-details" id="requestDetails">
@@ -1227,6 +1297,7 @@
         let isMapRotationEnabled = false;
         let lastMapRotationUpdate = 0;
         let currentFareData = null;
+        let destinationDistance = 0; // Distância até o destino
 
         const DRIVERS_STORAGE_KEY = 'gotaxi_drivers';
         const RIDES_HISTORY_KEY = 'gotaxi_rides_history';
@@ -2066,6 +2137,29 @@
             return distance;
         }
         
+        // Nova função para calcular distância da rota (origem -> destino)
+        async function calculateRouteDistance(origin, destination) {
+            return new Promise((resolve, reject) => {
+                directionsService.route({
+                    origin: origin,
+                    destination: destination,
+                    travelMode: google.maps.TravelMode.DRIVING
+                }, (response, status) => {
+                    if (status === 'OK') {
+                        const route = response.routes[0].legs[0];
+                        const distanceInKm = route.distance.value / 1000;
+                        const timeInMinutes = route.duration.value / 60;
+                        resolve({
+                            distance: distanceInKm,
+                            time: timeInMinutes
+                        });
+                    } else {
+                        reject(new Error('Não foi possível calcular a rota: ' + status));
+                    }
+                });
+            });
+        }
+        
         function listenForRequests() {
             database.ref(`notifications/drivers/${currentDriver.driverId}`).on('child_added', (snapshot) => {
                 const notification = snapshot.val();
@@ -2083,49 +2177,64 @@
             cleanupOldNotifications();
         }
 
-        function processDriverSpecificRequest(notification, notificationId) {
-            database.ref(`ride_requests/${notification.requestId}`).once('value').then((snapshot) => {
-                const request = snapshot.val();
+        async function processDriverSpecificRequest(notification, notificationId) {
+            try {
+                const request = await database.ref(`ride_requests/${notification.requestId}`).once('value');
+                const requestData = request.val();
                 
-                if (request) {
-                    if (request.status === 'accepted' && request.driverId !== currentDriver.driverId) {
+                if (requestData) {
+                    if (requestData.status === 'accepted' && requestData.driverId !== currentDriver.driverId) {
                         showAlreadyAcceptedPopup();
                         database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
                         return;
                     }
                     
-                    if (request.status === 'pending') {
+                    if (requestData.status === 'pending') {
+                        // Calcular distância até o destino
+                        let destinationDistanceInfo = { distance: 0, time: 0 };
+                        try {
+                            destinationDistanceInfo = await calculateRouteDistance(
+                                requestData.origin, 
+                                requestData.destination
+                            );
+                        } catch (error) {
+                            console.warn('Não foi possível calcular distância do destino:', error);
+                        }
+                        
                         playNotificationSound();
-                        showRequestCard(request, notification.requestId, true, notification.fareData);
+                        showRequestCard(requestData, notification.requestId, true, notification.fareData, destinationDistanceInfo);
                         database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
                     }
                 }
-            });
+            } catch (error) {
+                console.error('Erro ao processar solicitação:', error);
+            }
         }
 
-        function processGeneralRequest(notification, notificationId) {
-            database.ref(`ride_requests/${notification.requestId}`).once('value').then((snapshot) => {
-                const request = snapshot.val();
+        async function processGeneralRequest(notification, notificationId) {
+            try {
+                const request = await database.ref(`ride_requests/${notification.requestId}`).once('value');
+                const requestData = request.val();
                 
-                if (request) {
-                    if (request.status === 'accepted') {
+                if (requestData) {
+                    if (requestData.status === 'accepted') {
                         showAlreadyAcceptedPopup();
                         database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
                         return;
                     }
                     
-                    if (request && request.status === 'pending') {
-                        if (request.assignedDriverId && request.assignedDriverId !== currentDriver.driverId) {
-                            console.log('Solicitação já atribuída a outro motorista:', request.assignedDriverId);
+                    if (requestData && requestData.status === 'pending') {
+                        if (requestData.assignedDriverId && requestData.assignedDriverId !== currentDriver.driverId) {
+                            console.log('Solicitação já atribuída a outro motorista:', requestData.assignedDriverId);
                             return;
                         }
                         
-                        if (request.clientLocation && lastPosition) {
+                        if (requestData.clientLocation && lastPosition) {
                             const distance = calculateStraightDistance(
                                 lastPosition.lat,
                                 lastPosition.lng,
-                                request.clientLocation.lat,
-                                request.clientLocation.lng
+                                requestData.clientLocation.lat,
+                                requestData.clientLocation.lng
                             );
                             
                             if (distance > 10) {
@@ -2134,12 +2243,25 @@
                             }
                         }
                         
+                        // Calcular distância até o destino
+                        let destinationDistanceInfo = { distance: 0, time: 0 };
+                        try {
+                            destinationDistanceInfo = await calculateRouteDistance(
+                                requestData.origin, 
+                                requestData.destination
+                            );
+                        } catch (error) {
+                            console.warn('Não foi possível calcular distância do destino:', error);
+                        }
+                        
                         playNotificationSound();
-                        showRequestCard(request, notification.requestId, false, notification.fareData);
+                        showRequestCard(requestData, notification.requestId, false, notification.fareData, destinationDistanceInfo);
                         database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
                     }
                 }
-            });
+            } catch (error) {
+                console.error('Erro ao processar solicitação geral:', error);
+            }
         }
 
         function cleanupOldNotifications() {
@@ -2177,16 +2299,21 @@
             document.getElementById('alreadyAcceptedPopup').classList.remove('active');
         }
 
-        function showRequestCard(request, requestId, isPriority = false, fareData = null) {
+        function showRequestCard(request, requestId, isPriority = false, fareData = null, destinationDistanceInfo = null) {
             const requestCard = document.getElementById('requestCard');
             const requestDetails = document.getElementById('requestDetails');
             const timerElement = document.getElementById('timer');
-            const distanceInfo = document.getElementById('distanceInfo');
+            const distanceToClientInfo = document.getElementById('distanceToClientInfo');
+            const distanceToDestinationInfo = document.getElementById('distanceToDestinationInfo');
             const fareDisplay = document.getElementById('fareDisplay');
+            const clientNameDisplay = document.getElementById('clientNameDisplay');
+            const originDisplay = document.getElementById('originDisplay');
+            const destinationDisplay = document.getElementById('destinationDisplay');
             
             currentRequestId = requestId;
             currentRequest = request;
             currentFareData = fareData;
+            destinationDistance = destinationDistanceInfo ? destinationDistanceInfo.distance : 0;
             
             database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
                 const updatedRequest = snapshot.val();
@@ -2200,38 +2327,49 @@
                     '<div class="priority-badge">🚗 VOCÊ É O MOTORISTA MAIS PRÓXIMO!</div>' : 
                     '';
                 
+                // Atualizar informações principais
+                clientNameDisplay.textContent = request.name || 'Não informado';
+                originDisplay.textContent = request.origin || 'Não informado';
+                destinationDisplay.textContent = request.destination || 'Não informado';
+                
+                // Calcular e mostrar distância até o cliente
                 if (request.clientLocation && lastPosition) {
-                    const distance = calculateStraightDistance(
+                    const distanceToClient = calculateStraightDistance(
                         lastPosition.lat,
                         lastPosition.lng,
                         request.clientLocation.lat,
                         request.clientLocation.lng
                     );
                     
-                    distanceInfo.innerHTML = `${priorityBadge}📍 Distância do cliente: <strong>${distance.toFixed(1)} km</strong>`;
+                    distanceToClientInfo.innerHTML = `${priorityBadge}📍 <strong>Distância até você:</strong> <span id="distanceToClient">${distanceToClient.toFixed(1)} km</span>`;
                 } else {
-                    distanceInfo.innerHTML = `${priorityBadge}📍 Distância: Não disponível`;
+                    distanceToClientInfo.innerHTML = `${priorityBadge}📍 <strong>Distância até você:</strong> <span id="distanceToClient">Não disponível</span>`;
+                }
+                
+                // Mostrar distância até o destino (NOVO)
+                if (destinationDistanceInfo && destinationDistanceInfo.distance > 0) {
+                    distanceToDestinationInfo.style.display = 'block';
+                    document.getElementById('distanceToDestination').textContent = `${destinationDistanceInfo.distance.toFixed(1)} km`;
+                } else {
+                    distanceToDestinationInfo.style.display = 'none';
                 }
                 
                 // Mostrar ou ocultar a seção de tarifa
                 if (fareData && fareData.totalFare) {
                     fareDisplay.style.display = 'block';
                     
-                    // Preencher dados da tarifa FINAL apenas
+                    // Preencher dados da tarifa FINAL
                     document.getElementById('fareTotalDisplay').textContent = `€ ${fareData.totalFare.toFixed(2)}`;
-                    document.getElementById('fareDistanceDisplay').textContent = `${fareData.distance ? fareData.distance.toFixed(1) + ' km' : '0 km'}`;
-                    document.getElementById('fareTimeDisplay').textContent = `${fareData.time ? Math.round(fareData.time) + ' min' : '0 min'}`;
+                    document.getElementById('tripDistanceDisplay').textContent = `${fareData.distance ? fareData.distance.toFixed(1) + ' km' : '0 km'}`;
+                    document.getElementById('tripTimeDisplay').textContent = `${fareData.time ? Math.round(fareData.time) + ' min' : '0 min'}`;
                 } else {
                     fareDisplay.style.display = 'none';
                 }
                 
                 requestDetails.innerHTML = `
-                    <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
-                    <p><strong>📍 De:</strong> ${request.origin}</p>
-                    <p><strong>🎯 Para:</strong> ${request.destination}</p>
                     <p><strong>👥 Passageiros:</strong> ${request.passengers || '1'}</p>
                     <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
-                    <p><strong>⏰ Chegada:</strong> ${request.arrivalTime || '10'} minutos</p>
+                    <p><strong>⏰ Chegada desejada:</strong> ${request.arrivalTime || '10'} minutos</p>
                     <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
                     ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
                 `;
@@ -2279,6 +2417,7 @@
                 <p><strong>👤 Cliente:</strong> ${currentRequest.name || 'Não informado'}</p>
                 <p><strong>📍 De:</strong> ${currentRequest.origin}</p>
                 <p><strong>🎯 Para:</strong> ${currentRequest.destination}</p>
+                <p><strong>📏 Distância até destino:</strong> ${destinationDistance.toFixed(1)} km</p>
                 ${currentFareData ? `
                     <p><strong>💰 Valor da Corrida:</strong> € ${currentFareData.totalFare ? currentFareData.totalFare.toFixed(2) : '0.00'}</p>
                 ` : ''}
