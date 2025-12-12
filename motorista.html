@@ -4,259 +4,2809 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Área do Motorista - GoTáxi</title>
-    <link rel="stylesheet" href="css/motorista.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            background-color: #000;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logo span {
+            color: #ffc107;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 20px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: #333;
+        }
+        
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+            display: none;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            gap: 10px;
+        }
+        
+        .btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+        }
+        
+        .notification.error {
+            background-color: #f44336;
+        }
+        
+        .request-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .request-card h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .request-details {
+            margin-bottom: 20px;
+        }
+        
+        .request-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-accept {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn-reserve {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .timer {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #f44336;
+            font-size: 18px;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 60px);
+            background-color: #f5f5f5;
+        }
+        
+        .login-form {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .login-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        
+        .login-btn:hover {
+            background-color: #e0a800;
+        }
+
+        .driver-name-badge {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background-color: #ffc107;
+            color: #000;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .reservation-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1003;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .reservation-card h3 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .reservation-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .reservation-option {
+            padding: 10px 15px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .reservation-option:hover {
+            background-color: #e0e0e0;
+        }
+
+        .reservation-option.selected {
+            background-color: #2196F3;
+            color: white;
+            font-weight: bold;
+        }
+
+        .reservation-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-confirm {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .distance-info {
+            background-color: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: #ffc107;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .register-link a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .success-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .profile-container {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 85%;
+            max-width: 320px;
+            display: none;
+        }
+
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .profile-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .btn-close {
+            background-color: #f44336;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-edit {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .profile-field {
+            margin-bottom: 8px;
+        }
+
+        .profile-field label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .profile-field input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .profile-field input:read-only {
+            background-color: #f9f9f9;
+            color: #666;
+        }
+
+        .profile-footer {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        .support-container {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 85%;
+            max-width: 350px;
+            display: none;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .support-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .support-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .support-content {
+            padding: 10px 0;
+        }
+
+        .support-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .support-item h4 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .support-item p {
+            margin: 0;
+            color: #666;
+        }
+
+        .support-contact {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .support-contact a {
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .support-contact a:hover {
+            text-decoration: underline;
+        }
+
+        .reservation-response-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1005;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .reservation-response-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .reservation-response-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .reservation-response-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .reservation-response-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .reservation-response-message {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .reservation-accepted {
+            color: #4CAF50;
+        }
+
+        .reservation-rejected {
+            color: #f44336;
+        }
+
+        .already-accepted-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1006;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .already-accepted-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .already-accepted-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .already-accepted-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #ff9800;
+        }
+
+        .already-accepted-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #ff9800;
+        }
+
+        .already-accepted-message {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .priority-badge {
+            background-color: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Menu Animado do Perfil - AGORA COM 3 OPÇÕES */
+        .profile-menu-container {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: none;
+            align-items: flex-start;
+            justify-content: flex-start;
+            overflow: visible;
+        }
+
+        .profile-menu-container.active {
+            width: 160px;
+            height: 180px; /* Aumentado para 3 opções */
+            border-radius: 12px;
+        }
+
+        .profile-menu-icon {
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            background-color: #ffc107;
+            border-radius: 25px;
+        }
+
+        .profile-menu-container.active .profile-menu-icon {
+            transform: rotate(0deg);
+            left: 55px;
+        }
+
+        .profile-menu-options {
+            position: absolute;
+            top: 55px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            gap: 8px;
+            padding-top: 8px;
+        }
+
+        .profile-menu-container.active .profile-menu-options {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-menu-option {
+            width: 90%;
+            text-align: center;
+            padding: 8px 0;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .profile-menu-option:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .profile-menu-option:active {
+            transform: translateY(0);
+        }
+
+        /* Controles da Corrida */
+        .ride-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            gap: 10px;
+        }
+
+        .btn-go {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-go.active {
+            background-color: #4CAF50;
+        }
+
+        .btn-stop {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        /* Relatório de Corridas */
+        .report-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1004;
+            display: none;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .report-header h3 {
+            margin: 0;
+        }
+
+        .close-report {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .rides-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ride-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .ride-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .ride-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .ride-details p {
+            margin: 5px 0;
+        }
+
+        .no-rides {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        /* Estilos para exibição da tarifa no motorista */
+        .fare-display-card {
+            background-color: #fff9e6;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .fare-display-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .fare-display-total {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .fare-display-total-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .fare-display-total-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .fare-display-details {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .fare-display-detail {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .fare-display-detail-label {
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .fare-display-detail-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .fare-note {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="main-header">
-        <div class="logo-container">
-            <div class="logo-icon">🚕</div>
-            <div class="logo">GoTáxi Motorista</div>
-        </div>
-        
-        <div class="header-controls">
-            <div class="driver-status" id="driverStatus">
-                <span class="status-dot"></span>
-                <span class="status-text">Offline</span>
-            </div>
-            
-            <button class="user-profile-btn" id="userProfileBtn">
-                <i class="fas fa-user"></i>
-            </button>
-        </div>
+    <header>
+        <div class="logo">Go<span>Táxi</span></div>
+        <nav>
+            <ul>
+                <li><a href="#" id="logoutBtn" style="display: none;">Sair</a></li>
+            </ul>
+        </nav>
     </header>
-
-    <!-- Mapa -->
+    
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <div class="tab-container">
+                <div class="tab active" id="loginTab">Login</div>
+                <div class="tab" id="registerTab">Registrar</div>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                ✅ Registro realizado com sucesso! Faça login para continuar.
+            </div>
+            
+            <div class="tab-content active" id="loginContent">
+                <h2>Login do Motorista</h2>
+                <div class="form-group">
+                    <label for="username">Usuário ou Email</label>
+                    <input type="text" id="username" placeholder="Digite seu usuário ou email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" placeholder="Digite sua senha">
+                </div>
+                <button class="login-btn" onclick="login()">Entrar</button>
+                <div id="loginError" style="color: #f44336; text-align: center; margin-top: 15px; display: none;">
+                    Usuário ou senha incorretos!
+                </div>
+                <div class="register-link">
+                    <a href="#" id="showRegister">Não tem conta? Registre-se</a>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="registerContent">
+                <h2>Registro de Motorista</h2>
+                <div class="form-group">
+                    <label for="regName">Nome Completo</label>
+                    <input type="text" id="regName" placeholder="Digite seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label for="regUsername">Usuário</label>
+                    <input type="text" id="regUsername" placeholder="Escolha um nome de usuário">
+                </div>
+                <div class="form-group">
+                    <label for="regLicensePlate">Matrícula do Veículo</label>
+                    <input type="text" id="regLicensePlate" placeholder="Ex: AA-00-00">
+                </div>
+                <div class="form-group">
+                    <label for="regNif">NIF</label>
+                    <input type="text" id="regNif" placeholder="Digite seu NIF">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Senha</label>
+                    <input type="password" id="regPassword" placeholder="Crie uma senha">
+                </div>
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirmar Senha</label>
+                    <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha">
+                </div>
+                <button class="login-btn" onclick="register()">Registrar</button>
+                <div id="registerError" style="color: #f44336; text-align: center; margin-top: 15px; display: none;">
+                </div>
+                <div class="register-link">
+                    <a href="#" id="showLogin">Já tem conta? Faça login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div id="map"></div>
-
-    <!-- Controles -->
-    <div class="controls-panel" id="controlsPanel">
-        <button class="control-btn btn-primary" id="startTrackingBtn">
-            <i class="fas fa-play"></i>
-            <span>Iniciar Trabalho</span>
-        </button>
-        
-        <button class="control-btn btn-secondary" id="stopTrackingBtn" disabled>
-            <i class="fas fa-stop"></i>
-            <span>Parar Trabalho</span>
-        </button>
+    
+    <div class="driver-name-badge" id="driverNameBadge" style="display: none;">
+        Motorista: <span id="driverNameDisplay"></span>
     </div>
 
-    <!-- Painel de corrida -->
-    <div class="ride-panel hidden" id="ridePanel">
-        <div class="ride-header">
-            <h3>🚕 Nova Corrida</h3>
-            <div class="timer" id="rideTimer">120s</div>
+    <div class="profile-menu-container" id="profileMenuContainer" style="display: none;">
+        <div class="profile-menu-icon" onclick="toggleProfileMenu()">👤</div>
+        <div class="profile-menu-options">
+            <div class="profile-menu-option" onclick="showProfile()">Meu Perfil</div>
+            <div class="profile-menu-option" onclick="showSupport()">Suporte</div>
+            <div class="profile-menu-option" onclick="showReport()">📊 Relatório</div>
         </div>
-        
-        <div class="ride-details">
-            <div class="detail-item">
-                <i class="fas fa-user"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Cliente</div>
-                    <div class="detail-value" id="clientName">-</div>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Origem</div>
-                    <div class="detail-value" id="rideOrigin">-</div>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <i class="fas fa-flag-checkered"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Destino</div>
-                    <div class="detail-value" id="rideDestination">-</div>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <i class="fas fa-users"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Passageiros</div>
-                    <div class="detail-value" id="ridePassengers">1</div>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <i class="fas fa-phone"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Contato</div>
-                    <div class="detail-value" id="clientPhone">-</div>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <i class="fas fa-money-bill-wave"></i>
-                <div class="detail-content">
-                    <div class="detail-label">Pagamento</div>
-                    <div class="detail-value" id="ridePayment">-</div>
-                </div>
+    </div>
+    
+    <div class="profile-container" id="profileContainer">
+        <div class="profile-header">
+            <h3>👤 Meu Perfil</h3>
+            <div class="profile-actions">
+                <button class="profile-btn btn-close" onclick="closeProfile()">×</button>
             </div>
         </div>
-        
-        <div class="ride-actions">
-            <button class="action-btn accept-btn" id="acceptRideBtn">
-                <i class="fas fa-check"></i> Aceitar
-            </button>
-            <button class="action-btn reject-btn" id="rejectRideBtn">
-                <i class="fas fa-times"></i> Recusar
-            </button>
+        <div class="profile-fields">
+            <div class="profile-field">
+                <label for="profileName">Nome Completo</label>
+                <input type="text" id="profileName" readonly>
+            </div>
+            <div class="profile-field">
+                <label for="profileUsername">Usuário</label>
+                <input type="text" id="profileUsername" readonly>
+            </div>
+            <div class="profile-field">
+                <label for="profileLicensePlate">Matrícula do Veículo</label>
+                <input type="text" id="profileLicensePlate" readonly>
+            </div>
+            <div class="profile-field">
+                <label for="profileNif">NIF</label>
+                <input type="text" id="profileNif" readonly>
+            </div>
+            <div class="profile-field">
+                <label for="profilePhone">Telefone</label>
+                <input type="tel" id="profilePhone" readonly>
+            </div>
+        </div>
+        <div class="profile-footer">
+            <button class="profile-btn btn-edit" id="editProfileBtn" onclick="enableEditMode()">Editar</button>
+            <button class="profile-btn btn-save" id="saveProfileBtn" onclick="saveProfile()" style="display: none;">Salvar</button>
+            <button class="profile-btn btn-cancel" id="cancelEditBtn" onclick="disableEditMode()" style="display: none;">Cancelar</button>
         </div>
     </div>
 
-    <!-- Painel do motorista -->
-    <div class="driver-panel" id="driverPanel">
-        <div class="driver-header">
-            <div class="driver-avatar" id="driverAvatar">
-                <i class="fas fa-user"></i>
+    <div class="support-container" id="supportContainer">
+        <div class="support-header">
+            <h3>📞 Suporte Técnico</h3>
+            <div class="profile-actions">
+                <button class="profile-btn btn-close" onclick="closeSupport()">×</button>
             </div>
-            <div class="driver-info">
-                <div class="driver-name" id="driverNameDisplay">Motorista</div>
-                <div class="driver-plate" id="driverPlateDisplay">Matrícula</div>
+        </div>
+        <div class="support-content">
+            <div class="support-item">
+                <h4>Telefone de Suporte</h4>
+                <p>Contato via WhatsApp:</p>
+                <div class="support-contact">
+                    <a href="tel:351000000000">📞 +351 000 000 000</a>
+                </div>
             </div>
-            <button class="close-panel" id="closeDriverPanel">&times;</button>
+            <div class="support-item">
+                <h4>Email de Suporte</h4>
+                <p>Envie email para nós:</p>
+                <div class="support-contact">
+                    <a href="mailto:gotaxipt@hotmail.com">📧 gotaxipt@hotmail.com</a>
+                </div>
+            </div>
+            <div class="support-item">
+                <h4>Horário de Atendimento</h4>
+                <p>Segunda a Sexta: 9:00 - 18:00</p>
+                <p>Sábado: 10:00 - 14:00</p>
+                <p>Domingo: Fechado</p>
+            </div>
+            <div class="support-item">
+                <h4>Emergências</h4>
+                <p>Para situações de emergência durante o serviço, utilize o telefone de suporte que funciona 24/7.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportContainer" class="report-container">
+        <div class="report-header">
+            <h3>📊 Relatório de Corridas</h3>
+            <button class="close-report" onclick="closeReport()">×</button>
+        </div>
+        <div class="rides-list" id="ridesList">
+        </div>
+    </div>
+    
+    <div class="controls" id="controls">
+        <button id="startTracking" class="btn">Iniciar Rastreamento</button>
+        <button id="stopTracking" class="btn" disabled>Parar Rastreamento</button>
+    </div>
+    
+    <div class="ride-controls" id="rideControls">
+        <button id="goBtn" class="btn btn-go">Go</button>
+        <button id="stopBtn" class="btn btn-stop">Stop</button>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <div id="requestCard" class="request-card">
+        <h3>🚕 Nova Solicitação de Táxi</h3>
+        <div class="timer" id="timer">120 segundos</div>
+        <div class="distance-info" id="distanceInfo">
+            📍 Calculando distância...
         </div>
         
-        <div class="driver-content">
-            <div class="stats-section">
-                <h3>📊 Estatísticas</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalRides">0</div>
-                        <div class="stat-label">Corridas Hoje</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="totalEarnings">€0</div>
-                        <div class="stat-label">Ganhos</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="rating">5.0</div>
-                        <div class="stat-label">Avaliação</div>
-                    </div>
+        <!-- Área para exibir a tarifa FINAL -->
+        <div id="fareDisplay" class="fare-display-card" style="display: none;">
+            <div class="fare-display-title">
+                <span>💰</span>
+                <span>Valor da Corrida</span>
+            </div>
+            <div class="fare-display-total">
+                <div class="fare-display-total-label">Total</div>
+                <div class="fare-display-total-value" id="fareTotalDisplay">€ 0.00</div>
+            </div>
+            <div class="fare-display-details">
+                <div class="fare-display-detail">
+                    <div class="fare-display-detail-label">📍 Distância</div>
+                    <div class="fare-display-detail-value" id="fareDistanceDisplay">0 km</div>
+                </div>
+                <div class="fare-display-detail">
+                    <div class="fare-display-detail-label">⏱️ Tempo</div>
+                    <div class="fare-display-detail-value" id="fareTimeDisplay">0 min</div>
                 </div>
             </div>
-            
-            <div class="info-section">
-                <h3>👤 Informações</h3>
-                <div class="info-item">
-                    <i class="fas fa-user"></i>
-                    <div class="info-content">
-                        <div class="info-label">Nome</div>
-                        <div class="info-value" id="infoName">-</div>
-                    </div>
-                    <button class="edit-btn" data-field="name">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-                
-                <div class="info-item">
-                    <i class="fas fa-car"></i>
-                    <div class="info-content">
-                        <div class="info-label">Matrícula</div>
-                        <div class="info-value" id="infoPlate">-</div>
-                    </div>
-                    <button class="edit-btn" data-field="plate">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-                
-                <div class="info-item">
-                    <i class="fas fa-phone"></i>
-                    <div class="info-content">
-                        <div class="info-label">Telefone</div>
-                        <div class="info-value" id="infoPhone">-</div>
-                    </div>
-                    <button class="edit-btn" data-field="phone">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="security-section">
-                <h3>🔒 Segurança</h3>
-                <div class="info-item">
-                    <i class="fas fa-user-circle"></i>
-                    <div class="info-content">
-                        <div class="info-label">Usuário</div>
-                        <div class="info-value" id="infoUsername">-</div>
-                    </div>
-                    <button class="edit-btn" data-field="username">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-                
-                <div class="info-item">
-                    <i class="fas fa-lock"></i>
-                    <div class="info-content">
-                        <div class="info-label">Senha</div>
-                        <div class="info-value">••••••••</div>
-                    </div>
-                    <button class="edit-btn" data-field="password">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <button class="logout-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i> Sair
+            <div class="fare-note">* Valor estimado. Valor final pode variar.</div>
+        </div>
+        
+        <div class="request-details" id="requestDetails">
+        </div>
+        <div class="request-actions">
+            <button id="acceptRequest" class="btn btn-accept">✅ Aceitar</button>
+            <button id="reserveRequest" class="btn btn-reserve">⏰ Reserva</button>
+            <button id="rejectRequest" class="btn btn-reject">❌ Rejeitar</button>
+        </div>
+    </div>
+
+    <div id="reservationCard" class="reservation-card">
+        <h3>⏰ Propor Reserva</h3>
+        <div class="request-details" id="reservationRequestDetails">
+        </div>
+        <div class="reservation-options">
+            <button class="reservation-option" data-time="10">10 min</button>
+            <button class="reservation-option" data-time="15">15 min</button>
+            <button class="reservation-option" data-time="20">20 min</button>
+            <button class="reservation-option" data-time="30">30 min</button>
+            <button class="reservation-option" data-time="40">40 min</button>
+        </div>
+        <div class="reservation-actions">
+            <button id="sendReservation" class="btn btn-confirm" disabled>📤 Enviar Reserva</button>
+            <button id="cancelReservation" class="btn btn-cancel">❌ Cancelar</button>
+        </div>
+    </div>
+
+    <div id="reservationResponsePopup" class="reservation-response-popup">
+        <div class="reservation-response-content">
+            <div class="reservation-response-icon" id="reservationResponseIcon">⏰</div>
+            <h3 class="reservation-response-title" id="reservationResponseTitle">Resposta da Reserva</h3>
+            <p class="reservation-response-message" id="reservationResponseMessage">
+                Aguardando resposta do cliente...
+            </p>
+            <button class="btn" onclick="closeReservationResponse()" style="margin-top: 20px;">
+                🏠 Voltar para o Mapa
             </button>
         </div>
     </div>
 
-    <!-- Modal de login -->
-    <div class="auth-modal active" id="authModal">
-        <div class="auth-container">
-            <div class="auth-header">
-                <h2>Área do Motorista</h2>
-                <p>Faça login para começar</p>
-            </div>
-            
-            <div class="auth-content">
-                <div class="auth-form active" id="loginForm">
-                    <div class="auth-input-group">
-                        <label for="loginUsername">Usuário</label>
-                        <input type="text" id="loginUsername" class="auth-input" placeholder="Digite seu usuário">
-                    </div>
-                    
-                    <div class="auth-input-group">
-                        <label for="loginPassword">Senha</label>
-                        <input type="password" id="loginPassword" class="auth-input" placeholder="Digite sua senha">
-                    </div>
-                    
-                    <button class="auth-btn" id="loginBtn">
-                        <i class="fas fa-sign-in-alt"></i> Entrar
-                    </button>
-                    
-                    <div class="auth-links">
-                        <a href="registro-motorista.html" class="auth-link">
-                            <i class="fas fa-user-plus"></i> Cadastrar como motorista
-                        </a>
-                    </div>
-                    
-                    <div class="auth-error" id="loginError"></div>
-                </div>
-            </div>
+    <div id="alreadyAcceptedPopup" class="already-accepted-popup">
+        <div class="already-accepted-content">
+            <div class="already-accepted-icon">⏰</div>
+            <h3 class="already-accepted-title">Corrida Já Aceita</h3>
+            <p class="already-accepted-message" id="alreadyAcceptedMessage">
+                Esta corrida já foi aceita por outro motorista.
+            </p>
+            <button class="btn" onclick="closeAlreadyAcceptedPopup()" style="margin-top: 20px;">
+                OK
+            </button>
         </div>
     </div>
 
-    <!-- Notificações -->
-    <div class="notification-container" id="notificationContainer"></div>
+    <audio id="notificationSound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
 
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <!-- Scripts -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/motorista.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        let map;
+        let marker;
+        let watchId;
+        let isTracking = false;
+        let countdown;
+        let currentDriver = null;
+        let currentRequestId = null;
+        let currentRequest = null;
+        let directionsService;
+        let directionsRenderer;
+        let selectedReservationTime = null;
+        let reservationMarker;
+        let geocoder;
+        let lastPosition = null;
+        let isEditingProfile = false;
+        let originalProfileData = {};
+        let currentReservationRequestId = null;
+        let backgroundWatchId = null;
+        let clientMarker = null;
+        let destinationMarker = null;
+        let isRouteDisplayed = false;
+        let currentRoute = null;
+        let isRideGoing = false;
+        let isRideAccepted = false;
+        let currentRideId = null;
+        let mapRotationInterval = null;
+        let isMapRotationEnabled = false;
+        let lastMapRotationUpdate = 0;
+        let currentFareData = null;
+
+        const DRIVERS_STORAGE_KEY = 'gotaxi_drivers';
+        const RIDES_HISTORY_KEY = 'gotaxi_rides_history';
+        const SESSION_STORAGE_KEY = 'gotaxi_driver_session';
+        
+        function initializeDriversStorage() {
+            if (!localStorage.getItem(DRIVERS_STORAGE_KEY)) {
+                const defaultDrivers = {
+                    'mega': {
+                        name: 'Mega',
+                        username: 'mega',
+                        password: '12345',
+                        licensePlate: 'AA-00-00',
+                        nif: '123456789',
+                        phone: '+351 912 345 678',
+                        driverId: 'mega'
+                    },
+                    'heitor': {
+                        name: 'Heitor',
+                        username: 'heitor',
+                        password: '12345',
+                        licensePlate: 'BB-11-11',
+                        nif: '987654321',
+                        phone: '+351 923 456 789',
+                        driverId: 'heitor'
+                    }
+                };
+                localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(defaultDrivers));
+            }
+        }
+
+        function getAllDrivers() {
+            const drivers = localStorage.getItem(DRIVERS_STORAGE_KEY);
+            return drivers ? JSON.parse(drivers) : {};
+        }
+
+        function saveDriver(driverData) {
+            const drivers = getAllDrivers();
+            drivers[driverData.driverId] = driverData;
+            localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+            return true;
+        }
+
+        function userExists(username) {
+            const drivers = getAllDrivers();
+            for (const driverId in drivers) {
+                if (drivers[driverId].username === username) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function saveRideToHistory(rideData) {
+            let ridesHistory = JSON.parse(localStorage.getItem(RIDES_HISTORY_KEY) || '{}');
+            
+            if (!ridesHistory[currentDriver.driverId]) {
+                ridesHistory[currentDriver.driverId] = [];
+            }
+            
+            ridesHistory[currentDriver.driverId].unshift(rideData);
+            
+            if (ridesHistory[currentDriver.driverId].length > 100) {
+                ridesHistory[currentDriver.driverId] = ridesHistory[currentDriver.driverId].slice(0, 100);
+            }
+            
+            localStorage.setItem(RIDES_HISTORY_KEY, JSON.stringify(ridesHistory));
+        }
+
+        function getRidesHistory() {
+            const ridesHistory = JSON.parse(localStorage.getItem(RIDES_HISTORY_KEY) || '{}');
+            return ridesHistory[currentDriver.driverId] || [];
+        }
+
+        function saveDriverSession(driverData) {
+            localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
+                driverId: driverData.driverId,
+                username: driverData.username,
+                lastLogin: new Date().toISOString()
+            }));
+        }
+
+        function getSavedSession() {
+            const session = localStorage.getItem(SESSION_STORAGE_KEY);
+            return session ? JSON.parse(session) : null;
+        }
+
+        function clearSession() {
+            localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+        
+        document.getElementById('showRegister').addEventListener('click', function(e) {
+            e.preventDefault();
+            switchToRegister();
+        });
+        
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            switchToLogin();
+        });
+
+        function switchToRegister() {
+            document.getElementById('loginTab').classList.remove('active');
+            document.getElementById('registerTab').classList.add('active');
+            document.getElementById('loginContent').classList.remove('active');
+            document.getElementById('registerContent').classList.add('active');
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('registerError').style.display = 'none';
+        }
+
+        function switchToLogin() {
+            document.getElementById('registerTab').classList.remove('active');
+            document.getElementById('loginTab').classList.add('active');
+            document.getElementById('registerContent').classList.remove('active');
+            document.getElementById('loginContent').classList.add('active');
+            document.getElementById('loginError').style.display = 'none';
+        }
+        
+        function register() {
+            const name = document.getElementById('regName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const licensePlate = document.getElementById('regLicensePlate').value.trim();
+            const nif = document.getElementById('regNif').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const registerError = document.getElementById('registerError');
+            
+            registerError.style.display = 'none';
+            registerError.textContent = '';
+            
+            if (!name || !username || !licensePlate || !nif || !password || !confirmPassword) {
+                registerError.textContent = "Todos os campos são obrigatórios!";
+                registerError.style.display = 'block';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                registerError.textContent = "As senhas não coincidem!";
+                registerError.style.display = 'block';
+                return;
+            }
+            
+            if (password.length < 4) {
+                registerError.textContent = "A senha deve ter pelo menos 4 caracteres!";
+                registerError.style.display = 'block';
+                return;
+            }
+            
+            if (userExists(username)) {
+                registerError.textContent = "Este nome de usuário já está em uso!";
+                registerError.style.display = 'block';
+                return;
+            }
+            
+            const driverId = 'driver_' + Date.now();
+            
+            const driverData = {
+                name: name,
+                username: username,
+                licensePlate: licensePlate,
+                nif: nif,
+                password: password,
+                driverId: driverId,
+                phone: '',
+                createdAt: new Date().toISOString(),
+                status: 'offline'
+            };
+            
+            try {
+                saveDriver(driverData);
+                console.log('Motorista registrado com sucesso:', driverId);
+                
+                document.getElementById('successMessage').style.display = 'block';
+                
+                document.getElementById('regName').value = '';
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regLicensePlate').value = '';
+                document.getElementById('regNif').value = '';
+                document.getElementById('regPassword').value = '';
+                document.getElementById('regConfirmPassword').value = '';
+                
+                setTimeout(() => {
+                    switchToLogin();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Erro ao registrar motorista:', error);
+                registerError.textContent = "Erro ao registrar. Tente novamente.";
+                registerError.style.display = 'block';
+            }
+        }
+        
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('loginError');
+            
+            loginError.style.display = 'none';
+            
+            if (!username || !password) {
+                loginError.textContent = "Por favor, preencha todos os campos!";
+                loginError.style.display = 'block';
+                return;
+            }
+            
+            const drivers = getAllDrivers();
+            let loginSuccess = false;
+            let driverData = null;
+            
+            for (const driverId in drivers) {
+                const driver = drivers[driverId];
+                if (driver.username === username && driver.password === password) {
+                    loginSuccess = true;
+                    driverData = driver;
+                    break;
+                }
+            }
+            
+            if (loginSuccess) {
+                currentDriver = driverData;
+                
+                saveDriverSession(currentDriver);
+                
+                initializeDriverInterface();
+                
+            } else {
+                loginError.textContent = "Usuário ou senha incorretos!";
+                loginError.style.display = 'block';
+            }
+        }
+
+        function initializeDriverInterface() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('driverNameBadge').style.display = 'block';
+            document.getElementById('profileMenuContainer').style.display = 'flex';
+            document.getElementById('driverNameDisplay').textContent = currentDriver.name;
+            
+            initMap();
+            
+            showNotification(`Bem-vindo, ${currentDriver.name}!`);
+            
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
+            const savedSession = getSavedSession();
+            if (savedSession && savedSession.driverId === currentDriver.driverId) {
+                startTracking();
+            }
+        }
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (isTracking) {
+                stopTracking();
+            }
+            
+            if (backgroundWatchId) {
+                navigator.geolocation.clearWatch(backgroundWatchId);
+                backgroundWatchId = null;
+            }
+            
+            if (isRideGoing) {
+                stopRide();
+            }
+            
+            clearSession();
+            
+            currentDriver = null;
+            
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('map').style.display = 'none';
+            document.getElementById('controls').style.display = 'none';
+            document.getElementById('rideControls').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('driverNameBadge').style.display = 'none';
+            document.getElementById('profileMenuContainer').style.display = 'none';
+            document.getElementById('profileContainer').style.display = 'none';
+            document.getElementById('supportContainer').style.display = 'none';
+            document.getElementById('reportContainer').style.display = 'none';
+            
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        });
+        
+        function initMap() {
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
+            
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 14,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControl: true,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_BOTTOM
+                },
+                tilt: 0, // Inicialmente sem inclinação
+                heading: 0, // Inicialmente apontando para o norte
+                gestureHandling: 'greedy',
+                disableDefaultUI: false
+            });
+            
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: null,
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: '#4285f4',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 6
+                }
+            });
+            
+            geocoder = new google.maps.Geocoder();
+            
+            marker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: `Motorista: ${currentDriver.name}`,
+                icon: {
+                    url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                    scaledSize: new google.maps.Size(40, 60),
+                    anchor: new google.maps.Point(20, 20)
+                }
+            });
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        marker.setPosition(pos);
+                        map.setCenter(pos);
+                        lastPosition = pos;
+                        
+                        if (isTracking && currentDriver) {
+                            database.ref(`drivers/${currentDriver.driverId}`).update({
+                                location: pos,
+                                timestamp: firebase.database.ServerValue.TIMESTAMP
+                            });
+                        }
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                handleLocationError(false, map.getCenter());
+            }
+            
+            loadProfileData();
+            setupReservationButtons();
+            listenForReservationNotifications();
+            setupRideControls();
+        }
+        
+        function setupRideControls() {
+            document.getElementById('goBtn').addEventListener('click', startRide);
+            document.getElementById('stopBtn').addEventListener('click', stopRide);
+        }
+        
+        function startRide() {
+            if (!isRideAccepted) {
+                showNotification("Você precisa aceitar uma corrida primeiro!", true);
+                return;
+            }
+            
+            isRideGoing = true;
+            document.getElementById('goBtn').classList.add('active');
+            
+            // ATIVAR ROTAÇÃO DO MAPA
+            enableMapRotation();
+            
+            // Atualizar o marcador para vermelho
+            marker.setIcon({
+                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                scaledSize: new google.maps.Size(40, 60),
+                anchor: new google.maps.Point(20, 20)
+            });
+            
+            // Notificar o cliente que a corrida começou
+            if (currentRequest && currentRequest.clientId) {
+                database.ref(`notifications/clients/${currentRequest.clientId}`).push({
+                    type: 'ride_started',
+                    message: `🚕 A corrida começou! Motorista ${currentDriver.name} está a caminho.`,
+                    driverName: currentDriver.name,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+            
+            showNotification("🚗 Viagem iniciada! O cliente foi notificado.");
+        }
+        
+        function stopRide() {
+            if (!isRideGoing) {
+                showNotification("A viagem ainda não começou!", true);
+                return;
+            }
+            
+            isRideGoing = false;
+            isRideAccepted = false;
+            document.getElementById('goBtn').classList.remove('active');
+            
+            // DESATIVAR ROTAÇÃO DO MAPA
+            disableMapRotation();
+            
+            document.getElementById('rideControls').style.display = 'none';
+            document.getElementById('controls').style.display = 'flex';
+            
+            // Atualizar o marcador para verde
+            marker.setIcon({
+                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                scaledSize: new google.maps.Size(40, 60),
+                anchor: new google.maps.Point(20, 20)
+            });
+            
+            // Limpar rota e marcadores
+            if (directionsRenderer) {
+                directionsRenderer.setMap(null);
+            }
+            
+            if (clientMarker) {
+                clientMarker.setMap(null);
+            }
+            
+            if (destinationMarker) {
+                destinationMarker.setMap(null);
+            }
+            
+            isRouteDisplayed = false;
+            currentRoute = null;
+            currentRequest = null;
+            
+            // Notificar o cliente que a corrida terminou
+            if (currentRequest && currentRequest.clientId) {
+                database.ref(`notifications/clients/${currentRequest.clientId}`).push({
+                    type: 'ride_completed',
+                    message: `✅ Corrida finalizada! Obrigado por viajar com ${currentDriver.name}.`,
+                    driverName: currentDriver.name,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+            
+            showNotification("✅ Viagem finalizada! Você está disponível para novas corridas.");
+        }
+        
+        // FUNÇÃO PARA ATIVAR ROTAÇÃO DO MAPA
+        function enableMapRotation() {
+            if (isMapRotationEnabled) return;
+            
+            isMapRotationEnabled = true;
+            
+            // Configurar mapa para modo navegação
+            map.setTilt(45); // Inclinar para perspectiva 3D
+            map.setZoom(17); // Zoom mais próximo
+            
+            // Iniciar intervalo para atualizar rotação
+            mapRotationInterval = setInterval(() => {
+                if (isRideGoing && lastPosition && marker) {
+                    const currentTime = Date.now();
+                    
+                    // Atualizar a cada 500ms para suavidade
+                    if (currentTime - lastMapRotationUpdate > 500) {
+                        // Obter rotação atual do marcador
+                        const icon = marker.getIcon();
+                        if (icon && icon.rotation !== undefined) {
+                            // Girar mapa para seguir a direção do veículo
+                            map.setHeading(icon.rotation);
+                            // Centralizar no marcador
+                            map.setCenter(marker.getPosition());
+                        }
+                        
+                        lastMapRotationUpdate = currentTime;
+                    }
+                }
+            }, 100);
+            
+            console.log("Rotação do mapa ativada");
+        }
+        
+        // FUNÇÃO PARA DESATIVAR ROTAÇÃO DO MAPA
+        function disableMapRotation() {
+            if (!isMapRotationEnabled) return;
+            
+            isMapRotationEnabled = false;
+            
+            // Parar intervalo de rotação
+            if (mapRotationInterval) {
+                clearInterval(mapRotationInterval);
+                mapRotationInterval = null;
+            }
+            
+            // Restaurar configurações normais do mapa
+            map.setTilt(0); // Voltar à vista 2D
+            map.setHeading(0); // Voltar ao norte
+            map.setZoom(14); // Zoom padrão
+            
+            console.log("Rotação do mapa desativada");
+        }
+        
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            showNotification("Não foi possível obter sua localização.", true);
+        }
+        
+        function loadProfileData() {
+            if (!currentDriver) return;
+            
+            document.getElementById('profileName').value = currentDriver.name || '';
+            document.getElementById('profileUsername').value = currentDriver.username || '';
+            document.getElementById('profileLicensePlate').value = currentDriver.licensePlate || '';
+            document.getElementById('profileNif').value = currentDriver.nif || '';
+            document.getElementById('profilePhone').value = currentDriver.phone || '';
+            
+            originalProfileData = {
+                name: currentDriver.name || '',
+                licensePlate: currentDriver.licensePlate || '',
+                nif: currentDriver.nif || '',
+                phone: currentDriver.phone || ''
+            };
+        }
+        
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenuContainer');
+            menu.classList.toggle('active');
+            
+            // Se o menu está fechando (não tem classe active)
+            if (!menu.classList.contains('active')) {
+                // Fecha todos os painéis sem mostrar notificação
+                closeAllPanelsSilently();
+            }
+        }
+        
+        function showProfile() {
+            closeAllPanelsSilently();
+            document.getElementById('profileContainer').style.display = 'block';
+        }
+        
+        function closeProfile() {
+            if (isEditingProfile) {
+                // Se estava editando, cancelar a edição
+                disableEditMode();
+            } else {
+                // Se não estava editando, apenas fechar
+                document.getElementById('profileContainer').style.display = 'none';
+                document.getElementById('profileMenuContainer').classList.remove('active');
+            }
+        }
+        
+        function showSupport() {
+            closeAllPanelsSilently();
+            document.getElementById('supportContainer').style.display = 'block';
+        }
+        
+        function closeSupport() {
+            document.getElementById('supportContainer').style.display = 'none';
+            document.getElementById('profileMenuContainer').classList.remove('active');
+        }
+        
+        function showReport() {
+            closeAllPanelsSilently();
+            
+            const rides = getRidesHistory();
+            const ridesList = document.getElementById('ridesList');
+            
+            if (rides.length === 0) {
+                ridesList.innerHTML = '<div class="no-rides">Nenhuma corrida realizada ainda.</div>';
+            } else {
+                let html = '';
+                rides.forEach((ride, index) => {
+                    html += `
+                        <div class="ride-item">
+                            <div class="ride-item-header">
+                                <span>Corrida #${index + 1}</span>
+                                <span class="ride-date">${ride.date || 'Data não disponível'}</span>
+                            </div>
+                            <div class="ride-details">
+                                <p><strong>Cliente:</strong> ${ride.clientName || 'Não informado'}</p>
+                                <p><strong>Origem:</strong> ${ride.origin || 'Não informado'}</p>
+                                <p><strong>Destino:</strong> ${ride.destination || 'Não informado'}</p>
+                                <p><strong>Passageiros:</strong> ${ride.passengers || '1'}</p>
+                                <p><strong>Contato:</strong> ${ride.contact || 'Não informado'}</p>
+                                ${ride.fareData ? `
+                                    <p><strong>Distância:</strong> ${ride.fareData.distance ? ride.fareData.distance.toFixed(1) + ' km' : 'Não informado'}</p>
+                                    <p><strong>Tempo:</strong> ${ride.fareData.time ? Math.round(ride.fareData.time) + ' min' : 'Não informado'}</p>
+                                    <p><strong>💰 Valor da Corrida:</strong> € ${ride.fareData.totalFare ? ride.fareData.totalFare.toFixed(2) : '0.00'}</p>
+                                ` : ''}
+                                ${ride.reservationTime ? `<p><strong>Tempo de Reserva:</strong> ${ride.reservationTime} minutos</p>` : ''}
+                                ${ride.type ? `<p><strong>Tipo:</strong> ${ride.type === 'reservation' ? 'Reserva' : 'Corrida Normal'}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                ridesList.innerHTML = html;
+            }
+            
+            document.getElementById('reportContainer').style.display = 'block';
+        }
+        
+        function closeReport() {
+            document.getElementById('reportContainer').style.display = 'none';
+            document.getElementById('profileMenuContainer').classList.remove('active');
+        }
+        
+        function closeAllPanels() {
+            document.getElementById('profileContainer').style.display = 'none';
+            document.getElementById('supportContainer').style.display = 'none';
+            document.getElementById('reportContainer').style.display = 'none';
+            if (isEditingProfile) {
+                disableEditMode();
+            }
+        }
+        
+        function closeAllPanelsSilently() {
+            document.getElementById('profileContainer').style.display = 'none';
+            document.getElementById('supportContainer').style.display = 'none';
+            document.getElementById('reportContainer').style.display = 'none';
+            if (isEditingProfile) {
+                silentDisableEditMode();
+            }
+        }
+        
+        function enableEditMode() {
+            isEditingProfile = true;
+            
+            document.getElementById('profileName').readOnly = false;
+            document.getElementById('profileLicensePlate').readOnly = false;
+            document.getElementById('profileNif').readOnly = false;
+            document.getElementById('profilePhone').readOnly = false;
+            
+            document.getElementById('profileName').style.backgroundColor = '#fff';
+            document.getElementById('profileLicensePlate').style.backgroundColor = '#fff';
+            document.getElementById('profileNif').style.backgroundColor = '#fff';
+            document.getElementById('profilePhone').style.backgroundColor = '#fff';
+            
+            document.getElementById('editProfileBtn').style.display = 'none';
+            document.getElementById('saveProfileBtn').style.display = 'block';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            
+            showNotification("Modo de edição ativado. Faça suas alterações e clique em Salvar.");
+        }
+        
+        function disableEditMode() {
+            isEditingProfile = false;
+            
+            document.getElementById('profileName').readOnly = true;
+            document.getElementById('profileLicensePlate').readOnly = true;
+            document.getElementById('profileNif').readOnly = true;
+            document.getElementById('profilePhone').readOnly = true;
+            
+            document.getElementById('profileName').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profileLicensePlate').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profileNif').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profilePhone').style.backgroundColor = '#f9f9f9';
+            
+            document.getElementById('editProfileBtn').style.display = 'block';
+            document.getElementById('saveProfileBtn').style.display = 'none';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            
+            if (originalProfileData) {
+                document.getElementById('profileName').value = originalProfileData.name;
+                document.getElementById('profileLicensePlate').value = originalProfileData.licensePlate;
+                document.getElementById('profileNif').value = originalProfileData.nif;
+                document.getElementById('profilePhone').value = originalProfileData.phone;
+            }
+            
+            showNotification("Edição cancelada.");
+        }
+        
+        function silentDisableEditMode() {
+            isEditingProfile = false;
+            
+            document.getElementById('profileName').readOnly = true;
+            document.getElementById('profileLicensePlate').readOnly = true;
+            document.getElementById('profileNif').readOnly = true;
+            document.getElementById('profilePhone').readOnly = true;
+            
+            document.getElementById('profileName').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profileLicensePlate').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profileNif').style.backgroundColor = '#f9f9f9';
+            document.getElementById('profilePhone').style.backgroundColor = '#f9f9f9';
+            
+            document.getElementById('editProfileBtn').style.display = 'block';
+            document.getElementById('saveProfileBtn').style.display = 'none';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            
+            if (originalProfileData) {
+                document.getElementById('profileName').value = originalProfileData.name;
+                document.getElementById('profileLicensePlate').value = originalProfileData.licensePlate;
+                document.getElementById('profileNif').value = originalProfileData.nif;
+                document.getElementById('profilePhone').value = originalProfileData.phone;
+            }
+            // NÃO mostra notificação aqui
+        }
+        
+        function saveProfile() {
+            const name = document.getElementById('profileName').value.trim();
+            const licensePlate = document.getElementById('profileLicensePlate').value.trim();
+            const nif = document.getElementById('profileNif').value.trim();
+            const phone = document.getElementById('profilePhone').value.trim();
+            
+            if (!name) {
+                showNotification("O nome é obrigatório!", true);
+                return;
+            }
+            
+            if (!licensePlate) {
+                showNotification("A matrícula é obrigatória!", true);
+                return;
+            }
+            
+            if (!nif) {
+                showNotification("O NIF é obrigatório!", true);
+                return;
+            }
+            
+            currentDriver.name = name;
+            currentDriver.licensePlate = licensePlate;
+            currentDriver.nif = nif;
+            currentDriver.phone = phone;
+            
+            const drivers = getAllDrivers();
+            drivers[currentDriver.driverId] = currentDriver;
+            localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+            
+            originalProfileData = {
+                name: name,
+                licensePlate: licensePlate,
+                nif: nif,
+                phone: phone
+            };
+            
+            document.getElementById('driverNameDisplay').textContent = currentDriver.name;
+            
+            if (isTracking && currentDriver) {
+                database.ref(`drivers/${currentDriver.driverId}`).update({
+                    name: currentDriver.name,
+                    licensePlate: currentDriver.licensePlate
+                });
+            }
+            
+            disableEditMode();
+            
+            showNotification("Perfil atualizado com sucesso!");
+        }
+        
+        function setupReservationButtons() {
+            document.getElementById("reserveRequest").addEventListener("click", function() {
+                showReservationCard();
+            });
+            
+            document.querySelectorAll('.reservation-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.reservation-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    this.classList.add('selected');
+                    selectedReservationTime = this.getAttribute('data-time');
+                    
+                    document.getElementById('sendReservation').disabled = false;
+                });
+            });
+            
+            document.getElementById('sendReservation').addEventListener('click', sendReservation);
+            
+            document.getElementById('cancelReservation').addEventListener('click', function() {
+                document.getElementById('reservationCard').style.display = 'none';
+                document.getElementById('requestCard').style.display = 'none';
+                clearInterval(countdown);
+                currentRequestId = null;
+                currentRequest = null;
+                currentFareData = null;
+            });
+        }
+        
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showNotification("Seu navegador não suporta geolocalização.", true);
+                return;
+            }
+            
+            isTracking = true;
+            document.getElementById("startTracking").disabled = true;
+            document.getElementById("stopTracking").disabled = false;
+            
+            showNotification("Agora você está visível para os clientes!");
+            
+            database.ref(`drivers/${currentDriver.driverId}`).update({
+                name: currentDriver.name,
+                licensePlate: currentDriver.licensePlate,
+                status: 'online',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            startBackgroundTracking();
+            
+            listenForRequests();
+        }
+        
+        function calculateHeading(from, to) {
+            const lat1 = from.lat * Math.PI / 180;
+            const lon1 = from.lng * Math.PI / 180;
+            const lat2 = to.lat * Math.PI / 180;
+            const lon2 = to.lng * Math.PI / 180;
+            
+            const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) -
+                      Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+            let brng = Math.atan2(y, x) * 180 / Math.PI;
+            return (brng + 360) % 360;
+        }
+        
+        function calculateStraightDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            return distance;
+        }
+        
+        function listenForRequests() {
+            database.ref(`notifications/drivers/${currentDriver.driverId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                const notificationId = snapshot.key;
+                
+                console.log('Nova notificação recebida:', notification);
+                
+                if (notification.type === 'new_request') {
+                    processDriverSpecificRequest(notification, notificationId);
+                } else if (notification.type === 'new_request_all') {
+                    processGeneralRequest(notification, notificationId);
+                }
+            });
+            
+            cleanupOldNotifications();
+        }
+
+        function processDriverSpecificRequest(notification, notificationId) {
+            database.ref(`ride_requests/${notification.requestId}`).once('value').then((snapshot) => {
+                const request = snapshot.val();
+                
+                if (request) {
+                    if (request.status === 'accepted' && request.driverId !== currentDriver.driverId) {
+                        showAlreadyAcceptedPopup();
+                        database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
+                        return;
+                    }
+                    
+                    if (request.status === 'pending') {
+                        playNotificationSound();
+                        showRequestCard(request, notification.requestId, true, notification.fareData);
+                        database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
+                    }
+                }
+            });
+        }
+
+        function processGeneralRequest(notification, notificationId) {
+            database.ref(`ride_requests/${notification.requestId}`).once('value').then((snapshot) => {
+                const request = snapshot.val();
+                
+                if (request) {
+                    if (request.status === 'accepted') {
+                        showAlreadyAcceptedPopup();
+                        database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
+                        return;
+                    }
+                    
+                    if (request && request.status === 'pending') {
+                        if (request.assignedDriverId && request.assignedDriverId !== currentDriver.driverId) {
+                            console.log('Solicitação já atribuída a outro motorista:', request.assignedDriverId);
+                            return;
+                        }
+                        
+                        if (request.clientLocation && lastPosition) {
+                            const distance = calculateStraightDistance(
+                                lastPosition.lat,
+                                lastPosition.lng,
+                                request.clientLocation.lat,
+                                request.clientLocation.lng
+                            );
+                            
+                            if (distance > 10) {
+                                console.log('Motorista muito longe do cliente:', distance, 'km');
+                                return;
+                            }
+                        }
+                        
+                        playNotificationSound();
+                        showRequestCard(request, notification.requestId, false, notification.fareData);
+                        database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
+                    }
+                }
+            });
+        }
+
+        function cleanupOldNotifications() {
+            const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+            
+            database.ref(`notifications/drivers/${currentDriver.driverId}`).once('value').then((snapshot) => {
+                const notifications = snapshot.val();
+                
+                if (!notifications) return;
+                
+                for (const notificationId in notifications) {
+                    const notification = notifications[notificationId];
+                    
+                    if (notification.timestamp && notification.timestamp < tenMinutesAgo) {
+                        database.ref(`notifications/drivers/${currentDriver.driverId}/${notificationId}`).remove();
+                    }
+                }
+            });
+        }
+
+        function showAlreadyAcceptedPopup() {
+            const popup = document.getElementById('alreadyAcceptedPopup');
+            const message = document.getElementById('alreadyAcceptedMessage');
+            
+            message.textContent = 'Esta corrida já foi aceita por outro motorista.';
+            
+            popup.classList.add('active');
+            
+            setTimeout(() => {
+                closeAlreadyAcceptedPopup();
+            }, 3000);
+        }
+
+        function closeAlreadyAcceptedPopup() {
+            document.getElementById('alreadyAcceptedPopup').classList.remove('active');
+        }
+
+        function showRequestCard(request, requestId, isPriority = false, fareData = null) {
+            const requestCard = document.getElementById('requestCard');
+            const requestDetails = document.getElementById('requestDetails');
+            const timerElement = document.getElementById('timer');
+            const distanceInfo = document.getElementById('distanceInfo');
+            const fareDisplay = document.getElementById('fareDisplay');
+            
+            currentRequestId = requestId;
+            currentRequest = request;
+            currentFareData = fareData;
+            
+            database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
+                const updatedRequest = snapshot.val();
+                
+                if (updatedRequest && updatedRequest.status === 'accepted' && updatedRequest.driverId !== currentDriver.driverId) {
+                    showAlreadyAcceptedPopup();
+                    return;
+                }
+                
+                const priorityBadge = isPriority ? 
+                    '<div class="priority-badge">🚗 VOCÊ É O MOTORISTA MAIS PRÓXIMO!</div>' : 
+                    '';
+                
+                if (request.clientLocation && lastPosition) {
+                    const distance = calculateStraightDistance(
+                        lastPosition.lat,
+                        lastPosition.lng,
+                        request.clientLocation.lat,
+                        request.clientLocation.lng
+                    );
+                    
+                    distanceInfo.innerHTML = `${priorityBadge}📍 Distância do cliente: <strong>${distance.toFixed(1)} km</strong>`;
+                } else {
+                    distanceInfo.innerHTML = `${priorityBadge}📍 Distância: Não disponível`;
+                }
+                
+                // Mostrar ou ocultar a seção de tarifa
+                if (fareData && fareData.totalFare) {
+                    fareDisplay.style.display = 'block';
+                    
+                    // Preencher dados da tarifa FINAL apenas
+                    document.getElementById('fareTotalDisplay').textContent = `€ ${fareData.totalFare.toFixed(2)}`;
+                    document.getElementById('fareDistanceDisplay').textContent = `${fareData.distance ? fareData.distance.toFixed(1) + ' km' : '0 km'}`;
+                    document.getElementById('fareTimeDisplay').textContent = `${fareData.time ? Math.round(fareData.time) + ' min' : '0 min'}`;
+                } else {
+                    fareDisplay.style.display = 'none';
+                }
+                
+                requestDetails.innerHTML = `
+                    <p><strong>👤 Cliente:</strong> ${request.name || 'Não informado'}</p>
+                    <p><strong>📍 De:</strong> ${request.origin}</p>
+                    <p><strong>🎯 Para:</strong> ${request.destination}</p>
+                    <p><strong>👥 Passageiros:</strong> ${request.passengers || '1'}</p>
+                    <p><strong>📞 Contato:</strong> ${request.contact || 'Não informado'}</p>
+                    <p><strong>⏰ Chegada:</strong> ${request.arrivalTime || '10'} minutos</p>
+                    <p><strong>💳 Pagamento:</strong> ${getPaymentMethodText(request.paymentMethod)}</p>
+                    ${request.notes ? `<p><strong>📝 Observações:</strong> ${request.notes}</p>` : ''}
+                `;
+                
+                requestCard.style.display = 'block';
+                
+                let timeLeft = 120;
+                updateTimerDisplay(timerElement, timeLeft);
+                
+                countdown = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay(timerElement, timeLeft);
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        rejectRequest(requestId);
+                    }
+                }, 1000);
+                
+                document.getElementById('acceptRequest').onclick = () => acceptRequest(requestId, request);
+                document.getElementById('rejectRequest').onclick = () => rejectRequest(requestId);
+            });
+        }
+        
+        function updateTimerDisplay(timerElement, timeLeft) {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 30) {
+                timerElement.style.color = '#f44336';
+                timerElement.style.fontWeight = 'bold';
+            } else if (timeLeft <= 60) {
+                timerElement.style.color = '#ff9800';
+            } else {
+                timerElement.style.color = '#4CAF50';
+            }
+        }
+        
+        function showReservationCard() {
+            const reservationCard = document.getElementById('reservationCard');
+            const reservationDetails = document.getElementById('reservationRequestDetails');
+            
+            reservationDetails.innerHTML = `
+                <p><strong>👤 Cliente:</strong> ${currentRequest.name || 'Não informado'}</p>
+                <p><strong>📍 De:</strong> ${currentRequest.origin}</p>
+                <p><strong>🎯 Para:</strong> ${currentRequest.destination}</p>
+                ${currentFareData ? `
+                    <p><strong>💰 Valor da Corrida:</strong> € ${currentFareData.totalFare ? currentFareData.totalFare.toFixed(2) : '0.00'}</p>
+                ` : ''}
+            `;
+            
+            selectedReservationTime = null;
+            document.querySelectorAll('.reservation-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.getElementById('sendReservation').disabled = true;
+            
+            reservationCard.style.display = 'block';
+        }
+        
+        function sendReservation() {
+            if (!selectedReservationTime) {
+                showNotification("Selecione um tempo de reserva.", true);
+                return;
+            }
+            
+            clearInterval(countdown);
+            
+            const driverLocation = marker.getPosition();
+            
+            geocoder.geocode({ location: driverLocation }, (results, status) => {
+                let locationName = "Local próximo";
+                
+                if (status === "OK" && results[0]) {
+                    locationName = results[0].formatted_address;
+                }
+                
+                if (currentRequest.clientId) {
+                    database.ref(`notifications/clients/${currentRequest.clientId}`).push({
+                        type: 'reservation_proposal',
+                        message: `⏰ O motorista ${currentDriver.name} propõe uma reserva de ${selectedReservationTime} minutos.`,
+                        driverName: currentDriver.name,
+                        driverId: currentDriver.driverId,
+                        licensePlate: currentDriver.licensePlate,
+                        reservationTime: selectedReservationTime,
+                        reservationLocation: {
+                            lat: driverLocation.lat(),
+                            lng: driverLocation.lng()
+                        },
+                        reservationLocationName: locationName,
+                        requestId: currentRequestId,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    console.log('Notificação de reserva enviada para o cliente:', currentRequest.clientId);
+                    
+                    database.ref(`ride_requests/${currentRequestId}`).update({
+                        status: 'reservation_proposed',
+                        reservationTime: selectedReservationTime,
+                        driverId: currentDriver.driverId,
+                        driverName: currentDriver.name,
+                        licensePlate: currentDriver.licensePlate,
+                        proposedAt: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    document.getElementById('reservationCard').style.display = 'none';
+                    document.getElementById('requestCard').style.display = 'none';
+                    
+                    showReservationResponsePopup('waiting');
+                    
+                    currentReservationRequestId = currentRequestId;
+                    
+                    listenForReservationResponse();
+                    
+                    currentRequestId = null;
+                    currentRequest = null;
+                    currentFareData = null;
+                    
+                } else {
+                    console.warn('Cliente ID não encontrado na solicitação');
+                    showNotification("Erro: ID do cliente não encontrado.", true);
+                }
+            });
+        }
+        
+        function listenForReservationNotifications() {
+            database.ref(`notifications/drivers/${currentDriver.driverId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'reservation_accepted') {
+                    showNotification(notification.message);
+                    
+                    if (notification.reservationLocation) {
+                        addReservationMarker(notification.reservationLocation);
+                    }
+                    
+                    snapshot.ref.remove();
+                } else if (notification.type === 'reservation_rejected') {
+                    showNotification(notification.message, true);
+                    snapshot.ref.remove();
+                }
+            });
+        }
+        
+        function listenForReservationResponse() {
+            if (!currentReservationRequestId) return;
+            
+            database.ref(`ride_requests/${currentReservationRequestId}`).on('value', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (request) {
+                    if (request.status === 'reservation_accepted') {
+                        showReservationResponsePopup('accepted');
+                        
+                        const rideData = {
+                            clientName: request.name,
+                            origin: request.origin,
+                            destination: request.destination,
+                            passengers: request.passengers,
+                            contact: request.contact,
+                            date: new Date().toLocaleString('pt-PT'),
+                            timestamp: Date.now(),
+                            type: 'reservation',
+                            reservationTime: request.reservationTime,
+                            fareData: currentFareData
+                        };
+                        
+                        saveRideToHistory(rideData);
+                        
+                        database.ref(`ride_requests/${currentReservationRequestId}`).off();
+                        currentReservationRequestId = null;
+                        
+                    } else if (request.status === 'reservation_rejected') {
+                        showReservationResponsePopup('rejected');
+                        
+                        database.ref(`ride_requests/${currentReservationRequestId}`).off();
+                        currentReservationRequestId = null;
+                    }
+                }
+            });
+        }
+        
+        function showReservationResponsePopup(status) {
+            const popup = document.getElementById('reservationResponsePopup');
+            const icon = document.getElementById('reservationResponseIcon');
+            const title = document.getElementById('reservationResponseTitle');
+            const message = document.getElementById('reservationResponseMessage');
+            
+            switch(status) {
+                case 'waiting':
+                    icon.textContent = '⏰';
+                    icon.style.color = '#ff9800';
+                    title.textContent = 'Aguardando Resposta';
+                    title.className = 'reservation-response-title';
+                    message.textContent = 'Sua proposta de reserva foi enviada ao cliente. Aguardando resposta...';
+                    break;
+                    
+                case 'accepted':
+                    icon.textContent = '✅';
+                    icon.style.color = '#4CAF50';
+                    title.textContent = 'Reserva Aceita!';
+                    title.className = 'reservation-response-title reservation-accepted';
+                    message.textContent = 'O cliente aceitou sua proposta de reserva! A corrida foi confirmada.';
+                    break;
+                    
+                case 'rejected':
+                    icon.textContent = '❌';
+                    icon.style.color = '#f44336';
+                    title.textContent = 'Reserva Rejeitada';
+                    title.className = 'reservation-response-title reservation-rejected';
+                    message.textContent = 'O cliente rejeitou sua proposta de reserva.';
+                    break;
+            }
+            
+            popup.classList.add('active');
+        }
+        
+        function closeReservationResponse() {
+            document.getElementById('reservationResponsePopup').classList.remove('active');
+        }
+        
+        function addReservationMarker(location) {
+            if (reservationMarker) {
+                reservationMarker.setMap(null);
+            }
+            
+            reservationMarker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: "Local de Encontro com Cliente",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                }
+            });
+            
+            map.setCenter(location);
+        }
+        
+        function acceptRequest(requestId, request) {
+            database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
+                const updatedRequest = snapshot.val();
+                
+                if (updatedRequest && updatedRequest.status === 'accepted') {
+                    showAlreadyAcceptedPopup();
+                    
+                    document.getElementById('requestCard').style.display = 'none';
+                    clearInterval(countdown);
+                    currentRequestId = null;
+                    currentRequest = null;
+                    currentFareData = null;
+                    return;
+                }
+                
+                clearInterval(countdown);
+                
+                const rideData = {
+                    clientName: request.name,
+                    origin: request.origin,
+                    destination: request.destination,
+                    passengers: request.passengers,
+                    contact: request.contact,
+                    date: new Date().toLocaleString('pt-PT'),
+                    timestamp: Date.now(),
+                    fareData: currentFareData
+                };
+                
+                saveRideToHistory(rideData);
+                
+                database.ref(`ride_requests/${requestId}`).update({
+                    status: 'accepted',
+                    driverId: currentDriver.driverId,
+                    driverName: currentDriver.name,
+                    licensePlate: currentDriver.licensePlate,
+                    acceptedAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                document.getElementById('requestCard').style.display = 'none';
+                
+                showNotification("✅ Você aceitou a solicitação!");
+                
+                // Mostrar controles da corrida
+                isRideAccepted = true;
+                document.getElementById('controls').style.display = 'none';
+                document.getElementById('rideControls').style.display = 'flex';
+                
+                if (request.clientId) {
+                    database.ref(`notifications/clients/${request.clientId}`).push({
+                        type: 'request_accepted',
+                        message: `🎉 Seu táxi foi aceito! Motorista: ${currentDriver.name} está a caminho.`,
+                        driverName: currentDriver.name,
+                        licensePlate: currentDriver.licensePlate,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+                
+                // Mostrar rota, marcador do cliente e marcador do destino
+                displayRouteAndMarkers(request);
+                
+                currentRequestId = null;
+                currentRequest = request;
+            });
+        }
+        
+        function displayRouteAndMarkers(request) {
+            if (!request || !request.origin || !request.destination) {
+                console.error('Dados de origem ou destino não disponíveis');
+                return;
+            }
+            
+            // Limpar rota anterior se existir
+            if (directionsRenderer) {
+                directionsRenderer.setMap(null);
+            }
+            
+            // Limpar marcadores anteriores se existirem
+            if (clientMarker) {
+                clientMarker.setMap(null);
+            }
+            
+            if (destinationMarker) {
+                destinationMarker.setMap(null);
+            }
+            
+            // Primeiro, obter coordenadas da origem (local do cliente)
+            geocoder.geocode({ address: request.origin }, (originResults, originStatus) => {
+                if (originStatus === 'OK' && originResults[0]) {
+                    const clientLocation = originResults[0].geometry.location;
+                    
+                    // Adicionar marcador vermelho do Google no local do cliente
+                    clientMarker = new google.maps.Marker({
+                        position: clientLocation,
+                        map: map,
+                        title: "Local do Cliente",
+                        icon: {
+                            url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+                            scaledSize: new google.maps.Size(32, 32)
+                        }
+                    });
+                    
+                    // Depois, obter coordenadas do destino
+                    geocoder.geocode({ address: request.destination }, (destinationResults, destinationStatus) => {
+                        if (destinationStatus === 'OK' && destinationResults[0]) {
+                            const destinationLocation = destinationResults[0].geometry.location;
+                            
+                            // Adicionar marcador azul do Google no destino
+                            destinationMarker = new google.maps.Marker({
+                                position: destinationLocation,
+                                map: map,
+                                title: "Destino",
+                                icon: {
+                                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                                    scaledSize: new google.maps.Size(32, 32)
+                                }
+                            });
+                            
+                            // Calcular e exibir rota da origem ao destino
+                            calculateAndDisplayRoute(clientLocation, destinationLocation);
+                            
+                        } else {
+                            console.error('Erro ao geocodificar destino:', destinationStatus);
+                            showNotification("Não foi possível obter localização do destino. A rota não será exibida.", true);
+                        }
+                    });
+                    
+                } else {
+                    console.error('Erro ao geocodificar origem do cliente:', originStatus);
+                    showNotification("Não foi possível obter localização do cliente. A rota não será exibida.", true);
+                }
+            });
+        }
+        
+        function calculateAndDisplayRoute(origin, destination) {
+            const request = {
+                origin: origin,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
+            
+            directionsService.route(request, (result, status) => {
+                if (status === 'OK') {
+                    // Salvar a rota atual
+                    currentRoute = result;
+                    
+                    // Ativar o renderizador no mapa
+                    directionsRenderer.setMap(map);
+                    directionsRenderer.setDirections(result);
+                    
+                    // Ajustar mapa para mostrar a rota completa com marcadores
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend(origin);
+                    bounds.extend(destination);
+                    
+                    // Incluir a posição atual do motorista se disponível
+                    if (marker && marker.getPosition()) {
+                        bounds.extend(marker.getPosition());
+                    }
+                    
+                    map.fitBounds(bounds);
+                    
+                    // Adicionar um pequeno padding para melhor visualização
+                    map.panBy(0, -50);
+                    
+                    showNotification("Rota calculada com sucesso! Marcadores adicionados.");
+                    isRouteDisplayed = true;
+                    
+                } else {
+                    console.error('Erro ao calcular rota:', status);
+                    showNotification("Não foi possível calcular a rota.", true);
+                }
+            });
+        }
+        
+        function rejectRequest(requestId) {
+            clearInterval(countdown);
+            
+            database.ref(`ride_requests/${requestId}`).update({
+                status: 'rejected',
+                rejectedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            document.getElementById('requestCard').style.display = 'none';
+            
+            showNotification("❌ Você rejeitou a solicitação.");
+            
+            currentRequestId = null;
+            currentRequest = null;
+            currentFareData = null;
+        }
+        
+        function startBackgroundTracking() {
+            if (!navigator.geolocation) return;
+            
+            backgroundWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    };
+                    
+                    let heading = 0;
+                    if (lastPosition) {
+                        heading = calculateHeading(lastPosition, pos);
+                    }
+                    
+                    if (marker) {
+                        // Definir cor do marcador baseado no status da corrida
+                        let iconUrl = "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png";
+                        
+                        // Sempre usar rotação independente do status
+                        marker.setIcon({
+                            url: iconUrl,
+                            scaledSize: new google.maps.Size(40, 60),
+                            anchor: new google.maps.Point(20, 20),
+                            rotation: heading
+                        });
+                        
+                        marker.setPosition(pos);
+                        
+                        // Não centralizar automaticamente no motorista quando há uma rota ativa
+                        // A não ser que a rotação do mapa esteja ativada
+                        if (!isRouteDisplayed && !isMapRotationEnabled && map) {
+                            map.setCenter(pos);
+                        }
+                    }
+                    
+                    database.ref(`drivers/${currentDriver.driverId}`).update({
+                        location: pos,
+                        heading: heading,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    
+                    lastPosition = pos;
+                },
+                (error) => {
+                    console.error("Erro ao obter localização:", error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 3000,
+                    maximumAge: 1000
+                }
+            );
+        }
+        
+        function stopTracking() {
+            isTracking = false;
+            document.getElementById("startTracking").disabled = false;
+            document.getElementById("stopTracking").disabled = true;
+            
+            showNotification("Você não está mais visível para os clientes.");
+            
+            if (backgroundWatchId) {
+                navigator.geolocation.clearWatch(backgroundWatchId);
+                backgroundWatchId = null;
+            }
+            
+            database.ref(`drivers/${currentDriver.driverId}`).update({
+                status: 'offline',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+        
+        function getPaymentMethodText(method) {
+            switch(method) {
+                case 'cash': return '💵 Dinheiro';
+                case 'card': return '💳 Cartão';
+                case 'mbway': return '📱 MBWay';
+                default: return method;
+            }
+        }
+        
+        function playNotificationSound() {
+            const audio = document.getElementById('notificationSound');
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('Erro ao tocar som:', e));
+        }
+        
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        document.getElementById('regConfirmPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                register();
+            }
+        });
+
+        function checkSavedSession() {
+            const savedSession = getSavedSession();
+            if (savedSession && savedSession.driverId) {
+                const drivers = getAllDrivers();
+                const driverData = drivers[savedSession.driverId];
+                
+                if (driverData) {
+                    currentDriver = driverData;
+                    initializeDriverInterface();
+                }
+            }
+        }
+
+        document.getElementById("startTracking").addEventListener("click", startTracking);
+        document.getElementById("stopTracking").addEventListener("click", stopTracking);
+
+        window.addEventListener('load', function() {
+            initializeDriversStorage();
+            checkSavedSession();
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && currentDriver && backgroundWatchId) {
+                console.log('Página visível - mantendo trabalho ativo');
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (currentDriver && backgroundWatchId) {
+                console.log('Mantendo trabalho ativo após recarregar página');
+            }
+        });
+    </script>
     
-    <!-- Google Maps API -->
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
     </script>
