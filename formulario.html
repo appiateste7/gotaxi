@@ -556,127 +556,6 @@
         .reservation-response-error {
             color: #f44336;
         }
-
-        /* Estilos para exibição da tarifa FINAL */
-        .fare-summary-card {
-            background-color: #fff9e6;
-            border: 2px solid #ffc107;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .fare-summary-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .fare-summary-details {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .fare-detail-item {
-            flex: 1;
-            min-width: 120px;
-            padding: 10px;
-            background-color: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .fare-detail-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .fare-detail-value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .fare-total-container {
-            background-color: #4CAF50;
-            color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .fare-total-label {
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        .fare-total-value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .fare-info-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 10px;
-            font-style: italic;
-        }
-
-        .fare-simple-display {
-            background-color: #4CAF50;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .fare-simple-label {
-            font-size: 16px;
-            margin-bottom: 5px;
-            opacity: 0.9;
-        }
-
-        .fare-simple-value {
-            font-size: 32px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .fare-simple-details {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .fare-simple-detail {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .fare-simple-detail-label {
-            font-size: 12px;
-            margin-bottom: 3px;
-        }
-
-        .fare-simple-detail-value {
-            font-weight: bold;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
@@ -699,25 +578,6 @@
     
     <div class="container">
         <a href="index.html" class="back-btn" data-i18n="back">← Voltar</a>
-        
-        <!-- Card de tarifa final SIMPLIFICADO -->
-        <div id="fareSummaryCard" class="fare-simple-display" style="display: none;">
-            <div class="fare-simple-label">💰 Valor da Corrida</div>
-            <div class="fare-simple-value" id="fareTotalDisplay">€ 0.00</div>
-            <div class="fare-simple-details">
-                <div class="fare-simple-detail">
-                    <div class="fare-simple-detail-label">📍 Distância</div>
-                    <div class="fare-simple-detail-value" id="fareDistance">0 km</div>
-                </div>
-                <div class="fare-simple-detail">
-                    <div class="fare-simple-detail-label">⏱️ Tempo</div>
-                    <div class="fare-simple-detail-value" id="fareTime">0 min</div>
-                </div>
-            </div>
-            <div class="fare-info-note" data-i18n="fare_estimate_info">
-                * Valor estimado. O valor final pode variar conforme o tráfego.
-            </div>
-        </div>
         
         <div id="nearestDriverInfo" class="nearest-driver-info">
             <h3>🚗 Motorista Mais Próximo Encontrado!</h3>
@@ -897,12 +757,7 @@
                 "driver_rejected": "Motorista não disponível.",
                 "searching_another_driver": "Buscando outro motorista...",
                 "no_drivers": "Nenhum motorista disponível no momento.",
-                "nearest_driver_found": "Motorista encontrado a {distance} km!",
-                "fare_summary": "Valor da Corrida",
-                "distance": "Distância",
-                "estimated_time": "Tempo Estimado",
-                "total_fare": "Valor Total",
-                "fare_estimate_info": "* Valor estimado. O valor final pode variar conforme o tráfego."
+                "nearest_driver_found": "Motorista encontrado a {distance} km!"
             },
             en: {
                 "app_title": "GoTáxi - Request Taxi",
@@ -944,12 +799,7 @@
                 "driver_rejected": "Driver not available.",
                 "searching_another_driver": "Searching for another driver...",
                 "no_drivers": "No drivers available at the moment.",
-                "nearest_driver_found": "Driver found {distance} km away!",
-                "fare_summary": "Ride Price",
-                "distance": "Distance",
-                "estimated_time": "Estimated Time",
-                "total_fare": "Total Price",
-                "fare_estimate_info": "* Estimated value. Final amount may vary depending on traffic."
+                "nearest_driver_found": "Driver found {distance} km away!"
             },
             es: {
                 "app_title": "GoTáxi - Solicitar Taxi",
@@ -991,12 +841,7 @@
                 "driver_rejected": "Conductor no disponible.",
                 "searching_another_driver": "Buscando otro conductor...",
                 "no_drivers": "No hay conductores disponibles en este momento.",
-                "nearest_driver_found": "¡Conductor encontrado a {distance} km!",
-                "fare_summary": "Precio del Viaje",
-                "distance": "Distancia",
-                "estimated_time": "Tiempo Estimado",
-                "total_fare": "Precio Total",
-                "fare_estimate_info": "* Valor estimado. El monto final puede variar según el tráfico."
+                "nearest_driver_found": "¡Conductor encontrado a {distance} km!"
             },
             fr: {
                 "app_title": "GoTáxi - Demander un Taxi",
@@ -1038,12 +883,7 @@
                 "driver_rejected": "Chauffeur non disponible.",
                 "searching_another_driver": "Recherche d'un autre chauffeur...",
                 "no_drivers": "Aucun chauffeur disponible pour le moment.",
-                "nearest_driver_found": "Chauffeur trouvé à {distance} km!",
-                "fare_summary": "Prix de la Course",
-                "distance": "Distance",
-                "estimated_time": "Temps Estimé",
-                "total_fare": "Prix Total",
-                "fare_estimate_info": "* Valeur estimée. Le montant final peut varier selon la circulation."
+                "nearest_driver_found": "Chauffeur trouvé à {distance} km!"
             }
         };
 
@@ -1065,72 +905,17 @@
         let currentLanguage = 'pt';
         let nearestDriverId = null;
         let currentRequestId = null;
-        let fareData = null;
 
-        // Carregar dados da tarifa da URL
-        function loadFareDataFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            fareData = {
-                distance: parseFloat(urlParams.get('distance')) || 0,
-                time: parseInt(urlParams.get('time')) || 0,
-                totalFare: parseFloat(urlParams.get('totalFare')) || 0,
-                origin: urlParams.get('origin') || '',
-                destination: urlParams.get('destination') || ''
-            };
-            
-            // Se houver dados de tarifa, exibir resumo SIMPLIFICADO
-            if (fareData.totalFare > 0) {
-                displayFareSummary();
-            }
-            
-            // Carregar dados do motorista se disponíveis
-            const driverId = urlParams.get('driverId');
-            const driverName = urlParams.get('driverName');
-            const driverDistance = urlParams.get('driverDistance');
-            
-            if (driverId) {
-                nearestDriverId = driverId;
-                showNearestDriverInfo(driverName, driverDistance);
-            }
-        }
-
-        // Exibir resumo da tarifa SIMPLIFICADO
-        function displayFareSummary() {
-            if (!fareData) return;
-            
-            const card = document.getElementById('fareSummaryCard');
-            card.style.display = 'block';
-            
-            // Atualizar valores APENAS O TOTAL
-            document.getElementById('fareTotalDisplay').textContent = `€ ${fareData.totalFare.toFixed(2)}`;
-            document.getElementById('fareDistance').textContent = `${fareData.distance.toFixed(1)} km`;
-            document.getElementById('fareTime').textContent = `${Math.round(fareData.time)} min`;
-            
-            // Preencher campos de origem e destino
-            if (fareData.origin) {
-                document.getElementById('origin').value = fareData.origin;
-            }
-            
-            if (fareData.destination) {
-                document.getElementById('destination').value = fareData.destination;
-            }
-        }
-
-        function showNearestDriverInfo(driverName, driverDistance) {
-            const infoCard = document.getElementById('nearestDriverInfo');
-            const driverDistanceEl = document.getElementById('driverDistance');
-            
-            infoCard.style.display = 'block';
-            
-            if (driverDistance) {
-                driverDistanceEl.textContent = `Distância aproximada: ${driverDistance} km`;
-            }
-            
-            if (driverName) {
-                const title = infoCard.querySelector('h3');
-                title.textContent = `🚗 ${driverName} - Motorista Mais Próximo!`;
-            }
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
         }
 
         function changeLanguage(lang) {
@@ -1159,6 +944,15 @@
 
         function t(key) {
             return translations[currentLanguage][key] || key;
+        }
+
+        function loadSavedLanguage() {
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+                document.getElementById('languageSelector').value = savedLanguage;
+            }
+            updateTexts();
         }
 
         function selectPaymentMethod(method) {
@@ -1209,11 +1003,6 @@
                 driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> <span class="license-plate">${licensePlate}</span></p>`;
             } else {
                 driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> Não informada</p>`;
-            }
-            
-            // Adicionar informação da tarifa
-            if (fareData && fareData.totalFare) {
-                driverDetailsHTML += `<p><strong>💰 Valor da Corrida:</strong> € ${fareData.totalFare.toFixed(2)}</p>`;
             }
             
             driverDetails.innerHTML = driverDetailsHTML;
@@ -1295,7 +1084,6 @@
                 return;
             }
             
-            // Preparar dados da solicitação incluindo a tarifa
             const requestData = {
                 name: name,
                 origin: origin,
@@ -1309,14 +1097,11 @@
                 clientId: clientId,
                 status: 'pending',
                 createdAt: firebase.database.ServerValue.TIMESTAMP,
-                clientLocation: userLocation,
-                // Incluir dados da tarifa FINAL
-                fareData: fareData ? {
-                    distance: fareData.distance,
-                    time: fareData.time,
-                    totalFare: fareData.totalFare
-                } : null
+                clientLocation: userLocation
             };
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            nearestDriverId = urlParams.get('nearestDriverId');
             
             showLoading(t("searching_drivers"));
             
@@ -1334,25 +1119,20 @@
             requestData.requestId = requestId;
             requestData.assignedDriverId = driverId;
             
-            // Incluir dados da tarifa na notificação para o motorista
-            const driverNotificationData = {
-                type: 'new_request',
-                requestId: requestId,
-                clientName: requestData.name,
-                clientLocation: requestData.clientLocation,
-                origin: requestData.origin,
-                destination: requestData.destination,
-                passengers: requestData.passengers,
-                contact: requestData.contact,
-                arrivalTime: requestData.arrivalTime,
-                timestamp: firebase.database.ServerValue.TIMESTAMP,
-                // Dados da tarifa FINAL
-                fareData: requestData.fareData
-            };
-            
             newRequestRef.set(requestData)
                 .then(() => {
-                    database.ref(`notifications/drivers/${driverId}`).push(driverNotificationData);
+                    database.ref(`notifications/drivers/${driverId}`).push({
+                        type: 'new_request',
+                        requestId: requestId,
+                        clientName: requestData.name,
+                        clientLocation: requestData.clientLocation,
+                        origin: requestData.origin,
+                        destination: requestData.destination,
+                        passengers: requestData.passengers,
+                        contact: requestData.contact,
+                        arrivalTime: requestData.arrivalTime,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
                     
                     document.getElementById('loadingMessage').textContent = 
                         "✅ Solicitação enviada para o motorista mais próximo! Aguardando resposta...";
@@ -1482,9 +1262,7 @@
                         contact: request.contact,
                         arrivalTime: request.arrivalTime,
                         timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        note: 'Corrida recusada por outro motorista, você é o mais próximo agora!',
-                        // Incluir dados da tarifa
-                        fareData: request.fareData
+                        note: 'Corrida recusada por outro motorista, você é o mais próximo agora!'
                     });
                     
                     document.getElementById('loadingMessage').textContent = 
@@ -1517,9 +1295,7 @@
                 passengers: requestData?.passengers,
                 contact: requestData?.contact,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
-                note: 'Nenhum motorista próximo disponível, enviando para todos.',
-                // Incluir dados da tarifa
-                fareData: requestData?.fareData
+                note: 'Nenhum motorista próximo disponível, enviando para todos.'
             });
             
             document.getElementById('loadingMessage').textContent = 
@@ -1542,9 +1318,7 @@
                         destination: requestData.destination,
                         passengers: requestData.passengers,
                         contact: requestData.contact,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP,
-                        // Dados da tarifa
-                        fareData: requestData.fareData
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
                     });
                     
                     document.getElementById('loadingMessage').textContent = 
@@ -1601,25 +1375,41 @@
             });
         }
 
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+        function showNearestDriverInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const nearestDriverId = urlParams.get('nearestDriverId');
+            const distance = urlParams.get('distance');
+            
+            if (nearestDriverId) {
+                document.getElementById('nearestDriverInfo').style.display = 'block';
+                
+                if (distance) {
+                    document.getElementById('driverDistance').textContent = 
+                        `Distância aproximada: ${distance} km`;
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             clientId = 'client_' + Math.random().toString(36).substr(2, 9);
             
             loadSavedLanguage();
-            loadFareDataFromURL();
             
             selectPaymentMethod('cash');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const origin = urlParams.get('origin');
+            const destination = urlParams.get('destination');
+            
+            if (origin) {
+                document.getElementById('origin').value = origin;
+            }
+            
+            if (destination) {
+                document.getElementById('destination').value = destination;
+            }
+            
+            showNearestDriverInfo();
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -1637,15 +1427,6 @@
             
             listenForNotifications();
         });
-
-        function loadSavedLanguage() {
-            const savedLanguage = localStorage.getItem('preferredLanguage');
-            if (savedLanguage && translations[savedLanguage]) {
-                currentLanguage = savedLanguage;
-                document.getElementById('languageSelector').value = savedLanguage;
-            }
-            updateTexts();
-        }
 
         function listenForNotifications() {
             database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
@@ -1677,4 +1458,3 @@
     </script>
 </body>
 </html>
-

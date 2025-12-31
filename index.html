@@ -1,372 +1,1437 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoTaxi - Baixar Aplicativo Oficial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title data-i18n="app_title">GoTáxi - Seu Táxi Em Lisboa</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
         
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+            background-color: #f5f5f5;
+        }
+        
+        header {
+            background-color: #000;
             color: white;
-            min-height: 100vh;
-            padding: 20px;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
         }
         
-        .header {
-            text-align: center;
-            margin-bottom: 50px;
+        .logo span {
+            color: #ffc107;
         }
         
-        .taxi-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
+        nav ul {
+            display: flex;
+            list-style: none;
+            align-items: center;
         }
         
-        h1 {
-            font-size: 2.8em;
-            margin-bottom: 10px;
-            color: #FFD700;
-            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        nav ul li {
+            margin-left: 15px;
         }
         
-        .tagline {
-            font-size: 1.2em;
-            color: #bbbbbb;
-            margin-bottom: 10px;
-        }
-        
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: 50px 0;
-        }
-        
-        .app-card {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .app-card:hover {
-            transform: translateY(-10px);
-            border-color: #FFD700;
-            background: rgba(255, 215, 0, 0.05);
-        }
-        
-        .app-icon {
-            font-size: 50px;
-            margin-bottom: 20px;
-            display: block;
-        }
-        
-        .app-title {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            color: #4FC3F7;
-        }
-        
-        .app-description {
-            color: #cccccc;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-        
-        .download-btn {
-            display: block;
-            padding: 18px 30px;
-            background: linear-gradient(45deg, #00C853, #64DD17);
+        nav ul li a {
             color: white;
             text-decoration: none;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 18px;
-            transition: all 0.3s;
-            margin-top: 20px;
-            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav ul li a:hover {
+            background-color: #333;
+        }
+
+        .language-selector {
+            background: transparent;
+            border: 1px solid #ffc107;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
             cursor: pointer;
+        }
+        
+        .language-selector option {
+            background: #000;
+            color: white;
+        }
+        
+        #map {
+            height: calc(100vh - 60px);
             width: 100%;
         }
         
-        .download-btn:hover {
-            background: linear-gradient(45deg, #00E676, #76FF03);
-            box-shadow: 0 5px 20px rgba(0, 200, 83, 0.4);
-            transform: scale(1.05);
-        }
-        
-        .instructions {
-            background: rgba(255, 193, 7, 0.1);
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 40px;
-            border-left: 5px solid #FFC107;
-        }
-        
-        .instructions h2 {
-            color: #FFC107;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-        
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .step {
-            background: rgba(255, 255, 255, 0.05);
+        .location-card {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
             padding: 20px;
-            border-radius: 10px;
-            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
         }
         
-        .step-number {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background: #FF6B00;
-            border-radius: 50%;
-            line-height: 40px;
-            font-weight: bold;
+        .form-group {
             margin-bottom: 15px;
         }
         
-        .warning {
-            background: rgba(255, 87, 34, 0.1);
-            border: 2px solid #FF5722;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 30px;
-            text-align: center;
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
             font-weight: bold;
         }
         
-        .device-message {
-            text-align: center;
-            padding: 15px;
-            background: rgba(76, 175, 80, 0.2);
-            border-radius: 10px;
-            margin: 20px 0;
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px; /* Previne zoom no iOS */
+        }
+        
+        .call-taxi-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+        
+        .call-taxi-btn:hover {
+            background-color: #e0a800;
+        }
+        
+        .call-taxi-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .call-taxi-btn.active {
+            background-color: #ffc107;
+            cursor: pointer;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1001;
             display: none;
-            animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
+        .notification.error {
+            background-color: #f44336;
         }
         
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 20px auto;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .apps-grid {
-                grid-template-columns: 1fr;
-            }
+        .driver-info {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .floating-buttons {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .floating-btn {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* Popup de sucesso */
+        .success-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .success-popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s;
+        }
+
+        .success-popup.active .popup-content {
+            transform: scale(1);
+        }
+
+        .popup-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .popup-message {
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .driver-details {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        
+        .driver-details h4 {
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+        
+        .driver-details p {
+            margin: 5px 0;
+        }
+        
+        .license-plate {
+            display: inline-block;
+            background-color: #ffc107;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-family: monospace;
+            margin-top: 5px;
+        }
+
+        .taxi-on-way {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .online-drivers-counter {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        /* Estilos para a busca do motorista mais próximo */
+        .nearest-driver-search {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10000;
+            text-align: center;
+            display: none;
+            max-width: 350px;
+            width: 90%;
+        }
+
+        .nearest-driver-search.active {
+            display: block;
+        }
+
+        .search-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+
+        .search-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .search-distance {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .search-loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ffc107;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Cabeçalho -->
-        <div class="header">
-            <div class="taxi-icon">🚖</div>
-            <h1>GoTaxi</h1>
-            <p class="tagline">Sua viagem, nossa prioridade!</p>
-            <p>Baixe o aplicativo oficial e tenha mobilidade na palma da mão</p>
+    <header>
+        <div class="logo">Go<span>Táxi</span></div>
+        <nav>
+            <ul>
+                <li><a href="index.html" data-i18n="home">Início</a></li>
+                <li>
+                    <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
+                        <option value="pt">🇵🇹 Português</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="fr">🇫🇷 Français</option>
+                    </select>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div id="map"></div>
+
+    <div id="onlineDriversCounter" class="online-drivers-counter" style="display: none;">
+        🚗 <span id="driversCount">0</span> <span data-i18n="drivers_online">motoristas online</span>
+    </div>
+    
+    <div class="location-card">
+        <div class="form-group">
+            <label for="origin" data-i18n="where_are_you">Onde está?</label>
+            <input type="text" id="origin" data-i18n-placeholder="enter_current_location" placeholder="Digite sua localização atual">
         </div>
-        
-        <!-- Mensagem para Android -->
-        <div id="androidMessage" class="device-message">
-            📱 <strong>Dispositivo Android detectado!</strong> Você pode instalar nosso aplicativo diretamente.
-        </div>
-        
-        <!-- Cards dos Apps -->
-        <div class="apps-grid">
-            <!-- App do Usuário -->
-            <div class="app-card">
-                <span class="app-icon">👤</span>
-                <h2 class="app-title">GoTaxi - Usuário</h2>
-                <p class="app-description">
-                    Solicite viagens, acompanhe seu motorista em tempo real, 
-                    escolha formas de pagamento e avalie seu trajeto.
-                </p>
-                <a href="https://gotaxi.rf.gd/app-release.apk" 
-                   class="download-btn"
-                   download="GoTaxi-Usuario.apk"
-                   onclick="trackDownload('usuario')">
-                    📲 BAIXAR APP USUÁRIO
-                </a>
-                <p style="margin-top: 10px; font-size: 14px; color: #aaa;">
-                    Versão 1.0 | Para Android 5.0+
-                </p>
-            </div>
-            
-            <!-- App do Motorista -->
-            <div class="app-card">
-                <span class="app-icon">🚗</span>
-                <h2 class="app-title">GoTaxi - Motorista</h2>
-                <p class="app-description">
-                    Receba corridas, gerencie suas viagens, 
-                    visualize seus ganhos e ofereça um serviço de qualidade.
-                </p>
-                <a href="https://gotaxi.rf.gd/motorista.apk" 
-                   class="download-btn"
-                   download="GoTaxi-Motorista.apk"
-                   onclick="trackDownload('motorista')">
-                    📲 BAIXAR APP MOTORISTA
-                </a>
-                <p style="margin-top: 10px; font-size: 14px; color: #aaa;">
-                    Versão 1.0 | Para Android 5.0+
-                </p>
-            </div>
-        </div>
-        
-        <!-- Instruções -->
-        <div class="instructions">
-            <h2>📋 Como Instalar o Aplicativo</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <p>Clique no botão de download acima</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <p>Aguarde o download do arquivo APK</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <p>Toque no arquivo baixado para instalar</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <p>Permita "Fontes desconhecidas" se pedir</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">5</div>
-                    <p>Clique em "Instalar" e depois "Abrir"</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Aviso importante -->
-        <div class="warning">
-            ⚠️ <strong>Importante:</strong> Se aparecer "Bloqueado pelo Play Protect", 
-            clique em "INSTALAR MESMO ASSIM". Seu aplicativo é seguro!
-        </div>
-        
-        <!-- Teste rápido -->
-        <div style="text-align: center; margin-top: 40px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 10px;">
-            <h3 style="margin-bottom: 15px; color: #4FC3F7;">🔗 Teste os Links (Clique para verificar)</h3>
-            <p>
-                <a href="https://gotaxi.rf.gd/app-release.apk" style="color: #4FC3F7; margin-right: 20px;" target="_blank">🔗 Verificar App Usuário</a>
-                <a href="https://gotaxi.rf.gd/motorista.apk" style="color: #4FC3F7;" target="_blank">🔗 Verificar App Motorista</a>
-            </p>
+        <div class="form-group">
+            <label for="destination" data-i18n="where_to">Pra onde vai?</label>
+            <input type="text" id="destination" data-i18n-placeholder="enter_destination" placeholder="Digite seu destino">
         </div>
     </div>
 
+    <!-- Popup de busca do motorista mais próximo -->
+    <div id="nearestDriverSearch" class="nearest-driver-search">
+        <div class="search-icon">🚗</div>
+        <div class="search-text" id="searchText">Buscando motorista mais próximo...</div>
+        <div class="search-distance" id="searchDistance"></div>
+        <div class="search-loading"></div>
+    </div>
+
+    <!-- Botão flutuante apenas para localização -->
+    <div class="floating-buttons">
+        <button class="floating-btn" onclick="getCurrentLocation()" data-i18n-title="my_location" title="Minha Localização">
+            📍
+        </button>
+    </div>
+    
+    <button id="callTaxi" class="call-taxi-btn" data-i18n="call_gotaxi">Chame GoTáxi</button>
+    
+    <div id="notification" class="notification"></div>
+    
+    <div id="driverInfo" class="driver-info">
+        <h3 data-i18n="driver_on_way">Motorista a caminho</h3>
+        <p id="driverDetails"></p>
+        <p id="estimatedTime" data-i18n="estimated_time">Tempo estimado: 5-10 minutos</p>
+    </div>
+
+    <!-- Popup de sucesso -->
+    <div id="successPopup" class="success-popup">
+        <div class="popup-content">
+            <div class="popup-icon">✅</div>
+            <h2 class="popup-title" data-i18n="taxi_confirmed">Táxi Confirmado!</h2>
+            <div class="taxi-on-way" id="taxiOnWayMessage" data-i18n="taxi_on_the_way">
+                Seu táxi foi aceito e está a caminho!
+            </div>
+            <div class="driver-details" id="driverDetailsPopup">
+                <!-- Detalhes do motorista serão preenchidos aqui -->
+            </div>
+            <p class="popup-message" id="popupMessage" data-i18n="driver_contact">O motorista entrará em contato com você em breve.</p>
+            <button onclick="closePopup()" class="call-taxi-btn" style="margin-top: 20px;" data-i18n="back_home">
+                🏠 Fechar
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <script>
-        // Detectar dispositivo Android
-        function detectAndroid() {
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            const messageDiv = document.getElementById('androidMessage');
-            
-            if (isAndroid) {
-                messageDiv.style.display = 'block';
-                console.log('✅ Dispositivo Android detectado - Download APK disponível');
-                
-                // Sugerir download após 3 segundos
-                setTimeout(() => {
-                    if (confirm('📱 Deseja baixar o aplicativo GoTaxi agora?')) {
-                        // O usuário escolhe qual app baixar
-                        const appChoice = confirm('Você é:\n\nOK = Usuário (Quero pedir viagens)\nCancelar = Motorista (Quero oferecer viagens)');
-                        
-                        if (appChoice === true) {
-                            window.location.href = 'https://gotaxi.rf.gd/app-release.apk';
-                        } else {
-                            window.location.href = 'https://gotaxi.rf.gd/motorista.apk';
-                        }
-                    }
-                }, 3000);
-            } else {
-                console.log('ℹ️ Dispositivo não-Android - Mostrando página normal');
+        // Sistema de Internacionalização
+        const translations = {
+            pt: {
+                "app_title": "GoTáxi - Seu Táxi Em Lisboa",
+                "home": "Início",
+                "where_are_you": "Onde está?",
+                "where_to": "Pra onde vai?",
+                "enter_current_location": "Digite sua localização atual",
+                "enter_destination": "Digite seu destino",
+                "call_taxi": "Chamar Táxi",
+                "my_location": "Minha Localização",
+                "call_gotaxi": "Chame GoTáxi",
+                "driver_on_way": "Motorista a caminho",
+                "taxi_confirmed": "Táxi Confirmado!",
+                "driver_contact": "O motorista está a caminho! Aguarde no local.",
+                "back_home": "🏠 Fechar",
+                "drivers_online": "motoristas online",
+                "estimated_time": "Tempo estimado: 5-10 minutos",
+                "taxi_on_the_way": "Seu táxi foi aceito e está a caminho!",
+                "location_updated": "Localização atualizada!",
+                "location_unavailable": "Localização não disponível. Ative a localização.",
+                "location_error": "Não foi possível obter sua localização. Digite manualmente.",
+                "driver_accepted": "Motorista aceitou sua corrida!",
+                "driver_rejected": "Nenhum motorista disponível no momento.",
+                "fill_origin_destination": "Por favor, preencha origem e destino.",
+                "taxi_confirmed_message": "Táxi confirmado! Motorista está a caminho.",
+                "searching_nearest_driver": "Buscando motorista mais próximo...",
+                "nearest_driver_found": "Motorista encontrado a {distance} km!",
+                "no_drivers_available": "Nenhum motorista disponível no momento."
+            },
+            en: {
+                "app_title": "GoTáxi - Your Taxi in Lisbon",
+                "home": "Home",
+                "where_are_you": "Where are you?",
+                "where_to": "Where to?",
+                "enter_current_location": "Enter your current location",
+                "enter_destination": "Enter your destination",
+                "call_taxi": "Call Taxi",
+                "my_location": "My Location",
+                "call_gotaxi": "Call GoTáxi",
+                "driver_on_way": "Driver on the way",
+                "taxi_confirmed": "Taxi Confirmed!",
+                "driver_contact": "The driver is on his way! Please wait at the location.",
+                "back_home": "🏠 Close",
+                "drivers_online": "drivers online",
+                "estimated_time": "Estimated time: 5-10 minutes",
+                "taxi_on_the_way": "Your taxi has been accepted and is on the way!",
+                "location_updated": "Location updated!",
+                "location_unavailable": "Location unavailable. Please enable location services.",
+                "location_error": "Could not get your location. Please enter manually.",
+                "driver_accepted": "Driver accepted your ride!",
+                "driver_rejected": "No drivers available at the moment.",
+                "fill_origin_destination": "Please fill origin and destination.",
+                "taxi_confirmed_message": "Taxi confirmed! Driver is on the way.",
+                "searching_nearest_driver": "Searching for nearest driver...",
+                "nearest_driver_found": "Driver found {distance} km away!",
+                "no_drivers_available": "No drivers available at the moment."
+            },
+            es: {
+                "app_title": "GoTáxi - Tu Taxi en Lisboa",
+                "home": "Inicio",
+                "where_are_you": "¿Dónde estás?",
+                "where_to": "¿A dónde vas?",
+                "enter_current_location": "Ingresa tu ubicación atual",
+                "enter_destination": "Ingresa tu destino",
+                "call_taxi": "Llamar Taxi",
+                "my_location": "Mi Ubicación",
+                "call_gotaxi": "Llamar GoTáxi",
+                "driver_on_way": "Conductor en camino",
+                "taxi_confirmed": "¡Taxi Confirmado!",
+                "driver_contact": "¡El conductor ya viene! Por favor, espere en la ubicación.",
+                "back_home": "🏠 Cerrar",
+                "drivers_online": "conductores en línea",
+                "estimated_time": "Tiempo estimado: 5-10 minutos",
+                "taxi_on_the_way": "¡Tu taxi ha sido aceptado e está en camino!",
+                "location_updated": "¡Ubicação atualizada!",
+                "location_unavailable": "Ubicación no disponible. Active los servicios de ubicación.",
+                "location_error": "No se pudo obtener su ubicación. Ingrese manualmente.",
+                "driver_accepted": "¡Conductor aceptó tu viaje!",
+                "driver_rejected": "No hay conductores disponibles en este momento.",
+                "fill_origin_destination": "Por favor, complete origen y destino.",
+                "taxi_confirmed_message": "¡Taxi confirmado! Conductor está en camino.",
+                "searching_nearest_driver": "Buscando conductor más cercano...",
+                "nearest_driver_found": "¡Conductor encontrado a {distance} km!",
+                "no_drivers_available": "No hay conductores disponibles en este momento."
+            },
+            fr: {
+                "app_title": "GoTáxi - Votre Taxi à Lisbonne",
+                "home": "Accueil",
+                "where_are_you": "Où êtes-vous?",
+                "where_to": "Où allez-vous?",
+                "enter_current_location": "Entrez votre position actuelle",
+                "enter_destination": "Entrez votre destination",
+                "call_taxi": "Appeler un Taxi",
+                "my_location": "Ma Position",
+                "call_gotaxi": "Appeler GoTáxi",
+                "driver_on_way": "Chauffeur en route",
+                "taxi_confirmed": "Taxi Confirmé!",
+                "driver_contact": "Le chauffeur est en route ! Veuillez patienter sur place.",
+                "back_home": "🏠 Fermer",
+                "drivers_online": "conducteurs en ligne",
+                "estimated_time": "Temps estimé: 5-10 minutes",
+                "taxi_on_the_way": "Votre taxi a été acepté et est en route!",
+                "location_updated": "Position mise à jour!",
+                "location_unavailable": "Position non disponible. Activez les servicios de localisation.",
+                "location_error": "Impossible d'obtenir votre position. Veuillez saisir manuellement.",
+                "driver_accepted": "Chauffeur a acepté votre course!",
+                "driver_rejected": "Aucun chauffeur disponible pour le moment.",
+                "fill_origin_destination": "Veuillez remplir l'origine et la destination.",
+                "taxi_confirmed_message": "Taxi confirmé! Le chauffeur est en route.",
+                "searching_nearest_driver": "Recherche du chauffeur le plus proche...",
+                "nearest_driver_found": "Chauffeur trouvé à {distance} km!",
+                "no_drivers_available": "Aucun chauffeur disponible para le moment."
             }
-        }
+        };
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
         
-        // Rastrear downloads (opcional)
-        function trackDownload(type) {
-            console.log(`📊 Download iniciado: ${type}`);
-            // Aqui você pode adicionar Google Analytics ou outro rastreamento
-            // Exemplo: gtag('event', 'download', {'app_type': type});
-        }
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
-        // Verificar se links funcionam
-        async function checkLinks() {
-            const links = [
-                'https://gotaxi.rf.gd/app-release.apk',
-                'https://gotaxi.rf.gd/motorista.apk'
-            ];
-            
-            for (let link of links) {
-                try {
-                    const response = await fetch(link, { method: 'HEAD' });
-                    console.log(`✅ Link OK: ${link} (Status: ${response.status})`);
-                } catch (error) {
-                    console.warn(`❌ Link com problema: ${link}`);
+        // Variáveis globais
+        let map;
+        let userMarker;
+        let originAutocomplete;
+        let destinationAutocomplete;
+        let userLocation;
+        let clientId;
+        let currentDriverData = null;
+        let currentLanguage = 'pt';
+
+        // Sistema de movimento suave
+        class SmoothMovementSystem {
+            constructor() {
+                this.cars = new Map();
+                this.animationId = null;
+                this.isAnimating = false;
+            }
+
+            updateCarPosition(carId, newPosition, newHeading) {
+                if (!this.cars.has(carId)) {
+                    this.cars.set(carId, {
+                        marker: this.createCarMarker(newPosition, newHeading),
+                        currentPos: newPosition,
+                        targetPos: newPosition,
+                        currentHeading: newHeading,
+                        targetHeading: newHeading,
+                        startTime: Date.now(),
+                        duration: 0,
+                        lastUpdate: Date.now()
+                    });
+                } else {
+                    const car = this.cars.get(carId);
+                    
+                    const distance = this.calculateDistance(car.currentPos, newPosition);
+                    const timeDiff = Date.now() - car.lastUpdate;
+                    const expectedDuration = this.calculateDuration(distance, timeDiff);
+                    
+                    car.currentPos = car.marker.getPosition();
+                    car.targetPos = newPosition;
+                    car.currentHeading = this.getCarRotation(car.marker);
+                    car.targetHeading = newHeading;
+                    car.startTime = Date.now();
+                    car.duration = Math.max(1000, Math.min(5000, expectedDuration));
+                    car.lastUpdate = Date.now();
+                }
+
+                if (!this.isAnimating) {
+                    this.startAnimationLoop();
+                }
+            }
+
+            createCarMarker(position, heading) {
+                return new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: "Motorista",
+                    icon: {
+                        url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                        scaledSize: new google.maps.Size(40, 60),
+                        anchor: new google.maps.Point(20, 30),
+                        rotation: heading
+                    }
+                });
+            }
+
+            getCarRotation(marker) {
+                return marker.getIcon().rotation || 0;
+            }
+
+            startAnimationLoop() {
+                this.isAnimating = true;
+                
+                const animate = () => {
+                    const currentTime = Date.now();
+                    let hasActiveAnimations = false;
+
+                    this.cars.forEach((car, carId) => {
+                        const elapsed = currentTime - car.startTime;
+                        let progress = Math.min(elapsed / car.duration, 1);
+
+                        if (progress < 1) {
+                            hasActiveAnimations = true;
+                            
+                            progress = this.easeInOutCubic(progress);
+                            
+                            const newPos = this.interpolatePosition(
+                                car.currentPos, 
+                                car.targetPos, 
+                                progress
+                            );
+                            
+                            const newHeading = this.interpolateHeading(
+                                car.currentHeading,
+                                car.targetHeading,
+                                progress
+                            );
+                            
+                            car.marker.setPosition(newPos);
+                            car.marker.setIcon({
+                                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                                scaledSize: new google.maps.Size(40, 60),
+                                anchor: new google.maps.Point(20, 30),
+                                rotation: newHeading
+                            });
+                            
+                            car.currentHeading = newHeading;
+                        } else {
+                            car.marker.setPosition(car.targetPos);
+                            car.marker.setIcon({
+                                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
+                                scaledSize: new google.maps.Size(40, 60),
+                                anchor: new google.maps.Point(20, 30),
+                                rotation: car.targetHeading
+                            });
+                            
+                            car.currentHeading = car.targetHeading;
+                        }
+                    });
+
+                    if (hasActiveAnimations) {
+                        this.animationId = requestAnimationFrame(animate);
+                    } else {
+                        this.isAnimating = false;
+                    }
+                };
+
+                this.animationId = requestAnimationFrame(animate);
+            }
+
+            interpolatePosition(start, end, progress) {
+                const lat1 = typeof start.lat === 'function' ? start.lat() : start.lat;
+                const lng1 = typeof start.lng === 'function' ? start.lng() : start.lng;
+                const lat2 = typeof end.lat === 'function' ? end.lat() : end.lat;
+                const lng2 = typeof end.lng === 'function' ? end.lng() : end.lng;
+                
+                return {
+                    lat: lat1 + (lat2 - lat1) * progress,
+                    lng: lng1 + (lng2 - lng1) * progress
+                };
+            }
+
+            interpolateHeading(start, end, progress) {
+                let diff = end - start;
+                if (Math.abs(diff) > 180) {
+                    diff = diff > 0 ? diff - 360 : diff + 360;
+                }
+                return start + diff * progress;
+            }
+
+            calculateDistance(pos1, pos2) {
+                const lat1 = typeof pos1.lat === 'function' ? pos1.lat() : pos1.lat;
+                const lng1 = typeof pos1.lng === 'function' ? pos1.lng() : pos1.lng;
+                const lat2 = typeof pos2.lat === 'function' ? pos2.lat() : pos2.lat;
+                const lng2 = typeof pos2.lng === 'function' ? pos2.lng() : pos2.lng;
+                
+                const R = 6371000;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLng = (lng2 - lng1) * Math.PI / 180;
+                const a = 
+                    Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            calculateDuration(distance, timeDiff) {
+                const averageSpeed = 8.33;
+                const expectedTime = distance / averageSpeed * 1000;
+                return Math.max(expectedTime, timeDiff * 1.2);
+            }
+
+            easeInOutCubic(t) {
+                return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+            }
+
+            removeCar(carId) {
+                if (this.cars.has(carId)) {
+                    const car = this.cars.get(carId);
+                    car.marker.setMap(null);
+                    this.cars.delete(carId);
+                }
+            }
+
+            clearAll() {
+                this.cars.forEach(car => car.marker.setMap(null));
+                this.cars.clear();
+                this.isAnimating = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
                 }
             }
         }
-        
-        // Inicializar
-        window.addEventListener('DOMContentLoaded', () => {
-            detectAndroid();
-            checkLinks();
+
+        const smoothMovement = new SmoothMovementSystem();
+
+        // Função para registrar visita - VERSÃO CORRIGIDA
+        async function registerVisit() {
+            try {
+                console.log('Iniciando registro de visita...');
+                
+                // Gerar ID único para a visita
+                const visitId = 'visit_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                console.log('ID da visita:', visitId);
+                
+                // Coletar informações do visitante
+                const visitData = {
+                    timestamp: new Date().toISOString(),
+                    language: currentLanguage || 'pt',
+                    userAgent: navigator.userAgent.substring(0, 200), // Limitar tamanho
+                    isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+                    screenResolution: `${window.screen.width}x${window.screen.height}`,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+                    referrer: (document.referrer && document.referrer !== '') ? document.referrer.substring(0, 100) : 'direct',
+                    page: 'index',
+                    clientId: clientId || 'unknown'
+                };
+                
+                console.log('Dados da visita:', visitData);
+                
+                // Tentar salvar no Firebase com timeout
+                const savePromise = database.ref('visits/' + visitId).set(visitData);
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout ao salvar visita')), 5000)
+                );
+                
+                await Promise.race([savePromise, timeoutPromise]);
+                console.log('✅ Visita salva no Firebase com sucesso!');
+                
+                // Atualizar estatísticas
+                await updateVisitStats();
+                
+            } catch (error) {
+                console.error('❌ ERRO ao registrar visita:', error);
+                console.error('Detalhes do erro:', error.message, error.code);
+                
+                // Tentar método alternativo
+                tryAlternativeSave();
+            }
+        }
+
+        // Método alternativo se o primeiro falhar
+        async function tryAlternativeSave() {
+            try {
+                console.log('Tentando método alternativo...');
+                
+                const simpleVisit = {
+                    timestamp: new Date().toISOString(),
+                    language: 'pt',
+                    isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+                    page: 'index'
+                };
+                
+                const visitId = 'alt_' + Date.now();
+                await database.ref('simple_visits/' + visitId).set(simpleVisit);
+                console.log('✅ Visita salva com método alternativo!');
+                
+            } catch (altError) {
+                console.error('❌ Método alternativo também falhou:', altError);
+            }
+        }
+
+        // Função para atualizar estatísticas - VERSÃO CORRIGIDA
+        async function updateVisitStats() {
+            try {
+                console.log('Atualizando estatísticas...');
+                const today = new Date().toISOString().split('T')[0];
+                console.log('Data de hoje:', today);
+                
+                // Obter estatísticas atuais
+                const statsRef = database.ref('visits_stats');
+                const statsSnapshot = await statsRef.once('value');
+                let stats = statsSnapshot.val();
+                
+                console.log('Estatísticas atuais do Firebase:', stats);
+                
+                // Se não existir, criar estrutura inicial SIMPLIFICADA
+                if (!stats) {
+                    console.log('Criando estatísticas iniciais...');
+                    stats = {
+                        totalVisits: 1,
+                        todayVisits: 1,
+                        uniqueVisitors: 1,
+                        lastUpdate: new Date().toISOString()
+                    };
+                } else {
+                    // Incrementar contadores
+                    stats.totalVisits = (stats.totalVisits || 0) + 1;
+                    stats.todayVisits = (stats.todayVisits || 0) + 1;
+                    stats.uniqueVisitors = stats.uniqueVisitors || 1;
+                    stats.lastUpdate = new Date().toISOString();
+                }
+                
+                console.log('Novas estatísticas:', stats);
+                
+                // Salvar de volta
+                await statsRef.set(stats);
+                console.log('✅ Estatísticas salvas no Firebase!');
+                
+                // Atualizar estatísticas diárias
+                await updateDailyStats(today);
+                
+            } catch (error) {
+                console.error('❌ ERRO ao atualizar estatísticas:', error);
+            }
+        }
+
+        // Função para atualizar estatísticas diárias
+        async function updateDailyStats(today) {
+            try {
+                const dailyRef = database.ref('daily_stats/' + today);
+                const dailySnapshot = await dailyRef.once('value');
+                let dailyData = dailySnapshot.val();
+                
+                if (!dailyData) {
+                    dailyData = {
+                        date: today,
+                        count: 1
+                    };
+                } else {
+                    dailyData.count = (dailyData.count || 0) + 1;
+                }
+                
+                await dailyRef.set(dailyData);
+                console.log('✅ Estatísticas diárias atualizadas!');
+                
+            } catch (error) {
+                console.error('Erro ao atualizar estatísticas diárias:', error);
+            }
+        }
+
+        // Função para encontrar o motorista mais próximo
+        async function findNearestDriver(clientLocation) {
+            try {
+                showSearchPopup(true, t('searching_nearest_driver'));
+                
+                const driversSnapshot = await database.ref('drivers').once('value');
+                const drivers = driversSnapshot.val();
+                let nearestDriver = null;
+                let minDistance = Infinity;
+                
+                if (!drivers) {
+                    console.log('Nenhum motorista online');
+                    showSearchPopup(false);
+                    return null;
+                }
+                
+                for (const driverId in drivers) {
+                    const driver = drivers[driverId];
+                    
+                    if (driver.status === 'online' && driver.location) {
+                        const distance = calculateDistance(
+                            clientLocation.lat, clientLocation.lng,
+                            driver.location.lat, driver.location.lng
+                        );
+                        
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearestDriver = {
+                                id: driverId,
+                                name: driver.name,
+                                licensePlate: driver.licensePlate,
+                                location: driver.location,
+                                distance: distance
+                            };
+                            
+                            document.getElementById('searchDistance').textContent = 
+                                t('nearest_driver_found').replace('{distance}', distance.toFixed(1));
+                        }
+                    }
+                }
+                
+                showSearchPopup(false);
+                
+                return nearestDriver;
+            } catch (error) {
+                console.error('Erro ao buscar motoristas:', error);
+                showSearchPopup(false);
+                return null;
+            }
+        }
+
+        // Calcular distância usando fórmula de Haversine
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Raio da Terra em km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Mostrar/ocultar popup de busca
+        function showSearchPopup(show, message = '') {
+            const searchPopup = document.getElementById('nearestDriverSearch');
+            const searchText = document.getElementById('searchText');
+            const searchDistance = document.getElementById('searchDistance');
             
-            // Adicionar confirmação de download
-            document.querySelectorAll('.download-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    const appName = this.textContent.includes('USUÁRIO') ? 'Usuário' : 'Motorista';
-                    if (!confirm(`Isso irá baixar o aplicativo GoTaxi ${appName}. Continuar?`)) {
-                        e.preventDefault();
+            if (show) {
+                searchText.textContent = message || t('searching_nearest_driver');
+                searchDistance.textContent = '';
+                searchPopup.classList.add('active');
+            } else {
+                searchPopup.classList.remove('active');
+            }
+        }
+
+        // Função para chamar táxi
+        async function callTaxi() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!origin || !destination) {
+                showNotification(t("fill_origin_destination"), true);
+                return;
+            }
+            
+            let clientLocation = userLocation;
+            if (!clientLocation) {
+                try {
+                    const position = await new Promise((resolve, reject) => {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(resolve, reject);
+                        } else {
+                            reject(new Error('Geolocation não suportado'));
+                        }
+                    });
+                    
+                    clientLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                } catch (error) {
+                    console.error('Erro ao obter localização:', error);
+                    redirectToForm(origin, destination, null);
+                    return;
+                }
+            }
+            
+            showNotification(t("searching_nearest_driver"));
+            const nearestDriver = await findNearestDriver(clientLocation);
+            
+            if (!nearestDriver) {
+                showNotification(t("no_drivers_available"), true);
+                return;
+            }
+            
+            redirectToForm(origin, destination, nearestDriver.id, nearestDriver.distance);
+        }
+
+        // Função de redirecionamento
+        function redirectToForm(origin, destination, nearestDriverId = null, distance = null) {
+            const params = new URLSearchParams({
+                origin: origin,
+                destination: destination,
+                lang: currentLanguage
+            });
+            
+            if (nearestDriverId) {
+                params.append('nearestDriverId', nearestDriverId);
+                params.append('distance', distance ? distance.toFixed(1) : '');
+            }
+            
+            window.location.href = `formulario.html?${params.toString()}`;
+        }
+
+        // Função para mudar idioma
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            updateTexts();
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Função para atualizar textos
+        function updateTexts() {
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    element.textContent = translations[currentLanguage][key];
+                }
+            });
+
+            const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
+            placeholders.forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[currentLanguage][key]) {
+                    element.setAttribute('placeholder', translations[currentLanguage][key]);
+                }
+            });
+
+            const titles = document.querySelectorAll('[data-i18n-title]');
+            titles.forEach(element => {
+                const key = element.getAttribute('data-i18n-title');
+                if (translations[currentLanguage][key]) {
+                    element.setAttribute('title', translations[currentLanguage][key]);
+                }
+            });
+        }
+
+        // Função para obter tradução
+        function t(key) {
+            return translations[currentLanguage][key] || key;
+        }
+
+        // Carregar idioma salvo
+        function loadSavedLanguage() {
+            const savedLanguage = localStorage.getItem('preferredLanguage');
+            if (savedLanguage && translations[savedLanguage]) {
+                currentLanguage = savedLanguage;
+                document.getElementById('languageSelector').value = savedLanguage;
+            }
+            updateTexts();
+        }
+        
+        // Gerar ID único para o cliente
+        clientId = 'client_' + Math.random().toString(36).substr(2, 9);
+        
+        // Inicializar mapa
+        function initMap() {
+            // Registrar visita
+            registerVisit();
+            
+            const lisbon = { lat: 38.7223, lng: -9.1393 };
+            
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: lisbon,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+            
+            userMarker = new google.maps.Marker({
+                position: lisbon,
+                map: map,
+                title: "Sua Localização",
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                }
+            });
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            } else {
+                handleLocationError(false, map.getCenter());
+            }
+            
+            originAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('origin'),
+                { types: ['geocode'] }
+            );
+            
+            destinationAutocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('destination'),
+                { types: ['geocode'] }
+            );
+            
+            listenForDrivers();
+            listenForNotifications();
+            listenForRideUpdates();
+        }
+        
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(
+                browserHasGeolocation
+                    ? "Erro: O serviço de geolocalização falhou."
+                    : "Erro: Seu navegador não suporta geolocalização."
+            );
+            
+            showNotification(t("location_error"), true);
+        }
+
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                        };
+                        
+                        userMarker.setPosition(userLocation);
+                        map.setCenter(userLocation);
+                        
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLocation }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                document.getElementById('origin').value = results[0].formatted_address;
+                            }
+                        });
+                        
+                        showNotification(t("location_updated"));
+                    },
+                    () => {
+                        handleLocationError(true, map.getCenter());
+                    }
+                );
+            }
+        }
+        
+        function listenForDrivers() {
+            database.ref('drivers').on('value', (snapshot) => {
+                const drivers = snapshot.val();
+                let onlineDriversCount = 0;
+                
+                if (drivers) {
+                    for (const driverId in drivers) {
+                        const driver = drivers[driverId];
+                        
+                        if (driver.status === 'online' && driver.location && map) {
+                            onlineDriversCount++;
+                            
+                            smoothMovement.updateCarPosition(
+                                driverId,
+                                driver.location,
+                                driver.heading || 0
+                            );
+                        } else {
+                            smoothMovement.removeCar(driverId);
+                        }
+                    }
+                }
+                
+                smoothMovement.cars.forEach((car, carId) => {
+                    if (!drivers || !drivers[carId] || drivers[carId].status !== 'online') {
+                        smoothMovement.removeCar(carId);
                     }
                 });
+                
+                updateOnlineDriversCounter(onlineDriversCount);
+                
+                if (onlineDriversCount > 0) {
+                    document.getElementById('callTaxi').disabled = false;
+                    document.getElementById('callTaxi').classList.add('active');
+                } else {
+                    document.getElementById('callTaxi').disabled = true;
+                    document.getElementById('callTaxi').classList.remove('active');
+                }
             });
-        });
-        
-        // Mostrar notificação se for iOS
-        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            alert("ℹ️ Para dispositivos iOS, o aplicativo estará disponível em breve na App Store.");
         }
+        
+        function updateOnlineDriversCounter(count) {
+            const counterElement = document.getElementById('onlineDriversCounter');
+            const countElement = document.getElementById('driversCount');
+            
+            countElement.textContent = count;
+            
+            if (count > 0) {
+                counterElement.style.display = 'block';
+                counterElement.style.backgroundColor = count >= 3 ? '#4CAF50' : 
+                                                     count === 2 ? '#ff9800' : 
+                                                     '#f44336';
+            } else {
+                counterElement.style.display = 'none';
+            }
+        }
+        
+        function listenForNotifications() {
+            database.ref(`notifications/clients/${clientId}`).on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                if (notification.type === 'request_accepted') {
+                    getDriverDetails(notification.driverId, notification.driverName, notification.licensePlate);
+                    snapshot.ref.remove();
+                } else if (notification.type === 'request_rejected') {
+                    showNotification(t("driver_rejected"), true);
+                    snapshot.ref.remove();
+                }
+            });
+        }
+        
+        function listenForRideUpdates() {
+            database.ref('ride_requests').orderByChild('clientId').equalTo(clientId).on('child_changed', (snapshot) => {
+                const request = snapshot.val();
+                
+                if (request.status === 'accepted') {
+                    getDriverDetails(request.driverId, request.driverName, request.licensePlate);
+                }
+            });
+        }
+        
+        function getDriverDetails(driverId, driverName, licensePlate) {
+            if (driverId) {
+                database.ref(`drivers/${driverId}`).once('value').then((snapshot) => {
+                    const driverData = snapshot.val();
+                    
+                    if (driverData) {
+                        showSuccessPopup(
+                            driverData.name || driverName || 'Motorista',
+                            driverData.licensePlate || licensePlate || 'Não informada'
+                        );
+                        
+                        showDriverInfo(
+                            driverData.name || driverName || 'Motorista',
+                            driverData.licensePlate || licensePlate || 'Não informada'
+                        );
+                    } else {
+                        showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                        showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+                    }
+                }).catch((error) => {
+                    console.error('Erro ao buscar dados do motorista:', error);
+                    showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                    showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+                });
+            } else {
+                showSuccessPopup(driverName || 'Motorista', licensePlate || 'Não informada');
+                showDriverInfo(driverName || 'Motorista', licensePlate || 'Não informada');
+            }
+        }
+        
+        function showSuccessPopup(driverName, licensePlate) {
+            const driverDetailsPopup = document.getElementById('driverDetailsPopup');
+            const taxiOnWayMessage = document.getElementById('taxiOnWayMessage');
+            
+            taxiOnWayMessage.textContent = t('taxi_on_the_way');
+            
+            let driverDetailsHTML = `
+                <h4 data-i18n="driver_details">Detalhes do Motorista</h4>
+                <p><strong data-i18n="driver_name">Nome do Motorista:</strong> ${driverName}</p>
+            `;
+            
+            if (licensePlate && licensePlate !== 'Não informada') {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> <span class="license-plate">${licensePlate}</span></p>`;
+            } else {
+                driverDetailsHTML += `<p><strong data-i18n="license_plate_display">Matrícula:</strong> Não informada</p>`;
+            }
+            
+            driverDetailsPopup.innerHTML = driverDetailsHTML;
+            
+            updateTexts();
+            
+            document.getElementById('successPopup').classList.add('active');
+            
+            showNotification(t("taxi_confirmed_message"));
+        }
+        
+        function closePopup() {
+            document.getElementById('successPopup').classList.remove('active');
+        }
+        
+        function showDriverInfo(driverName, licensePlate) {
+            const driverInfo = document.getElementById('driverInfo');
+            const driverDetails = document.getElementById('driverDetails');
+            
+            let detailsText = `${t('driver_name')}: ${driverName}`;
+            if (licensePlate && licensePlate !== 'Não informada') {
+                detailsText += ` | ${t('license_plate_display')}: ${licensePlate}`;
+            }
+            
+            driverDetails.textContent = detailsText;
+            
+            driverInfo.style.display = 'block';
+        }
+        
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = isError ? 'notification error' : 'notification';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        // Event listeners
+        document.getElementById('callTaxi').addEventListener('click', function(e) {
+            e.preventDefault();
+            callTaxi();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedLanguage();
+        });
+
+        // Teste manual - execute esta função no console do navegador
+        window.testFirebase = async function() {
+            console.log('🧪 Testando conexão Firebase...');
+            
+            try {
+                // Testar escrita
+                const testId = 'test_' + Date.now();
+                const testData = {
+                    timestamp: new Date().toISOString(),
+                    test: true,
+                    message: 'Teste de conexão Firebase'
+                };
+                
+                console.log('📝 Tentando escrever no Firebase...');
+                await database.ref('test/' + testId).set(testData);
+                console.log('✅ Escrita no Firebase OK!');
+                
+                // Testar leitura
+                console.log('📖 Tentando ler do Firebase...');
+                const testRead = await database.ref('test').once('value');
+                console.log('✅ Leitura do Firebase OK! Dados:', testRead.val());
+                
+                // Testar estatísticas
+                console.log('📊 Verificando estatísticas...');
+                const stats = await database.ref('visits_stats').once('value');
+                console.log('✅ Estatísticas:', stats.val());
+                
+                alert('✅ Firebase funcionando corretamente!\nVerifique o console para detalhes.');
+                
+            } catch (error) {
+                console.error('❌ ERRO no teste Firebase:', error);
+                alert('❌ Erro no Firebase:\n' + error.message + '\n\nVerifique as regras de segurança!');
+            }
+        };
+
+        // Teste automático ao carregar
+        setTimeout(() => {
+            console.log('🔧 Iniciando teste automático de conexão...');
+            database.ref('.info/connected').once('value')
+                .then((snap) => {
+                    if (snap.val() === true) {
+                        console.log('✅ Firebase conectado com sucesso!');
+                    } else {
+                        console.warn('⚠️ Firebase não está conectado');
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ Erro na conexão Firebase:', error);
+                });
+        }, 1000);
+    </script>
+    
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>
+

@@ -138,6 +138,56 @@
         .login-link a:hover {
             text-decoration: underline;
         }
+        
+        .progress-bar {
+            height: 5px;
+            background-color: #ddd;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+            color: #666;
+            position: relative;
+        }
+        
+        .step.active {
+            color: #ffc107;
+            font-weight: bold;
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin-bottom: 5px;
+        }
+        
+        .step.active .step-number {
+            background-color: #ffc107;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -157,80 +207,169 @@
         <div class="form-card">
             <h2>🚗 Registro de Motorista</h2>
             
+            <div class="step-indicator">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div>Dados Pessoais</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>Verificação</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>Concluído</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress" id="registrationProgress"></div>
+            </div>
+            
             <form id="registerForm">
                 <div class="form-group">
-                    <label for="regName">Nome Completo</label>
+                    <label for="regName">Nome Completo *</label>
                     <input type="text" id="regName" placeholder="Digite seu nome completo" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="regUsername">Usuário</label>
+                    <label for="regUsername">Usuário *</label>
                     <input type="text" id="regUsername" placeholder="Escolha um nome de usuário" required>
+                    <small style="color: #666;">Mínimo 3 caracteres, apenas letras e números</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="regLicensePlate">Matrícula do Carro</label>
+                    <label for="regLicensePlate">Matrícula do Carro *</label>
                     <input type="text" id="regLicensePlate" placeholder="Ex: AA-00-00" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="regNif">NIF</label>
+                    <label for="regNif">NIF *</label>
                     <input type="text" id="regNif" placeholder="Digite seu NIF" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="regPassword">Senha</label>
-                    <input type="password" id="regPassword" placeholder="Crie uma senha" required>
+                    <label for="regPhone">Telefone</label>
+                    <input type="tel" id="regPhone" placeholder="+351 912 345 678">
                 </div>
                 
                 <div class="form-group">
-                    <label for="regConfirmPassword">Confirmar Senha</label>
+                    <label for="regPassword">Senha *</label>
+                    <input type="password" id="regPassword" placeholder="Crie uma senha" required>
+                    <small style="color: #666;">Mínimo 6 caracteres</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="regConfirmPassword">Confirmar Senha *</label>
                     <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha" required>
                 </div>
                 
-                <button type="button" id="registerButton" class="btn">Registrar</button>
+                <div class="form-group" style="font-size: 14px; color: #666;">
+                    <input type="checkbox" id="termsAgreement" required>
+                    <label for="termsAgreement">Li e concordo com os <a href="#" style="color: #2196F3;">Termos de Serviço</a> e <a href="#" style="color: #2196F3;">Política de Privacidade</a></label>
+                </div>
+                
+                <button type="button" id="registerButton" class="btn">
+                    <span id="registerButtonText">Registrar</span>
+                    <span id="registerButtonLoading" style="display: none;">⏳ Processando...</span>
+                </button>
             </form>
             
             <div class="login-link">
-                <a href="motorista1.html">Já tem conta? Faça login</a>
+                <a href="motorista1.html">← Voltar para o Login</a>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <script>
-        // Sistema de armazenamento local para motoristas
+        // Configuração do Firebase (IDÊNTICA À DO SISTEMA PRINCIPAL)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZ4YqmOZz0wUlhBvuSD_fBLcwq1av8yc8",
+            authDomain: "gotaxi-4e391.firebaseapp.com",
+            databaseURL: "https://gotaxi-4e391-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gotaxi-4e391",
+            storageBucket: "gotaxi-4e391.firebasestorage.app",
+            messagingSenderId: "597857194128",
+            appId: "1:597857194128:web:9b550abd9b5e98bb374815"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Chave para armazenamento local (backup/cache)
         const DRIVERS_STORAGE_KEY = 'gotaxi_drivers';
         
-        // Inicializar sistema de motoristas
+        // Estado do registro
+        let registrationStep = 1;
+        
+        // Inicializar armazenamento local
         function initializeDriversStorage() {
             if (!localStorage.getItem(DRIVERS_STORAGE_KEY)) {
                 localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify({}));
             }
         }
 
-        // Obter todos os motoristas
-        function getAllDrivers() {
+        // Obter motoristas do armazenamento local
+        function getAllDriversLocal() {
             const drivers = localStorage.getItem(DRIVERS_STORAGE_KEY);
             return drivers ? JSON.parse(drivers) : {};
         }
 
-        // Salvar motorista
-        function saveDriver(driverData) {
-            const drivers = getAllDrivers();
+        // Salvar motorista localmente (cache)
+        function saveDriverLocal(driverData) {
+            const drivers = getAllDriversLocal();
             drivers[driverData.driverId] = driverData;
             localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
             return true;
         }
 
-        // Verificar se usuário já existe
-        function userExists(username) {
-            const drivers = getAllDrivers();
+        // Verificar se usuário já existe LOCALMENTE (apenas cache)
+        function userExistsLocal(username) {
+            const drivers = getAllDriversLocal();
             for (const driverId in drivers) {
                 if (drivers[driverId].username === username) {
                     return true;
                 }
             }
             return false;
+        }
+
+        // VERIFICAÇÃO CRÍTICA: Verificar se usuário já existe no FIREBASE (sistema global)
+        async function userExistsFirebase(username) {
+            try {
+                const snapshot = await database.ref('drivers_registered').orderByChild('username').equalTo(username).once('value');
+                return snapshot.exists();
+            } catch (error) {
+                console.error('Erro ao verificar usuário no Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Verificar se matrícula já existe no Firebase
+        async function licensePlateExistsFirebase(licensePlate) {
+            try {
+                const snapshot = await database.ref('drivers_registered').orderByChild('licensePlate').equalTo(licensePlate).once('value');
+                return snapshot.exists();
+            } catch (error) {
+                console.error('Erro ao verificar matrícula no Firebase:', error);
+                throw error;
+            }
+        }
+
+        // Verificar se NIF já existe no Firebase
+        async function nifExistsFirebase(nif) {
+            try {
+                const snapshot = await database.ref('drivers_registered').orderByChild('nif').equalTo(nif).once('value');
+                return snapshot.exists();
+            } catch (error) {
+                console.error('Erro ao verificar NIF no Firebase:', error);
+                throw error;
+            }
         }
         
         // Mostrar notificação
@@ -244,76 +383,218 @@
                 notification.style.display = 'none';
             }, 5000);
         }
-        
-        // Registrar motorista
-        document.getElementById('registerButton').addEventListener('click', function() {
+
+        // Atualizar progresso
+        function updateProgress(step) {
+            const progressBar = document.getElementById('registrationProgress');
+            const steps = document.querySelectorAll('.step');
+            
+            // Atualizar indicador de passos
+            steps.forEach((s, index) => {
+                if (index + 1 === step) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            
+            // Atualizar barra de progresso
+            const percentage = (step / 3) * 100;
+            progressBar.style.width = percentage + '%';
+            
+            registrationStep = step;
+        }
+
+        // Validar formulário
+        function validateForm() {
             const name = document.getElementById('regName').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const licensePlate = document.getElementById('regLicensePlate').value.trim();
             const nif = document.getElementById('regNif').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const termsAgreed = document.getElementById('termsAgreement').checked;
             
-            // Validações
+            // Validações básicas
             if (!name || !username || !licensePlate || !nif || !password || !confirmPassword) {
-                showNotification("Todos os campos são obrigatórios!", true);
-                return;
+                showNotification("Todos os campos obrigatórios (*) devem ser preenchidos!", true);
+                return false;
             }
             
             if (password !== confirmPassword) {
                 showNotification("As senhas não coincidem!", true);
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showNotification("A senha deve ter pelo menos 6 caracteres!", true);
+                return false;
+            }
+            
+            if (username.length < 3) {
+                showNotification("O usuário deve ter pelo menos 3 caracteres!", true);
+                return false;
+            }
+            
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                showNotification("O usuário deve conter apenas letras e números!", true);
+                return false;
+            }
+            
+            if (!termsAgreed) {
+                showNotification("Você deve aceitar os Termos de Serviço!", true);
+                return false;
+            }
+            
+            return true;
+        }
+
+        // REGISTRO DE MOTORISTA (FOCO NO FIREBASE - SISTEMA GLOBAL)
+        document.getElementById('registerButton').addEventListener('click', async function() {
+            const registerButton = document.getElementById('registerButton');
+            const buttonText = document.getElementById('registerButtonText');
+            const buttonLoading = document.getElementById('registerButtonLoading');
+            
+            // Validar formulário
+            if (!validateForm()) {
                 return;
             }
             
-            if (password.length < 4) {
-                showNotification("A senha deve ter pelo menos 4 caracteres!", true);
-                return;
-            }
+            // Obter valores
+            const name = document.getElementById('regName').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const licensePlate = document.getElementById('regLicensePlate').value.trim();
+            const nif = document.getElementById('regNif').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const password = document.getElementById('regPassword').value;
             
-            if (userExists(username)) {
-                showNotification("Este nome de usuário já está em uso!", true);
-                return;
-            }
+            // Atualizar UI para mostrar processamento
+            buttonText.style.display = 'none';
+            buttonLoading.style.display = 'inline';
+            registerButton.disabled = true;
+            updateProgress(2);
             
-            // Criar novo motorista
-            const driverId = 'driver_' + Date.now();
-            
-            // Dados do motorista
-            const driverData = {
-                name: name,
-                username: username,
-                licensePlate: licensePlate,
-                nif: nif,
-                password: password,
-                driverId: driverId,
-                createdAt: new Date().toISOString(),
-                status: 'offline'
-            };
-            
-            // Salvar localmente
             try {
-                saveDriver(driverData);
-                console.log('Motorista registrado com sucesso:', driverId);
+                // PASSO 1: Verificar duplicatas no Firebase (sistema global)
+                showNotification("🔍 Verificando disponibilidade no sistema...", false);
                 
-                // Mostrar mensagem de sucesso
-                showNotification("✅ Registro realizado com sucesso! Redirecionando para login...");
+                const [userExists, licenseExists, nifExists] = await Promise.all([
+                    userExistsFirebase(username),
+                    licensePlateExistsFirebase(licensePlate),
+                    nifExistsFirebase(nif)
+                ]);
+                
+                if (userExists) {
+                    throw new Error("Este nome de usuário já está registrado no sistema!");
+                }
+                
+                if (licenseExists) {
+                    throw new Error("Esta matrícula já está registrada no sistema!");
+                }
+                
+                if (nifExists) {
+                    throw new Error("Este NIF já está registrado no sistema!");
+                }
+                
+                // PASSO 2: Criar motorista
+                updateProgress(3);
+                showNotification("📝 Criando sua conta no sistema global...", false);
+                
+                // Criar ID único para o motorista
+                const driverId = 'driver_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                
+                // Dados completos para salvar localmente (com senha)
+                const driverDataLocal = {
+                    name: name,
+                    username: username,
+                    licensePlate: licensePlate,
+                    nif: nif,
+                    phone: phone || '',
+                    password: password,
+                    driverId: driverId,
+                    createdAt: new Date().toISOString(),
+                    status: 'offline',
+                    registrationDate: new Date().toISOString(),
+                    lastLogin: null
+                };
+                
+                // Dados para salvar no Firebase (SEM SENHA por segurança)
+                const driverDataFirebase = {
+                    name: name,
+                    username: username,
+                    licensePlate: licensePlate,
+                    nif: nif,
+                    phone: phone || '',
+                    driverId: driverId,
+                    createdAt: new Date().toISOString(),
+                    status: 'offline',
+                    registrationDate: new Date().toISOString(),
+                    deviceInfo: navigator.userAgent,
+                    ipAddress: 'desconhecido',
+                    updatedAt: null
+                };
+                
+                // PASSO 3: Salvar no Firebase (sistema global)
+                await database.ref(`drivers_registered/${driverId}`).set(driverDataFirebase);
+                
+                // PASSO 4: Salvar cache localmente (com senha para login futuro)
+                saveDriverLocal(driverDataLocal);
+                
+                // PASSO 5: Enviar notificação para o admin
+                await database.ref('admin_notifications').push({
+                    type: 'new_driver_registration',
+                    driverName: name,
+                    driverUsername: username,
+                    licensePlate: licensePlate,
+                    nif: nif,
+                    driverId: driverId,
+                    registrationDate: new Date().toISOString(),
+                    deviceInfo: navigator.userAgent,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // PASSO 6: Sucesso - atualizar UI
+                showNotification("✅ Registro realizado com sucesso no sistema global!", false);
                 
                 // Limpar formulário
-                document.getElementById('regName').value = '';
-                document.getElementById('regUsername').value = '';
-                document.getElementById('regLicensePlate').value = '';
-                document.getElementById('regNif').value = '';
-                document.getElementById('regPassword').value = '';
-                document.getElementById('regConfirmPassword').value = '';
+                document.getElementById('registerForm').reset();
                 
-                // Redirecionar para a página de login após 2 segundos
+                // Mostrar mensagem final
                 setTimeout(() => {
-                    window.location.href = 'motorista1.html';
-                }, 2000);
+                    showNotification("🎉 Parabéns! Sua conta foi criada. Redirecionando para login...", false);
+                    
+                    // Redirecionar para login após 3 segundos
+                    setTimeout(() => {
+                        window.location.href = 'motorista1.html';
+                    }, 3000);
+                }, 1000);
                 
             } catch (error) {
-                console.error('Erro ao registrar motorista:', error);
-                showNotification("Erro ao registrar. Tente novamente.", true);
+                console.error('Erro no registro:', error);
+                
+                // Voltar para passo 1 em caso de erro
+                updateProgress(1);
+                
+                // Restaurar botão
+                buttonText.style.display = 'inline';
+                buttonLoading.style.display = 'none';
+                registerButton.disabled = false;
+                
+                // Mostrar erro específico
+                if (error.message.includes('usuário já está registrado')) {
+                    showNotification(error.message, true);
+                    document.getElementById('regUsername').focus();
+                } else if (error.message.includes('matrícula já está registrada')) {
+                    showNotification(error.message, true);
+                    document.getElementById('regLicensePlate').focus();
+                } else if (error.message.includes('NIF já está registrado')) {
+                    showNotification(error.message, true);
+                    document.getElementById('regNif').focus();
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+                    showNotification("❌ Erro de conexão! Verifique sua internet e tente novamente.", true);
+                } else {
+                    showNotification("❌ Erro ao registrar: " + error.message, true);
+                }
             }
         });
 
@@ -324,9 +605,44 @@
             }
         });
 
-        // Inicializar sistema de motoristas quando a página carregar
+        // Validar usuário em tempo real
+        document.getElementById('regUsername').addEventListener('blur', async function() {
+            const username = this.value.trim();
+            
+            if (username.length < 3) return;
+            
+            try {
+                const exists = await userExistsFirebase(username);
+                if (exists) {
+                    showNotification("⚠️ Este usuário já está registrado no sistema!", true);
+                    this.style.borderColor = '#f44336';
+                } else {
+                    this.style.borderColor = '#4CAF50';
+                }
+            } catch (error) {
+                // Silenciar erro de rede durante validação em tempo real
+                console.log('Validação em tempo real não disponível (offline)');
+            }
+        });
+
+        // Validar senha em tempo real
+        document.getElementById('regConfirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = this.value;
+            
+            if (confirmPassword && password !== confirmPassword) {
+                this.style.borderColor = '#f44336';
+                document.getElementById('regPassword').style.borderColor = '#f44336';
+            } else if (confirmPassword) {
+                this.style.borderColor = '#4CAF50';
+                document.getElementById('regPassword').style.borderColor = '#4CAF50';
+            }
+        });
+
+        // Inicializar quando a página carregar
         window.addEventListener('load', function() {
             initializeDriversStorage();
+            updateProgress(1);
         });
     </script>
 </body>

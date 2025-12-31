@@ -644,7 +644,6 @@
             font-weight: bold;
         }
 
-        /* Menu Animado do Perfil - AGORA COM 3 OPÇÕES */
         .profile-menu-container {
             position: fixed;
             top: 80px;
@@ -668,7 +667,7 @@
 
         .profile-menu-container.active {
             width: 160px;
-            height: 180px; /* Aumentado para 3 opções */
+            height: 180px;
             border-radius: 12px;
         }
 
@@ -736,7 +735,6 @@
             transform: translateY(0);
         }
 
-        /* Controles da Corrida */
         .ride-controls {
             position: fixed;
             bottom: 20px;
@@ -765,7 +763,6 @@
             color: white;
         }
 
-        /* Relatório de Corridas */
         .report-container {
             position: fixed;
             top: 50%;
@@ -815,6 +812,7 @@
             padding: 15px;
             margin-bottom: 10px;
             background-color: #f9f9f9;
+            position: relative;
         }
 
         .ride-item-header {
@@ -822,6 +820,7 @@
             justify-content: space-between;
             margin-bottom: 10px;
             font-weight: bold;
+            padding-left: 30px;
         }
 
         .ride-date {
@@ -839,25 +838,77 @@
             padding: 20px;
         }
 
-        /* Adicionando animação para a rotação do mapa */
-        .map-rotation-hint {
-            position: fixed;
-            bottom: 100px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 999;
-            animation: pulse 2s infinite;
-            display: none;
+        .report-checkbox {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 1;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid #ccc;
+            border-radius: 3px;
+            background-color: white;
         }
 
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1; }
-            100% { opacity: 0.7; }
+        .report-checkbox:checked {
+            border-color: #4CAF50;
+            background-color: #4CAF50;
+        }
+
+        .report-checkbox:checked::after {
+            content: 'X';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .report-actions .btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .btn-select-all {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-delete-selected {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .selected-ride {
+            background-color: #e8f5e8;
+            border-color: #4CAF50;
+        }
+
+        .accepted-badge {
+            background-color: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -897,41 +948,14 @@
                     Usuário ou senha incorretos!
                 </div>
                 <div class="register-link">
-                    <a href="#" id="showRegister">Não tem conta? Registre-se</a>
+                    <a href="motorista-registro.html">Não tem conta? <strong>Registre-se</strong></a>
                 </div>
             </div>
             
-            <div class="tab-content" id="registerContent">
+            <div class="tab-content" id="registerContent" style="display: none;">
                 <h2>Registro de Motorista</h2>
-                <div class="form-group">
-                    <label for="regName">Nome Completo</label>
-                    <input type="text" id="regName" placeholder="Digite seu nome completo">
-                </div>
-                <div class="form-group">
-                    <label for="regUsername">Usuário</label>
-                    <input type="text" id="regUsername" placeholder="Escolha um nome de usuário">
-                </div>
-                <div class="form-group">
-                    <label for="regLicensePlate">Matrícula do Veículo</label>
-                    <input type="text" id="regLicensePlate" placeholder="Ex: AA-00-00">
-                </div>
-                <div class="form-group">
-                    <label for="regNif">NIF</label>
-                    <input type="text" id="regNif" placeholder="Digite seu NIF">
-                </div>
-                <div class="form-group">
-                    <label for="regPassword">Senha</label>
-                    <input type="password" id="regPassword" placeholder="Crie uma senha">
-                </div>
-                <div class="form-group">
-                    <label for="regConfirmPassword">Confirmar Senha</label>
-                    <input type="password" id="regConfirmPassword" placeholder="Confirme sua senha">
-                </div>
-                <button class="login-btn" onclick="register()">Registrar</button>
-                <div id="registerError" style="color: #f44336; text-align: center; margin-top: 15px; display: none;">
-                </div>
                 <div class="register-link">
-                    <a href="#" id="showLogin">Já tem conta? Faça login</a>
+                    <a href="motorista-registro.html">Clique aqui para ir para a página de registro</a>
                 </div>
             </div>
         </div>
@@ -941,11 +965,6 @@
     
     <div class="driver-name-badge" id="driverNameBadge" style="display: none;">
         Motorista: <span id="driverNameDisplay"></span>
-    </div>
-
-    <!-- Dica de rotação do mapa -->
-    <div class="map-rotation-hint" id="mapRotationHint">
-        Use dois dedos para girar o mapa
     </div>
 
     <div class="profile-menu-container" id="profileMenuContainer" style="display: none;">
@@ -1005,7 +1024,7 @@
                 <h4>Telefone de Suporte</h4>
                 <p>Contato via WhatsApp:</p>
                 <div class="support-contact">
-                    <a href="tel:351000000000">📞 +351 000 000 000</a>
+                    <a href="tel:351000000000">📞 +351 939 354 112</a>
                 </div>
             </div>
             <div class="support-item">
@@ -1023,7 +1042,7 @@
             </div>
             <div class="support-item">
                 <h4>Emergências</h4>
-                <p>Para situações de emergência durante o serviço, utilize o telefone de suporte que funciona 24/7.</p>
+                <p>Para situações de emergência durante o serviço, utilize o telefone de suporte.</p>
             </div>
         </div>
     </div>
@@ -1136,8 +1155,6 @@
         let currentDriver = null;
         let currentRequestId = null;
         let currentRequest = null;
-        let directionsService;
-        let directionsRenderer;
         let selectedReservationTime = null;
         let reservationMarker;
         let geocoder;
@@ -1149,20 +1166,17 @@
         let clientMarker = null;
         let destinationMarker = null;
         let isRouteDisplayed = false;
-        let currentRoute = null;
         let isRideGoing = false;
         let isRideAccepted = false;
-        let currentRideId = null;
-        let mapRotationInterval = null;
-        let isMapRotationEnabled = false;
-        let lastMapRotationUpdate = 0;
-        let isTwoFingerGestureActive = false;
-        let mapRotationHintTimeout = null;
+        let selectedRides = new Set();
+        let isAllSelected = false;
 
+        // Chaves de armazenamento
         const DRIVERS_STORAGE_KEY = 'gotaxi_drivers';
         const RIDES_HISTORY_KEY = 'gotaxi_rides_history';
         const SESSION_STORAGE_KEY = 'gotaxi_driver_session';
         
+        // Inicializar armazenamento local
         function initializeDriversStorage() {
             if (!localStorage.getItem(DRIVERS_STORAGE_KEY)) {
                 const defaultDrivers = {
@@ -1189,11 +1203,13 @@
             }
         }
 
+        // Obter motoristas do armazenamento local
         function getAllDrivers() {
             const drivers = localStorage.getItem(DRIVERS_STORAGE_KEY);
             return drivers ? JSON.parse(drivers) : {};
         }
 
+        // Salvar motorista localmente (backup/cache)
         function saveDriver(driverData) {
             const drivers = getAllDrivers();
             drivers[driverData.driverId] = driverData;
@@ -1201,6 +1217,7 @@
             return true;
         }
 
+        // Verificar se usuário existe localmente
         function userExists(username) {
             const drivers = getAllDrivers();
             for (const driverId in drivers) {
@@ -1211,11 +1228,16 @@
             return false;
         }
 
+        // Salvar histórico de corridas
         function saveRideToHistory(rideData) {
             let ridesHistory = JSON.parse(localStorage.getItem(RIDES_HISTORY_KEY) || '{}');
             
             if (!ridesHistory[currentDriver.driverId]) {
                 ridesHistory[currentDriver.driverId] = [];
+            }
+            
+            if (!rideData.status) {
+                rideData.status = 'accepted';
             }
             
             ridesHistory[currentDriver.driverId].unshift(rideData);
@@ -1227,11 +1249,13 @@
             localStorage.setItem(RIDES_HISTORY_KEY, JSON.stringify(ridesHistory));
         }
 
+        // Obter histórico de corridas
         function getRidesHistory() {
             const ridesHistory = JSON.parse(localStorage.getItem(RIDES_HISTORY_KEY) || '{}');
             return ridesHistory[currentDriver.driverId] || [];
         }
 
+        // Salvar sessão do motorista
         function saveDriverSession(driverData) {
             localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
                 driverId: driverData.driverId,
@@ -1240,117 +1264,19 @@
             }));
         }
 
+        // Obter sessão salva
         function getSavedSession() {
             const session = localStorage.getItem(SESSION_STORAGE_KEY);
             return session ? JSON.parse(session) : null;
         }
 
+        // Limpar sessão
         function clearSession() {
             localStorage.removeItem(SESSION_STORAGE_KEY);
         }
-        
-        document.getElementById('showRegister').addEventListener('click', function(e) {
-            e.preventDefault();
-            switchToRegister();
-        });
-        
-        document.getElementById('showLogin').addEventListener('click', function(e) {
-            e.preventDefault();
-            switchToLogin();
-        });
 
-        function switchToRegister() {
-            document.getElementById('loginTab').classList.remove('active');
-            document.getElementById('registerTab').classList.add('active');
-            document.getElementById('loginContent').classList.remove('active');
-            document.getElementById('registerContent').classList.add('active');
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('registerError').style.display = 'none';
-        }
-
-        function switchToLogin() {
-            document.getElementById('registerTab').classList.remove('active');
-            document.getElementById('loginTab').classList.add('active');
-            document.getElementById('registerContent').classList.remove('active');
-            document.getElementById('loginContent').classList.add('active');
-            document.getElementById('loginError').style.display = 'none';
-        }
-        
-        function register() {
-            const name = document.getElementById('regName').value.trim();
-            const username = document.getElementById('regUsername').value.trim();
-            const licensePlate = document.getElementById('regLicensePlate').value.trim();
-            const nif = document.getElementById('regNif').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            const registerError = document.getElementById('registerError');
-            
-            registerError.style.display = 'none';
-            registerError.textContent = '';
-            
-            if (!name || !username || !licensePlate || !nif || !password || !confirmPassword) {
-                registerError.textContent = "Todos os campos são obrigatórios!";
-                registerError.style.display = 'block';
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                registerError.textContent = "As senhas não coincidem!";
-                registerError.style.display = 'block';
-                return;
-            }
-            
-            if (password.length < 4) {
-                registerError.textContent = "A senha deve ter pelo menos 4 caracteres!";
-                registerError.style.display = 'block';
-                return;
-            }
-            
-            if (userExists(username)) {
-                registerError.textContent = "Este nome de usuário já está em uso!";
-                registerError.style.display = 'block';
-                return;
-            }
-            
-            const driverId = 'driver_' + Date.now();
-            
-            const driverData = {
-                name: name,
-                username: username,
-                licensePlate: licensePlate,
-                nif: nif,
-                password: password,
-                driverId: driverId,
-                phone: '',
-                createdAt: new Date().toISOString(),
-                status: 'offline'
-            };
-            
-            try {
-                saveDriver(driverData);
-                console.log('Motorista registrado com sucesso:', driverId);
-                
-                document.getElementById('successMessage').style.display = 'block';
-                
-                document.getElementById('regName').value = '';
-                document.getElementById('regUsername').value = '';
-                document.getElementById('regLicensePlate').value = '';
-                document.getElementById('regNif').value = '';
-                document.getElementById('regPassword').value = '';
-                document.getElementById('regConfirmPassword').value = '';
-                
-                setTimeout(() => {
-                    switchToLogin();
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Erro ao registrar motorista:', error);
-                registerError.textContent = "Erro ao registrar. Tente novamente.";
-                registerError.style.display = 'block';
-            }
-        }
-        
-        function login() {
+        // FUNÇÃO DE LOGIN ATUALIZADA - VERIFICA FIREBASE PRIMEIRO
+        async function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const loginError = document.getElementById('loginError');
@@ -1363,32 +1289,153 @@
                 return;
             }
             
-            const drivers = getAllDrivers();
-            let loginSuccess = false;
-            let driverData = null;
+            // Login do admin
+            if (username === 'Megaadm' && password === '12345') {
+                window.location.href = 'admin.html';
+                return;
+            }
             
-            for (const driverId in drivers) {
-                const driver = drivers[driverId];
-                if (driver.username === username && driver.password === password) {
-                    loginSuccess = true;
-                    driverData = driver;
-                    break;
+            // Primeiro verificar no Firebase
+            try {
+                const snapshot = await database.ref('drivers_registered').orderByChild('username').equalTo(username).once('value');
+                const firebaseDrivers = snapshot.val();
+                let firebaseDriverData = null;
+                
+                if (firebaseDrivers) {
+                    // Encontrar o motorista pelo username no Firebase
+                    for (const driverId in firebaseDrivers) {
+                        if (firebaseDrivers[driverId].username === username) {
+                            firebaseDriverData = firebaseDrivers[driverId];
+                            break;
+                        }
+                    }
+                    
+                    if (firebaseDriverData) {
+                        // Verificar senha no armazenamento local (cache)
+                        const localDrivers = getAllDrivers();
+                        let passwordValid = false;
+                        
+                        // Tentar encontrar no cache local
+                        if (localDrivers[firebaseDriverData.driverId]) {
+                            if (localDrivers[firebaseDriverData.driverId].password === password) {
+                                passwordValid = true;
+                            }
+                        }
+                        
+                        // Se não encontrou no cache, verificar se há registro recente
+                        if (!passwordValid) {
+                            // Buscar qualquer motorista local com essas credenciais
+                            const localMatches = Object.values(localDrivers).filter(driver => 
+                                driver.username === username && driver.password === password
+                            );
+                            
+                            if (localMatches.length > 0) {
+                                passwordValid = true;
+                                // Usar os dados locais (mais completos, incluem senha)
+                                firebaseDriverData = localMatches[0];
+                            } else {
+                                loginError.textContent = "Senha incorreta!";
+                                loginError.style.display = 'block';
+                                return;
+                            }
+                        }
+                        
+                        // Login bem-sucedido
+                        currentDriver = {
+                            ...firebaseDriverData,
+                            password: password // Garantir que a senha está incluída
+                        };
+                        
+                        // Salvar no cache local para futuros logins
+                        saveDriver(currentDriver);
+                        
+                        // Salvar sessão
+                        saveDriverSession(currentDriver);
+                        
+                        // Inicializar interface
+                        initializeDriverInterface();
+                        
+                        showNotification(`Bem-vindo, ${currentDriver.name}! (Sincronizado com Firebase)`);
+                        
+                        // Limpar campos
+                        document.getElementById('username').value = '';
+                        document.getElementById('password').value = '';
+                        
+                        return;
+                    }
+                }
+                
+                // Se não encontrou no Firebase, tentar login local (modo fallback)
+                const localDrivers = getAllDrivers();
+                let loginSuccess = false;
+                let localDriverData = null;
+                
+                for (const driverId in localDrivers) {
+                    const driver = localDrivers[driverId];
+                    if (driver.username === username && driver.password === password) {
+                        loginSuccess = true;
+                        localDriverData = driver;
+                        break;
+                    }
+                }
+                
+                if (loginSuccess) {
+                    currentDriver = localDriverData;
+                    saveDriverSession(currentDriver);
+                    initializeDriverInterface();
+                    showNotification(`Bem-vindo, ${currentDriver.name}! (Modo local)`);
+                } else {
+                    loginError.textContent = "Usuário ou senha incorretos!";
+                    loginError.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Erro ao verificar login no Firebase:', error);
+                
+                // Fallback para verificação local
+                const localDrivers = getAllDrivers();
+                let loginSuccess = false;
+                let driverData = null;
+                
+                for (const driverId in localDrivers) {
+                    const driver = localDrivers[driverId];
+                    if (driver.username === username && driver.password === password) {
+                        loginSuccess = true;
+                        driverData = driver;
+                        break;
+                    }
+                }
+                
+                if (loginSuccess) {
+                    currentDriver = driverData;
+                    saveDriverSession(currentDriver);
+                    initializeDriverInterface();
+                    showNotification(`Bem-vindo, ${currentDriver.name}! (Modo offline)`);
+                } else {
+                    loginError.textContent = "Usuário ou senha incorretos!";
+                    loginError.style.display = 'block';
                 }
             }
-            
-            if (loginSuccess) {
-                currentDriver = driverData;
-                
-                saveDriverSession(currentDriver);
-                
-                initializeDriverInterface();
-                
-            } else {
-                loginError.textContent = "Usuário ou senha incorretos!";
-                loginError.style.display = 'block';
-            }
+        }
+        
+        // Alternar para tela de registro
+        function switchToRegister() {
+            document.getElementById('loginTab').classList.remove('active');
+            document.getElementById('registerTab').classList.add('active');
+            document.getElementById('loginContent').classList.remove('active');
+            document.getElementById('registerContent').classList.add('active');
+            document.getElementById('successMessage').style.display = 'none';
         }
 
+        function switchToLogin() {
+            document.getElementById('registerTab').classList.remove('active');
+            document.getElementById('loginTab').classList.add('active');
+            document.getElementById('registerContent').classList.remove('active');
+            document.getElementById('loginContent').classList.add('active');
+            document.getElementById('loginError').style.display = 'none';
+        }
+        
+        // Inicializar interface do motorista
         function initializeDriverInterface() {
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('map').style.display = 'block';
@@ -1400,8 +1447,6 @@
             
             initMap();
             
-            showNotification(`Bem-vindo, ${currentDriver.name}!`);
-            
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             
@@ -1411,6 +1456,7 @@
             }
         }
         
+        // Logout
         document.getElementById('logoutBtn').addEventListener('click', function() {
             if (isTracking) {
                 stopTracking();
@@ -1446,14 +1492,13 @@
             document.getElementById('successMessage').style.display = 'none';
         });
         
+        // Inicializar mapa
         function initMap() {
             const lisbon = { lat: 38.7223, lng: -9.1393 };
             
-            // CORREÇÃO PRINCIPAL: Configurar o mapa corretamente para permitir gestos
             map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 14,
                 center: lisbon,
-                // Configurações para permitir todos os gestos
                 mapTypeControl: true,
                 streetViewControl: true,
                 fullscreenControl: true,
@@ -1461,25 +1506,6 @@
                 zoomControlOptions: {
                     position: google.maps.ControlPosition.RIGHT_BOTTOM
                 },
-                // IMPORTANTE: Permitir inclinação e rotação
-                tilt: 0, // Inicialmente sem inclinação
-                heading: 0, // Inicialmente apontando para o norte
-                // Configurações críticas para gestos
-                gestureHandling: 'greedy', // ou 'cooperative' para melhor experiência móvel
-                disableDefaultUI: false, // Não desabilitar UI padrão
-                disableDoubleClickZoom: false, // Permitir zoom com duplo clique
-                draggable: true, // Permitir arrastar
-                scrollwheel: true, // Permitir rolagem do mouse
-                keyboardShortcuts: true, // Atalhos de teclado
-                rotateControl: true, // Mostrar controle de rotação
-                scaleControl: true, // Mostrar escala
-                panControl: true, // Mostrar controle de pan
-                isFractionalZoomEnabled: true, // Permitir zoom fracionário
-                restriction: null, // Sem restrições
-                // Configurar limites mínimos/máximos de zoom
-                minZoom: 8,
-                maxZoom: 20,
-                // Configurar estilo (opcional)
                 styles: [
                     {
                         "featureType": "all",
@@ -1494,36 +1520,6 @@
                 ]
             });
             
-            // Adicionar evento para mostrar dica de rotação
-            map.addListener('dragstart', function(event) {
-                if (event.domEvent && event.domEvent.touches && event.domEvent.touches.length >= 2) {
-                    isTwoFingerGestureActive = true;
-                    showMapRotationHint();
-                }
-            });
-            
-            map.addListener('dragend', function() {
-                isTwoFingerGestureActive = false;
-                hideMapRotationHint();
-            });
-            
-            // Adicionar listener para detectar gesto de rotação
-            const mapDiv = document.getElementById('map');
-            mapDiv.addEventListener('touchstart', handleTouchStart, {passive: true});
-            mapDiv.addEventListener('touchmove', handleTouchMove, {passive: true});
-            mapDiv.addEventListener('touchend', handleTouchEnd, {passive: true});
-            
-            directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: null,
-                suppressMarkers: true,
-                polylineOptions: {
-                    strokeColor: '#4285f4',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 6
-                }
-            });
-            
             geocoder = new google.maps.Geocoder();
             
             marker = new google.maps.Marker({
@@ -1535,7 +1531,7 @@
                     scaledSize: new google.maps.Size(40, 60),
                     anchor: new google.maps.Point(20, 20)
                 },
-                optimized: false // Para melhor performance com animações
+                optimized: false
             });
             
             if (navigator.geolocation) {
@@ -1571,71 +1567,21 @@
             setupRideControls();
         }
         
-        // Funções para detectar gestos de toque
-        let lastTouchDistance = null;
-        
-        function handleTouchStart(event) {
-            if (event.touches.length >= 2) {
-                const touch1 = event.touches[0];
-                const touch2 = event.touches[1];
-                lastTouchDistance = Math.hypot(
-                    touch1.clientX - touch2.clientX,
-                    touch1.clientY - touch2.clientY
-                );
-                isTwoFingerGestureActive = true;
-                showMapRotationHint();
-            }
+        // Função para calcular distância
+        function calculateStraightDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            return distance;
         }
         
-        function handleTouchMove(event) {
-            if (event.touches.length >= 2 && isTwoFingerGestureActive) {
-                const touch1 = event.touches[0];
-                const touch2 = event.touches[1];
-                const currentDistance = Math.hypot(
-                    touch1.clientX - touch2.clientX,
-                    touch1.clientY - touch2.clientY
-                );
-                
-                // Detecta movimento de rotação (os dedos se movem em arco)
-                if (lastTouchDistance !== null) {
-                    const delta = currentDistance - lastTouchDistance;
-                    // Se os dedos estão se movendo em círculo, podemos detectar como rotação
-                    if (Math.abs(delta) < 10) {
-                        // Movimento de rotação detectado
-                        showMapRotationHint();
-                    }
-                }
-                
-                lastTouchDistance = currentDistance;
-            }
-        }
-        
-        function handleTouchEnd() {
-            lastTouchDistance = null;
-            isTwoFingerGestureActive = false;
-            setTimeout(() => {
-                hideMapRotationHint();
-            }, 2000);
-        }
-        
-        function showMapRotationHint() {
-            const hint = document.getElementById('mapRotationHint');
-            hint.style.display = 'block';
-            
-            if (mapRotationHintTimeout) {
-                clearTimeout(mapRotationHintTimeout);
-            }
-            
-            mapRotationHintTimeout = setTimeout(() => {
-                hideMapRotationHint();
-            }, 3000);
-        }
-        
-        function hideMapRotationHint() {
-            const hint = document.getElementById('mapRotationHint');
-            hint.style.display = 'none';
-        }
-        
+        // Configurar controles da corrida
         function setupRideControls() {
             document.getElementById('goBtn').addEventListener('click', startRide);
             document.getElementById('stopBtn').addEventListener('click', stopRide);
@@ -1650,19 +1596,6 @@
             isRideGoing = true;
             document.getElementById('goBtn').classList.add('active');
             
-            // Ativar rotação do mapa se disponível
-            if (map.setTilt && map.setHeading) {
-                enableMapRotation();
-            }
-            
-            // Atualizar o marcador
-            marker.setIcon({
-                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
-                scaledSize: new google.maps.Size(40, 60),
-                anchor: new google.maps.Point(20, 20)
-            });
-            
-            // Notificar o cliente que a corrida começou
             if (currentRequest && currentRequest.clientId) {
                 database.ref(`notifications/clients/${currentRequest.clientId}`).push({
                     type: 'ride_started',
@@ -1685,23 +1618,8 @@
             isRideAccepted = false;
             document.getElementById('goBtn').classList.remove('active');
             
-            // Desativar rotação do mapa
-            disableMapRotation();
-            
             document.getElementById('rideControls').style.display = 'none';
             document.getElementById('controls').style.display = 'flex';
-            
-            // Restaurar marcador
-            marker.setIcon({
-                url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
-                scaledSize: new google.maps.Size(40, 60),
-                anchor: new google.maps.Point(20, 20)
-            });
-            
-            // Limpar rota e marcadores
-            if (directionsRenderer) {
-                directionsRenderer.setMap(null);
-            }
             
             if (clientMarker) {
                 clientMarker.setMap(null);
@@ -1712,10 +1630,8 @@
             }
             
             isRouteDisplayed = false;
-            currentRoute = null;
             currentRequest = null;
             
-            // Notificar o cliente que a corrida terminou
             if (currentRequest && currentRequest.clientId) {
                 database.ref(`notifications/clients/${currentRequest.clientId}`).push({
                     type: 'ride_completed',
@@ -1728,82 +1644,6 @@
             showNotification("✅ Viagem finalizada! Você está disponível para novas corridas.");
         }
         
-        function enableMapRotation() {
-            if (isMapRotationEnabled) return;
-            
-            isMapRotationEnabled = true;
-            
-            try {
-                // Configurar mapa para modo navegação (se suportado)
-                if (map.setTilt) {
-                    map.setTilt(45); // Inclinar para perspectiva 3D
-                }
-                if (map.setZoom) {
-                    map.setZoom(17); // Zoom mais próximo
-                }
-                
-                // Iniciar intervalo para atualizar rotação com base na direção do marcador
-                mapRotationInterval = setInterval(() => {
-                    if (isRideGoing && lastPosition && marker) {
-                        const currentTime = Date.now();
-                        
-                        // Atualizar a cada 500ms para suavidade
-                        if (currentTime - lastMapRotationUpdate > 500) {
-                            // Tentar obter rotação do marcador
-                            const icon = marker.getIcon();
-                            if (icon && icon.rotation !== undefined && map.setHeading) {
-                                // Girar mapa para seguir a direção do veículo
-                                map.setHeading(icon.rotation);
-                            }
-                            
-                            // Centralizar no marcador
-                            if (map.setCenter && marker.getPosition()) {
-                                map.setCenter(marker.getPosition());
-                            }
-                            
-                            lastMapRotationUpdate = currentTime;
-                        }
-                    }
-                }, 100);
-                
-                console.log("Modo navegação ativado");
-                
-            } catch (error) {
-                console.warn("Recursos de rotação do mapa não disponíveis:", error);
-                isMapRotationEnabled = false;
-            }
-        }
-        
-        function disableMapRotation() {
-            if (!isMapRotationEnabled) return;
-            
-            isMapRotationEnabled = false;
-            
-            // Parar intervalo de rotação
-            if (mapRotationInterval) {
-                clearInterval(mapRotationInterval);
-                mapRotationInterval = null;
-            }
-            
-            try {
-                // Restaurar configurações normais do mapa
-                if (map.setTilt) {
-                    map.setTilt(0); // Voltar à vista 2D
-                }
-                if (map.setHeading) {
-                    map.setHeading(0); // Voltar ao norte
-                }
-                if (map.setZoom) {
-                    map.setZoom(14); // Zoom padrão
-                }
-                
-                console.log("Modo navegação desativado");
-                
-            } catch (error) {
-                console.warn("Erro ao restaurar mapa:", error);
-            }
-        }
-        
         function handleLocationError(browserHasGeolocation, pos) {
             console.log(
                 browserHasGeolocation
@@ -1814,6 +1654,7 @@
             showNotification("Não foi possível obter sua localização.", true);
         }
         
+        // Carregar dados do perfil
         function loadProfileData() {
             if (!currentDriver) return;
             
@@ -1831,13 +1672,12 @@
             };
         }
         
+        // Menu de perfil
         function toggleProfileMenu() {
             const menu = document.getElementById('profileMenuContainer');
             menu.classList.toggle('active');
             
-            // Se o menu está fechando (não tem classe active)
             if (!menu.classList.contains('active')) {
-                // Fecha todos os painéis sem mostrar notificação
                 closeAllPanelsSilently();
             }
         }
@@ -1849,10 +1689,8 @@
         
         function closeProfile() {
             if (isEditingProfile) {
-                // Se estava editando, cancelar a edição
                 disableEditMode();
             } else {
-                // Se não estava editando, apenas fechar
                 document.getElementById('profileContainer').style.display = 'none';
                 document.getElementById('profileMenuContainer').classList.remove('active');
             }
@@ -1877,12 +1715,26 @@
             if (rides.length === 0) {
                 ridesList.innerHTML = '<div class="no-rides">Nenhuma corrida realizada ainda.</div>';
             } else {
-                let html = '';
+                let html = `
+                    <div class="report-actions">
+                        <button class="btn btn-select-all" onclick="selectAllReports()">
+                            <span id="selectAllText">📋 Selecionar Todos</span>
+                        </button>
+                        <button class="btn btn-delete-selected" onclick="deleteSelectedReports()">
+                            🗑️ Apagar Selecionados
+                        </button>
+                    </div>
+                `;
+                
                 rides.forEach((ride, index) => {
+                    const isAccepted = ride.status === 'accepted' || ride.type === 'reservation_accepted';
+                    const acceptedBadge = isAccepted ? '<span class="accepted-badge">✅ ACEITO</span>' : '';
+                    
                     html += `
-                        <div class="ride-item">
+                        <div class="ride-item" id="ride-${index}">
+                            <input type="checkbox" class="report-checkbox" id="checkbox-${index}" onchange="toggleRideSelection(${index})">
                             <div class="ride-item-header">
-                                <span>Corrida #${index + 1}</span>
+                                <span>Corrida #${index + 1} ${acceptedBadge}</span>
                                 <span class="ride-date">${ride.date || 'Data não disponível'}</span>
                             </div>
                             <div class="ride-details">
@@ -1892,7 +1744,7 @@
                                 <p><strong>Passageiros:</strong> ${ride.passengers || '1'}</p>
                                 <p><strong>Contato:</strong> ${ride.contact || 'Não informado'}</p>
                                 ${ride.reservationTime ? `<p><strong>Tempo de Reserva:</strong> ${ride.reservationTime} minutos</p>` : ''}
-                                ${ride.type ? `<p><strong>Tipo:</strong> ${ride.type === 'reservation' ? 'Reserva' : 'Corrida Normal'}</p>` : ''}
+                                ${ride.type ? `<p><strong>Tipo:</strong> ${ride.type === 'reservation' || ride.type === 'reservation_accepted' ? 'Reserva' : 'Corrida Normal'}</p>` : ''}
                             </div>
                         </div>
                     `;
@@ -1901,6 +1753,8 @@
             }
             
             document.getElementById('reportContainer').style.display = 'block';
+            selectedRides = new Set();
+            updateSelectAllButton();
         }
         
         function closeReport() {
@@ -1926,6 +1780,7 @@
             }
         }
         
+        // Edição do perfil
         function enableEditMode() {
             isEditingProfile = true;
             
@@ -1998,7 +1853,8 @@
             }
         }
         
-        function saveProfile() {
+        // Salvar perfil atualizado (atualiza Firebase também)
+        async function saveProfile() {
             const name = document.getElementById('profileName').value.trim();
             const licensePlate = document.getElementById('profileLicensePlate').value.trim();
             const nif = document.getElementById('profileNif').value.trim();
@@ -2019,36 +1875,147 @@
                 return;
             }
             
-            currentDriver.name = name;
-            currentDriver.licensePlate = licensePlate;
-            currentDriver.nif = nif;
-            currentDriver.phone = phone;
-            
-            const drivers = getAllDrivers();
-            drivers[currentDriver.driverId] = currentDriver;
-            localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
-            
-            originalProfileData = {
-                name: name,
-                licensePlate: licensePlate,
-                nif: nif,
-                phone: phone
-            };
-            
-            document.getElementById('driverNameDisplay').textContent = currentDriver.name;
-            
-            if (isTracking && currentDriver) {
-                database.ref(`drivers/${currentDriver.driverId}`).update({
-                    name: currentDriver.name,
-                    licensePlate: currentDriver.licensePlate
-                });
+            try {
+                // Atualizar localmente
+                currentDriver.name = name;
+                currentDriver.licensePlate = licensePlate;
+                currentDriver.nif = nif;
+                currentDriver.phone = phone;
+                
+                const drivers = getAllDrivers();
+                drivers[currentDriver.driverId] = currentDriver;
+                localStorage.setItem(DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+                
+                // Atualizar no Firebase (sem dados sensíveis)
+                if (currentDriver.driverId) {
+                    await database.ref(`drivers_registered/${currentDriver.driverId}`).update({
+                        name: name,
+                        licensePlate: licensePlate,
+                        nif: nif,
+                        phone: phone,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+                
+                originalProfileData = {
+                    name: name,
+                    licensePlate: licensePlate,
+                    nif: nif,
+                    phone: phone
+                };
+                
+                document.getElementById('driverNameDisplay').textContent = currentDriver.name;
+                
+                if (isTracking && currentDriver) {
+                    database.ref(`drivers/${currentDriver.driverId}`).update({
+                        name: currentDriver.name,
+                        licensePlate: currentDriver.licensePlate
+                    });
+                }
+                
+                disableEditMode();
+                
+                showNotification("Perfil atualizado com sucesso no sistema global!");
+                
+            } catch (error) {
+                console.error('Erro ao atualizar perfil no Firebase:', error);
+                showNotification("Perfil atualizado localmente, mas erro ao sincronizar com o sistema global.", true);
             }
-            
-            disableEditMode();
-            
-            showNotification("Perfil atualizado com sucesso!");
         }
         
+        // Relatório de corridas
+        function toggleRideSelection(index) {
+            const rideItem = document.getElementById(`ride-${index}`);
+            const checkbox = document.getElementById(`checkbox-${index}`);
+            
+            if (checkbox.checked) {
+                selectedRides.add(index);
+                rideItem.classList.add('selected-ride');
+            } else {
+                selectedRides.delete(index);
+                rideItem.classList.remove('selected-ride');
+            }
+            
+            updateSelectAllButton();
+        }
+        
+        function selectAllReports() {
+            const rides = getRidesHistory();
+            const selectAllText = document.getElementById('selectAllText');
+            
+            if (!isAllSelected) {
+                for (let i = 0; i < rides.length; i++) {
+                    selectedRides.add(i);
+                    const checkbox = document.getElementById(`checkbox-${i}`);
+                    if (checkbox) checkbox.checked = true;
+                    const rideItem = document.getElementById(`ride-${i}`);
+                    if (rideItem) rideItem.classList.add('selected-ride');
+                }
+                selectAllText.textContent = '📋 Desmarcar Todos';
+                isAllSelected = true;
+            } else {
+                selectedRides.clear();
+                for (let i = 0; i < rides.length; i++) {
+                    const checkbox = document.getElementById(`checkbox-${i}`);
+                    if (checkbox) checkbox.checked = false;
+                    const rideItem = document.getElementById(`ride-${i}`);
+                    if (rideItem) rideItem.classList.remove('selected-ride');
+                }
+                selectAllText.textContent = '📋 Selecionar Todos';
+                isAllSelected = false;
+            }
+        }
+        
+        function updateSelectAllButton() {
+            const rides = getRidesHistory();
+            const selectAllText = document.getElementById('selectAllText');
+            
+            if (selectAllText) {
+                if (selectedRides.size === rides.length && rides.length > 0) {
+                    selectAllText.textContent = '📋 Desmarcar Todos';
+                    isAllSelected = true;
+                } else {
+                    selectAllText.textContent = '📋 Selecionar Todos';
+                    isAllSelected = false;
+                }
+            }
+        }
+        
+        function deleteSelectedReports() {
+            if (selectedRides.size === 0) {
+                showNotification("Selecione pelo menos uma corrida para apagar.", true);
+                return;
+            }
+            
+            if (!confirm(`Tem certeza que deseja apagar ${selectedRides.size} corrida(s) selecionada(s)?`)) {
+                return;
+            }
+            
+            let ridesHistory = JSON.parse(localStorage.getItem(RIDES_HISTORY_KEY) || '{}');
+            
+            if (!ridesHistory[currentDriver.driverId]) {
+                return;
+            }
+            
+            const indicesToDelete = Array.from(selectedRides).sort((a, b) => b - a);
+            
+            indicesToDelete.forEach(index => {
+                if (index < ridesHistory[currentDriver.driverId].length) {
+                    ridesHistory[currentDriver.driverId].splice(index, 1);
+                }
+            });
+            
+            localStorage.setItem(RIDES_HISTORY_KEY, JSON.stringify(ridesHistory));
+            
+            selectedRides.clear();
+            isAllSelected = false;
+            
+            showReport();
+            
+            showNotification(`${indicesToDelete.length} corrida(s) apagada(s) com sucesso!`);
+        }
+        
+        // Configurar botões de reserva
         function setupReservationButtons() {
             document.getElementById("reserveRequest").addEventListener("click", function() {
                 showReservationCard();
@@ -2078,6 +2045,7 @@
             });
         }
         
+        // Iniciar rastreamento
         function startTracking() {
             if (!navigator.geolocation) {
                 showNotification("Seu navegador não suporta geolocalização.", true);
@@ -2102,38 +2070,11 @@
             listenForRequests();
         }
         
-        function calculateHeading(from, to) {
-            const lat1 = from.lat * Math.PI / 180;
-            const lon1 = from.lng * Math.PI / 180;
-            const lat2 = to.lat * Math.PI / 180;
-            const lon2 = to.lng * Math.PI / 180;
-            
-            const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
-            const x = Math.cos(lat1) * Math.sin(lat2) -
-                      Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
-            let brng = Math.atan2(y, x) * 180 / Math.PI;
-            return (brng + 360) % 360;
-        }
-        
-        function calculateStraightDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            const distance = R * c;
-            return distance;
-        }
-        
+        // Ouvir por solicitações
         function listenForRequests() {
             database.ref(`notifications/drivers/${currentDriver.driverId}`).on('child_added', (snapshot) => {
                 const notification = snapshot.val();
                 const notificationId = snapshot.key;
-                
-                console.log('Nova notificação recebida:', notification);
                 
                 if (notification.type === 'new_request') {
                     processDriverSpecificRequest(notification, notificationId);
@@ -2178,7 +2119,6 @@
                     
                     if (request && request.status === 'pending') {
                         if (request.assignedDriverId && request.assignedDriverId !== currentDriver.driverId) {
-                            console.log('Solicitação já atribuída a outro motorista:', request.assignedDriverId);
                             return;
                         }
                         
@@ -2191,7 +2131,6 @@
                             );
                             
                             if (distance > 10) {
-                                console.log('Motorista muito longe do cliente:', distance, 'km');
                                 return;
                             }
                         }
@@ -2304,42 +2243,6 @@
             });
         }
         
-        function calculateDistance(originAddress) {
-            return new Promise((resolve, reject) => {
-                const driverLocation = marker.getPosition();
-                
-                geocoder.geocode({ address: originAddress }, (results, status) => {
-                    if (status === 'OK' && results[0]) {
-                        const originLocation = results[0].geometry.location;
-                        
-                        const distanceInKm = calculateStraightDistance(
-                            driverLocation.lat(),
-                            driverLocation.lng(),
-                            originLocation.lat(),
-                            originLocation.lng()
-                        );
-                        
-                        resolve(`${distanceInKm.toFixed(1)} km`);
-                    } else {
-                        directionsService.route({
-                            origin: driverLocation,
-                            destination: originAddress,
-                            travelMode: google.maps.TravelMode.DRIVING
-                        }, (response, status) => {
-                            if (status === 'OK') {
-                                const route = response.routes[0];
-                                const distanceInMeters = route.legs[0].distance.value;
-                                const distanceInKm = (distanceInMeters / 1000).toFixed(1);
-                                resolve(`${distanceInKm} km`);
-                            } else {
-                                reject('Não foi possível calcular a distância');
-                            }
-                        });
-                    }
-                });
-            });
-        }
-        
         function updateTimerDisplay(timerElement, timeLeft) {
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
@@ -2408,8 +2311,6 @@
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     });
                     
-                    console.log('Notificação de reserva enviada para o cliente:', currentRequest.clientId);
-                    
                     database.ref(`ride_requests/${currentRequestId}`).update({
                         status: 'reservation_proposed',
                         reservationTime: selectedReservationTime,
@@ -2432,7 +2333,6 @@
                     currentRequest = null;
                     
                 } else {
-                    console.warn('Cliente ID não encontrado na solicitação');
                     showNotification("Erro: ID do cliente não encontrado.", true);
                 }
             });
@@ -2475,8 +2375,9 @@
                             contact: request.contact,
                             date: new Date().toLocaleString('pt-PT'),
                             timestamp: Date.now(),
-                            type: 'reservation',
-                            reservationTime: request.reservationTime
+                            type: 'reservation_accepted',
+                            reservationTime: request.reservationTime,
+                            status: 'accepted'
                         };
                         
                         saveRideToHistory(rideData);
@@ -2550,6 +2451,7 @@
             map.setCenter(location);
         }
         
+        // Aceitar solicitação
         function acceptRequest(requestId, request) {
             database.ref(`ride_requests/${requestId}`).once('value').then((snapshot) => {
                 const updatedRequest = snapshot.val();
@@ -2573,7 +2475,8 @@
                     passengers: request.passengers,
                     contact: request.contact,
                     date: new Date().toLocaleString('pt-PT'),
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    status: 'accepted'
                 };
                 
                 saveRideToHistory(rideData);
@@ -2590,7 +2493,6 @@
                 
                 showNotification("✅ Você aceitou a solicitação!");
                 
-                // Mostrar controles da corrida
                 isRideAccepted = true;
                 document.getElementById('controls').style.display = 'none';
                 document.getElementById('rideControls').style.display = 'flex';
@@ -2605,26 +2507,19 @@
                     });
                 }
                 
-                // Mostrar rota, marcador do cliente e marcador do destino
-                displayRouteAndMarkers(request);
+                displayMarkers(request);
                 
                 currentRequestId = null;
                 currentRequest = request;
             });
         }
         
-        function displayRouteAndMarkers(request) {
+        function displayMarkers(request) {
             if (!request || !request.origin || !request.destination) {
                 console.error('Dados de origem ou destino não disponíveis');
                 return;
             }
             
-            // Limpar rota anterior se existir
-            if (directionsRenderer) {
-                directionsRenderer.setMap(null);
-            }
-            
-            // Limpar marcadores anteriores se existirem
             if (clientMarker) {
                 clientMarker.setMap(null);
             }
@@ -2633,12 +2528,10 @@
                 destinationMarker.setMap(null);
             }
             
-            // Primeiro, obter coordenadas da origem (local do cliente)
             geocoder.geocode({ address: request.origin }, (originResults, originStatus) => {
                 if (originStatus === 'OK' && originResults[0]) {
                     const clientLocation = originResults[0].geometry.location;
                     
-                    // Adicionar marcador vermelho do Google no local do cliente
                     clientMarker = new google.maps.Marker({
                         position: clientLocation,
                         map: map,
@@ -2649,12 +2542,10 @@
                         }
                     });
                     
-                    // Depois, obter coordenadas do destino
                     geocoder.geocode({ address: request.destination }, (destinationResults, destinationStatus) => {
                         if (destinationStatus === 'OK' && destinationResults[0]) {
                             const destinationLocation = destinationResults[0].geometry.location;
                             
-                            // Adicionar marcador azul do Google no destino
                             destinationMarker = new google.maps.Marker({
                                 position: destinationLocation,
                                 map: map,
@@ -2665,59 +2556,26 @@
                                 }
                             });
                             
-                            // Calcular e exibir rota da origem ao destino
-                            calculateAndDisplayRoute(clientLocation, destinationLocation);
+                            const bounds = new google.maps.LatLngBounds();
+                            bounds.extend(clientLocation);
+                            bounds.extend(destinationLocation);
+                            
+                            if (marker && marker.getPosition()) {
+                                bounds.extend(marker.getPosition());
+                            }
+                            
+                            map.fitBounds(bounds);
+                            
+                            showNotification("Marcadores adicionados!");
+                            isRouteDisplayed = true;
                             
                         } else {
-                            console.error('Erro ao geocodificar destino:', destinationStatus);
-                            showNotification("Não foi possível obter localização do destino. A rota não será exibida.", true);
+                            showNotification("Não foi possível obter localização do destino.", true);
                         }
                     });
                     
                 } else {
-                    console.error('Erro ao geocodificar origem do cliente:', originStatus);
-                    showNotification("Não foi possível obter localização do cliente. A rota não será exibida.", true);
-                }
-            });
-        }
-        
-        function calculateAndDisplayRoute(origin, destination) {
-            const request = {
-                origin: origin,
-                destination: destination,
-                travelMode: google.maps.TravelMode.DRIVING
-            };
-            
-            directionsService.route(request, (result, status) => {
-                if (status === 'OK') {
-                    // Salvar a rota atual
-                    currentRoute = result;
-                    
-                    // Ativar o renderizador no mapa
-                    directionsRenderer.setMap(map);
-                    directionsRenderer.setDirections(result);
-                    
-                    // Ajustar mapa para mostrar a rota completa com marcadores
-                    const bounds = new google.maps.LatLngBounds();
-                    bounds.extend(origin);
-                    bounds.extend(destination);
-                    
-                    // Incluir a posição atual do motorista se disponível
-                    if (marker && marker.getPosition()) {
-                        bounds.extend(marker.getPosition());
-                    }
-                    
-                    map.fitBounds(bounds);
-                    
-                    // Adicionar um pequeno padding para melhor visualização
-                    map.panBy(0, -50);
-                    
-                    showNotification("Rota calculada com sucesso! Marcadores adicionados.");
-                    isRouteDisplayed = true;
-                    
-                } else {
-                    console.error('Erro ao calcular rota:', status);
-                    showNotification("Não foi possível calcular a rota.", true);
+                    showNotification("Não foi possível obter localização do cliente.", true);
                 }
             });
         }
@@ -2748,16 +2606,16 @@
                     
                     let heading = 0;
                     if (lastPosition) {
-                        heading = calculateHeading(lastPosition, pos);
+                        const y = Math.sin(pos.lng - lastPosition.lng) * Math.cos(pos.lat);
+                        const x = Math.cos(lastPosition.lat) * Math.sin(pos.lat) -
+                                  Math.sin(lastPosition.lat) * Math.cos(pos.lat) * Math.cos(pos.lng - lastPosition.lng);
+                        heading = Math.atan2(y, x) * 180 / Math.PI;
+                        heading = (heading + 360) % 360;
                     }
                     
                     if (marker) {
-                        // Definir cor do marcador baseado no status da corrida
-                        let iconUrl = "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png";
-                        
-                        // Sempre usar rotação independente do status
                         marker.setIcon({
-                            url: iconUrl,
+                            url: "https://i.postimg.cc/d37TyxgN/Screenshot-7-removebg-preview-(1).png",
                             scaledSize: new google.maps.Size(40, 60),
                             anchor: new google.maps.Point(20, 20),
                             rotation: heading
@@ -2765,9 +2623,7 @@
                         
                         marker.setPosition(pos);
                         
-                        // Não centralizar automaticamente no motorista quando há uma rota ativa
-                        // A não ser que a rotação do mapa esteja ativada
-                        if (!isRouteDisplayed && !isMapRotationEnabled && map) {
+                        if (!isRouteDisplayed && map) {
                             map.setCenter(pos);
                         }
                     }
@@ -2835,15 +2691,10 @@
             }, 5000);
         }
 
+        // Event listeners
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 login();
-            }
-        });
-
-        document.getElementById('regConfirmPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                register();
             }
         });
 
@@ -2863,26 +2714,21 @@
         document.getElementById("startTracking").addEventListener("click", startTracking);
         document.getElementById("stopTracking").addEventListener("click", stopTracking);
 
+        // Inicializar quando a página carregar
         window.addEventListener('load', function() {
             initializeDriversStorage();
             checkSavedSession();
-        });
-
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden && currentDriver && backgroundWatchId) {
-                console.log('Página visível - mantendo trabalho ativo');
-            }
-        });
-
-        window.addEventListener('beforeunload', function() {
-            if (currentDriver && backgroundWatchId) {
-                console.log('Mantendo trabalho ativo após recarregar página');
-            }
+            
+            // Redirecionar para página de registro se clicar na tab de registro
+            document.getElementById('registerTab').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'motorista-registro.html';
+            });
         });
     </script>
     
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places,directions">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmc6HTJo70N_ueR1qFVgyu74v7FIl7dU4&callback=initMap&libraries=places">
     </script>
 </body>
 </html>
